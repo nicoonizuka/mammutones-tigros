@@ -10,14 +10,16 @@ L'idea di fondo: il gioco è **facile all'inizio** e diventa più difficile **ma
 |---|---|---|---|---|---|---|---|
 | Pistola | arma di partenza | 25 | 50 | 8 | 64 | 1 colpo ogni 0,24 s | 1,3 s |
 | Fucile | appeso al muro del Tigros, parcheggio | 60 | 120 | 5 | 35 | 1 colpo ogni 0,6 s, niente raffica | 2,0 s |
+| Mitra | al muro dell'ortofrutta, negozio | 22 | 44 | 30 | 150 | raffica, 10 colpi al secondo | 2,0 s |
 
-Le armi che troverai nelle zone dopo (cassa armi, armi al muro del negozio e del magazzino) saranno più forti del fucile.
+Le armi delle zone successive (cassa armi, armi al muro del seminterrato e del magazzino) saranno ancora più forti.
 
 ### Comprare al muro
 
 | Arma | Prima volta (compri l'arma) | Volte dopo (munizioni piene) |
 |---|---|---|
 | Fucile | 500 | 250 |
+| Mitra | 1200 | 600 |
 
 Puoi portare **due armi**. Se ne hai già due, quella nuova prende il posto di quella che hai in mano.
 

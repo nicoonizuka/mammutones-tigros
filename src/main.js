@@ -4,8 +4,9 @@ import './style.css';
 import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
 import { buildHuman, buildMammutones, buildWeapon } from './characters/styled.js';
 import { mat, box, sign } from './render/textures.js';
-import { renderer, scene, camera, solids, blockers, solid, BOUNDS } from './render/engine.js';
+import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
 import { gzBar, gzSolids } from './world/parking.js';
+import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
 import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType } from './config/balance.js';
 
@@ -40,7 +41,7 @@ function newPlayer(i) {
 function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; P.reloadT = 0; equip(); }
 
 /* ===================== NEMICI ===================== */
-function spawnPoints() { let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); return pts; }
+function spawnPoints() { let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); return pts; }
 function spawnEnemy() {
   const pts = spawnPoints(); const p = pts[Math.floor(Math.random() * pts.length)];
   const type = pickType(zone); const st = enemyStats(type, wave, zone);
@@ -66,7 +67,7 @@ function animLimbs(m, phase, amp) { const p = m.userData.P; const s = Math.sin(p
 const ray = new THREE.Raycaster(); const tracerM = new THREE.LineBasicMaterial({ color: '#ffe08a' });
 const sparkG = new THREE.SphereGeometry(0.07, 6, 4), sparkM = new THREE.MeshBasicMaterial({ color: '#ffd27a' }), bloodM = new THREE.MeshBasicMaterial({ color: '#c0392b' });
 function muzzle() { const g = pModel.userData.gun; const v = g.userData.muzzle.clone(); g.localToWorld(v); return v; }
-function hitTargets() { const t = [...blockers]; for (const e of enemies) if (!e.dead) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
+function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.dead) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
 function shoot() {
   const w = P.weapons[P.cur]; if (P.reloadT > 0) return;
   const inf = P.pwT > 0 && P.pw.k === 'ammo';
@@ -135,13 +136,13 @@ const wallMeshes = WALL_BUYS.map(wb => {
   chalk.position.set(0, -0.55, 0.02); G.add(chalk);
   const frame = box(2.1, 1.0, 0.05, mat('#3a2a20')); frame.position.set(0, 0, -0.01); G.add(frame);
   const gun = buildWeapon(wb.id); gun.rotation.y = Math.PI / 2; gun.position.set(-0.05, 0.05, 0.08); gun.scale.setScalar(1.8); G.add(gun);
-  G.position.set(wb.x, 2.1, wb.z + 0.08); scene.add(G); return G;
+  const r = wb.rot || 0; G.rotation.y = r; G.position.set(wb.x + Math.sin(r) * 0.08, 2.1, wb.z + Math.cos(r) * 0.08); scene.add(G); return G;
 });
 
 /* ---------- punti interattivi ---------- */
 const INTER = [
   ...WALL_BUYS.map(wb => ({
-    x: wb.x, z: wb.z + 1.2, r: 2.4,
+    x: wb.x + Math.sin(wb.rot || 0) * 1.2, z: wb.z + Math.cos(wb.rot || 0) * 1.2, r: 2.4,
     label: () => P && P.weapons.some(w => w.id === wb.id) ? `<b>E</b> Munizioni ${WEAPONS[wb.id].n} · <b>${wb.ammoCost}</b>` : `<b>E</b> Compra ${WEAPONS[wb.id].n} · <b>${wb.cost}</b>`,
     cost: () => P.weapons.some(w => w.id === wb.id) ? wb.ammoCost : wb.cost,
     act: () => {
@@ -153,12 +154,15 @@ const INTER = [
   })),
   { x: -18, z: -5.4, r: 3, label: () => gzOpen() ? null : `<b>E</b> Apri il gazebo Buongusto · <b>${ZONES[1].cost}</b>`, cost: () => ZONES[1].cost, act: () => openZone(1) },
   { x: -11.4, z: -10, r: 2.4, label: () => gzOpen() ? null : `<b>E</b> Apri il gazebo Buongusto · <b>${ZONES[1].cost}</b>`, cost: () => ZONES[1].cost, act: () => openZone(1) },
-  { x: 8, z: -12.6, r: 2.6, label: () => 'Il negozio si apre nella prossima versione', cost: () => 0 },
+  { x: DOOR.x, z: -12.8, r: 3, label: () => zone >= 2 ? null : zone < 1 ? 'Per entrare nel negozio apri prima il gazebo Buongusto' : `<b>E</b> Apri il negozio · <b>${ZONES[2].cost}</b>`, cost: () => zone === 1 ? ZONES[2].cost : 0, act: () => openZone(2) },
+  { x: ESCALATOR.x, z: -22.8, r: 2.6, label: () => 'La scala mobile per il seminterrato arriva nella prossima versione', cost: () => 0 },
+  { x: WAREHOUSE_DOOR.x, z: -42, r: 2.6, label: () => 'Il magazzino è chiuso: prima il seminterrato', cost: () => 0 },
   { x: 34, z: 17.2, r: 2.6, label: () => 'La rampa per il seminterrato è bloccata, per ora', cost: () => 0 },
 ];
 function openZone(i) {
   if (zone >= i) return; zone = i;
   if (i === 1) { scene.remove(gzBar); gzSolids.forEach(s => (s.off = 1)); banner('Gazebo aperto', 'I Mammutones ora escono anche da qui'); }
+  if (i === 2) { scene.remove(storeDoor); doorSolid.off = 1; banner('Negozio aperto', 'Attenti ai Mammutones Cornuti tra le corsie'); }
 }
 let nearI = null;
 function useInter() {
@@ -268,7 +272,8 @@ function update(dt) {
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
-  cam.x = Math.max(-39.5, Math.min(39.5, cam.x)); cam.z = Math.max(-13.6, Math.min(29.5, cam.z));
+  if (inStore(P.pos)) { cam.x = Math.max(STORE.x1 + 0.4, Math.min(STORE.x2 - 0.4, cam.x)); cam.z = Math.max(STORE.z1 + 0.4, Math.min(STORE.z2 - 0.3, cam.z)); cam.y = Math.min(STORE.ceil - 0.4, cam.y); }
+  else { cam.x = Math.max(-39.5, Math.min(39.5, cam.x)); cam.z = Math.max(-13.6, Math.min(29.5, cam.z)); }
   camera.position.copy(cam); camera.lookAt(cam.clone().add(d));
   /* sparo */
   fireT -= dt; const w = P.weapons[P.cur]; if (mouseDown && w.auto && fireT <= 0) shoot();
@@ -280,7 +285,9 @@ function update(dt) {
     if (e.dead) { e.deadT += dt; m.rotation.x = Math.min(1.5, e.deadT * 4); m.position.y = -Math.max(0, e.deadT - 1.2) * 0.8; if (e.deadT > 2.6) { scene.remove(m); e.gone = 1; } continue; }
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
     EP.bells.forEach((b, k) => { b.rotation.x = Math.sin(time * 6 + k + e.walk) * 0.3; });
-    const to = P.pos.clone().sub(m.position); to.y = 0; const dist = to.length(); m.rotation.y = Math.atan2(to.x, to.z);
+    let goal = P.pos; const eIn = inStore(m.position);
+    if (eIn !== inStore(P.pos)) goal = new V3(Math.max(DOOR.x - 2.6, Math.min(DOOR.x + 2.6, m.position.x)), 0, eIn ? DOOR.z + 1.4 : DOOR.z - 1.4);
+    const to = goal.clone().sub(m.position); to.y = 0; const dist = goal === P.pos ? to.length() : 99; m.rotation.y = Math.atan2(to.x, to.z);
     if (dist > 1.15 * m.scale.x) {
       to.normalize();
       if (e.side) { const s = new V3(to.z, 0, -to.x).multiplyScalar(e.side); to.add(s).normalize(); e.sideT -= dt; if (e.sideT <= 0) e.side = 0; }
@@ -300,7 +307,7 @@ function update(dt) {
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt);
+  updMirko(dt); updateStore(time);
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
   P.hurtT = Math.max(0, P.hurtT - dt); $('dmg').style.boxShadow = `inset 0 0 120px 30px rgba(220,30,30,${Math.min(0.65, P.hurtT * 1.4)})`;
@@ -318,7 +325,7 @@ function resetWorld() {
   enemies.forEach(e => scene.remove(e.m)); drops.forEach(d => scene.remove(d.m)); enemies = []; drops = [];
   alive = 0; toSpawn = 0; wave = 0; kills = 0; coins = ECONOMY.start; breakT = 3;
   if (mirko) { scene.remove(mirko.m); mirko = null; }
-  if (zone >= 1) { scene.add(gzBar); gzSolids.forEach(s => (s.off = 0)); } zone = 0; shieldMesh.visible = false;
+  if (zone >= 1) { scene.add(gzBar); gzSolids.forEach(s => (s.off = 0)); } if (zone >= 2) { scene.add(storeDoor); doorSolid.off = 0; } zone = 0; shieldMesh.visible = false;
 }
 function startGame(i) {
   charIdx = i; resetWorld(); newPlayer(i); state = 'play'; ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
@@ -364,6 +371,9 @@ ROSTER.forEach((c, i) => {
 });
 if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
+/* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh]);
+
 /* per i test automatici e il debug dalla console */
-window.__game = { get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
+window.__game = { get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
 requestAnimationFrame(loop);

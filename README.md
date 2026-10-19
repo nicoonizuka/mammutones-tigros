@@ -43,7 +43,9 @@ src/
   config/
     balance.js          tutti i numeri: armi, nemici, monete, zone, ondate
   world/
+    kit.js              materiali, forme e texture comuni
     parking.js          zona 1 (parcheggio) e zona 2 (gazebo Buongusto)
+    store.js            edificio del Tigros e zona 3 (negozio)
 ```
 
 ## Personaggi e poteri
@@ -63,7 +65,7 @@ src/
 
 1. Parcheggio (fatto)
 2. Gazebo Buongusto (fatto, si apre a 750)
-3. Negozio: corsie, ortofrutta, sushi, casse
+3. Negozio (fatto, si apre a 1250 dopo il gazebo): corsie, ortofrutta, sushi, casse, mitra al muro
 4. Seminterrato: parcheggio sotterraneo, ratti e boss Fab La Rue, riaccendere la corrente
 5. Magazzino: celle frigo, scaffali, muletto
 6. Zona controllo: boss finale Loris Busato

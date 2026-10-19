@@ -1,78 +1,111 @@
-/* Zona 1 e 2: parcheggio del Tigros, facciata, gazebo Buongusto */
+/* Zona 1 e 2: parcheggio del Tigros e gazebo Buongusto (stile modellato) */
 import * as THREE from 'three';
-import {tex,mat,box,rr,setSeed,sign} from '../render/textures.js';
-import {scene,solid} from '../render/engine.js';
-/* terreno: asfalto con le strisce */
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,44),mat({map:tex(320,176,(g,w,h)=>{
-  setSeed(5);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const r=rr();g.fillStyle=r<.6?"#4a4e57":r<.9?"#43474f":"#565a63";g.fillRect(x,y,1,1);}
-  g.fillStyle="#b3ada3";g.fillRect(0,0,w,32);for(let x=0;x<w;x+=8)g.fillRect(x,0,1,32);g.fillStyle="#9d978d";for(let x=0;x<w;x+=8)g.fillRect(x,0,1,32);g.fillStyle="#8f897f";g.fillRect(0,31,w,1);
-  g.fillStyle="#e8e4dc";[[56,84],[104,132]].forEach(([y0,y1])=>{for(let x=16;x<=304;x+=12)g.fillRect(x,y0,1,y1-y0);});
-  g.fillStyle="#c9c3b8";g.fillRect(16,84,289,3);g.fillRect(16,132,289,3);
-  g.fillStyle="#2a2c30";for(let k=0;k<26;k++){let x=rr()*w,y=40+rr()*130;for(let i=0;i<14;i++){g.fillRect(x,y,1,1);x+=rr()<.5?1:-1;y+=1;}}
-  g.fillStyle="#6a5a4a";for(let k=0;k<200;k++)g.fillRect(rr()*w,40+rr()*130,1,1);
-})}));
-ground.rotation.x=-Math.PI/2;ground.position.set(0,0,8);ground.receiveShadow=true;scene.add(ground);
+import { scene, solid } from '../render/engine.js';
+import { M, rbox, mesh, ctex, texMat, plane, TEX, rnd, setSeed } from './kit.js';
 
-/* edificio: facciata in mattoni */
-const brick=tex(64,32,(g,w,h)=>{g.fillStyle="#b5563a";g.fillRect(0,0,w,h);g.fillStyle="#9a4630";for(let y=0;y<h;y+=4){g.fillRect(0,y,w,1);for(let x=(y/4)%2?0:4;x<w;x+=8)g.fillRect(x,y,1,4);}g.fillStyle="#c86a4a";for(let k=0;k<60;k++)g.fillRect(rr()*w,rr()*h,2,1);});
-brick.wrapS=brick.wrapT=THREE.RepeatWrapping;brick.repeat.set(10,2);
-const bld=box(80,9,16,mat({map:brick}));bld.position.set(0,4.5,-22);bld.receiveShadow=true;scene.add(bld);solid(0,-22,80,16,bld);
-const tigros=new THREE.Mesh(new THREE.PlaneGeometry(12,3),new THREE.MeshBasicMaterial({map:sign("TIGROS","900 64px Arial Black,Arial,sans-serif","#f4f2ee",320,80),transparent:true}));
-tigros.position.set(8,7,-13.95);scene.add(tigros);
-const bg=new THREE.Mesh(new THREE.PlaneGeometry(10,2),new THREE.MeshBasicMaterial({map:sign("Buongusto","italic 700 54px Georgia,serif","#f4f2ee",320,64),transparent:true}));
-bg.position.set(-24,6.6,-13.95);scene.add(bg);
-/* ingresso a vetri */
-const glass=box(8,3.6,0.2,mat({color:"#7fb4cc",transparent:true,opacity:.75}));glass.position.set(8,1.8,-13.9);scene.add(glass);
-for(const x of[4.5,6.8,9.2,11.5]){const y=box(1.2,0.35,0.22,mat("#f2c14e"));y.position.set(x,2.2,-13.85);scene.add(y);}
-const frame=box(8.4,0.3,0.4,mat("#dcdcdc"));frame.position.set(8,3.75,-13.8);scene.add(frame);
-for(let x=3;x<14;x+=1.6){const p=box(0.18,0.9,0.18,mat("#9aa3ad"));p.position.set(x,0.45,-12.3);scene.add(p);}
-/* vetrine Buongusto */
-for(let x=-36;x<-12;x+=4){const w=box(3.4,2.6,0.15,mat({color:"#5f8ea4",transparent:true,opacity:.8}));w.position.set(x+2,1.6,-13.9);scene.add(w);}
+const flat = (m) => { m.castShadow = false; m.receiveShadow = true; return m; };
 
-/* gazebo Buongusto: tettoia, pali, tavolini */
-const canopy=box(24,0.25,8.4,mat("#ecebe6"));canopy.position.set(-24,3.4,-10);canopy.castShadow=true;scene.add(canopy);
-for(let x=-36;x<=-12;x+=6)for(const z of[-6.2]){const p=box(0.25,3.4,0.25,mat("#e0dfda"));p.position.set(x,1.7,z);scene.add(p);}
-const tableM=mat("#f2f2ee"),chairM=mat("#4a4440");
-[[-32,-10],[-27,-8.4],[-22,-10.4],[-17,-8.6],[-30,-12.4],[-19,-12.4]].forEach(([x,z],k)=>{const t=box(1.3,0.08,1.3,tableM);t.position.set(x,0.95,z);scene.add(t);
-  const l=box(0.12,0.95,0.12,tableM);l.position.set(x,0.47,z);scene.add(l);solid(x,z,1.4,1.4);
-  [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dx,dz],j)=>{const c=box(0.5,0.5,0.5,chairM);c.position.set(x+dx*1.05,0.25,z+dz*1.05);if(k===2&&j===1){c.rotation.z=1.4;c.position.y=0.2;}scene.add(c);});});
+/* cielo al tramonto */
+{
+  const t = ctex(4, 256, (g) => { const gr = g.createLinearGradient(0, 0, 0, 256);
+    gr.addColorStop(0, '#3b4a78'); gr.addColorStop(0.42, '#c9806a'); gr.addColorStop(0.58, '#f2b27a'); gr.addColorStop(0.7, '#e8a06a'); gr.addColorStop(1, '#5a3a30'); g.fillStyle = gr; g.fillRect(0, 0, 4, 256); });
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(140, 32, 16), new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide, fog: false })));
+  scene.fog.color.set('#c98a6a'); scene.fog.near = 35; scene.fog.far = 110;
+}
 
-/* barriera del gazebo (si compra) */
-export const gzBar=new THREE.Group();export const plk=tex(8,2,(g)=>{for(let x=0;x<8;x++){g.fillStyle=x%4<2?"#f2c14e":"#1a1a1a";g.fillRect(x,0,1,2);}});plk.wrapS=THREE.RepeatWrapping;plk.repeat.set(6,1);
-function plank(x,z,len,rot){const p=box(len,0.35,0.12,mat({map:plk}));p.position.set(x,1.2,z);p.rotation.y=rot;gzBar.add(p);const p2=p.clone();p2.position.y=0.55;gzBar.add(p2);}
-plank(-24,-6,24,0);plank(-12,-10,8,Math.PI/2);scene.add(gzBar);
-export const gzSolids=[solid(-24,-6,24,0.4),solid(-12,-10,0.4,8)];
+/* asfalto, marciapiede, strisce */
+const asph = TEX.asphalt(); asph.wrapS = asph.wrapT = THREE.RepeatWrapping; asph.repeat.set(10, 6);
+flat(plane(80, 44, texMat(asph, { roughness: 0.95 }), scene, [0, 0, 8], [-Math.PI / 2, 0, 0]));
+const sw = TEX.sidewalk(); sw.wrapS = sw.wrapT = THREE.RepeatWrapping; sw.repeat.set(26, 4);
+flat(mesh(rbox(52, 0.16, 8, 0.04), texMat(sw, { roughness: 0.95 }), scene, [14, 0.02, -10]));
+const tiles = ctex(256, 256, (g, w, h) => { g.fillStyle = '#8a6a55'; g.fillRect(0, 0, w, h); g.fillStyle = '#7a5c48'; for (let y = 0; y < h; y += 32) g.fillRect(0, y, w, 2); for (let x = 0; x < w; x += 64) g.fillRect(x, 0, 2, h); }, 12, 4);
+flat(mesh(rbox(24, 0.14, 8, 0.03), texMat(tiles), scene, [-24, 0.02, -10]));
+const lineM = M('#ece6d8', { roughness: 0.8 });
+for (const [z0, z1] of [[0, 7], [12, 19]]) {
+  for (let x = -36; x <= 36; x += 3) flat(plane(0.12, z1 - z0, lineM, scene, [x, 0.01, (z0 + z1) / 2], [-Math.PI / 2, 0, 0]));
+}
+const kerbM = M('#c7c0b4', { roughness: 0.85 });
+for (const z of [7.3, 19.3]) mesh(rbox(72, 0.18, 0.4, 0.06), kerbM, scene, [0, 0.09, z]);
+[[0, 29.7, 80, 0.6], [-39.7, 8, 0.6, 44], [39.7, 8, 0.6, 44]].forEach(([x, z, w, d]) => mesh(rbox(w, 0.5, d, 0.1), kerbM, scene, [x, 0.25, z]));
+/* aiuole con alberi oltre il muretto */
+const leaf = [M('#4f8a4a', { roughness: 0.9 }), M('#3c7440', { roughness: 0.9 }), M('#6aa25a', { roughness: 0.9 })], trunk = M('#6b4a30', { roughness: 0.9 });
+setSeed(17);
+for (let x = -36; x <= 36; x += 8) { const z = 32 + rnd() * 3; mesh(new THREE.CylinderGeometry(0.18, 0.25, 3, 8), trunk, scene, [x, 1.5, z]); for (let k = 0; k < 4; k++) mesh(new THREE.IcosahedronGeometry(1.4 + rnd() * 0.6, 1), leaf[k % 3], scene, [x + (rnd() - 0.5) * 1.6, 3.4 + rnd() * 1.4, z + (rnd() - 0.5) * 1.6]); }
 
 /* macchine */
-const CARC=["#c94a42","#3f7fc0","#bfc4ca","#34343e","#6f9fc4","#d9ad3c","#5b6370"];
-function makeCar(x,z,rot,col,burnt){const G=new THREE.Group();const b=mat(burnt?"#2e2a28":col),gl=mat(burnt?"#151312":"#8fc0d6"),tire=mat("#141418");
-  const body=box(1.8,0.75,4,b);body.position.y=0.62;G.add(body);const cab=box(1.6,0.6,2.1,gl);cab.position.set(0,1.28,-0.2);G.add(cab);
-  const roof=box(1.62,0.1,1.9,b);roof.position.set(0,1.6,-0.2);G.add(roof);
-  for(const sx of[-0.85,0.85])for(const sz of[-1.3,1.3]){const t=box(0.25,0.55,0.6,tire);t.position.set(sx,0.28,sz);G.add(t);}
-  if(burnt){const r=box(0.5,0.05,0.6,mat("#b0552a"));r.position.set(0.3,1.0,1.4);G.add(r);G.rotation.z=0.04;}
-  G.position.set(x,0,z);G.rotation.y=rot;G.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;}});scene.add(G);
-  const horiz=Math.abs(Math.sin(rot))>0.5;solid(x,z,horiz?4.1:1.9,horiz?1.9:4.1,body);}
+const CARC = ['#c94a42', '#3f7fc0', '#bfc4ca', '#34343e', '#6f9fc4', '#d9ad3c', '#5b6370', '#6a8a5a'];
+function makeCar(x, z, rot, col, burnt) {
+  const G = new THREE.Group();
+  const body = M(burnt ? '#2e2826' : col, { roughness: burnt ? 0.9 : 0.35, metalness: burnt ? 0 : 0.4 });
+  const glass = M(burnt ? '#141110' : '#203040', { roughness: 0.1, metalness: 0.5 }), tire = M('#121214', { roughness: 0.9 }), rim = M('#9aa3ad', { roughness: 0.3, metalness: 0.8 });
+  const b = mesh(rbox(1.85, 0.7, 4.1, 0.25), body, G, [0, 0.62, 0]);
+  mesh(rbox(1.62, 0.62, 2.2, 0.22), glass, G, [0, 1.2, -0.25]);
+  mesh(rbox(1.66, 0.1, 1.95, 0.05), body, G, [0, 1.52, -0.25]);
+  for (const sx of [-0.88, 0.88]) for (const sz of [-1.32, 1.32]) { mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.26, 18), tire, G, [sx, 0.34, sz], [0, 0, Math.PI / 2]); mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.27, 12), rim, G, [sx, 0.34, sz], [0, 0, Math.PI / 2]); }
+  if (!burnt) for (const sx of [-0.6, 0.6]) { mesh(rbox(0.36, 0.14, 0.05, 0.04), M('#fff4d0', { emissive: '#fff4d0', emissiveIntensity: 0.3 }), G, [sx, 0.72, 2.05]); mesh(rbox(0.36, 0.12, 0.05, 0.04), M('#c0302a'), G, [sx, 0.75, -2.05]); }
+  else { mesh(rbox(0.9, 0.05, 1.2, 0.03), M('#7a3e22', { roughness: 0.9 }), G, [0.3, 0.98, 1.3]); G.rotation.z = 0.04; }
+  G.position.set(x, 0, z); G.rotation.y = rot; G.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(G);
+  const horiz = Math.abs(Math.sin(rot)) > 0.5; solid(x, z, horiz ? 4.1 : 1.9, horiz ? 1.9 : 4.1, b);
+}
 setSeed(31);
-[[-34,4],[-28,4],[-20,4],[-10,4],[-4,4],[6,4],[14,4],[24,4],[33,4],[-31,16],[-22,16],[-13,16],[0,16],[9,16],[18,16],[30,16]].forEach(([x,z],k)=>{
-  if(rr()<.25)return;makeCar(x+rr()*0.6,z+rr()*0.6,(rr()<.5?0:Math.PI)+(rr()-.5)*0.2,CARC[k%CARC.length],rr()<.3);});
-makeCar(-6,10.5,Math.PI/2+0.3,"#2e2a28",true);makeCar(20,22,Math.PI/2-0.2,"#3f7fc0",false);
-/* lampioni, carrelli */
-for(const [x,z] of[[-26,10],[-8,10],[10,10],[28,10],[-18,22],[12,24]]){const p=box(0.18,5,0.18,mat("#3d4350"));p.position.set(x,2.5,z);scene.add(p);const h=box(1.2,0.15,0.4,mat("#3d4350"));h.position.set(x+0.5,5,z);scene.add(h);solid(x,z,0.4,0.4);}
-const cartM=mat("#9aa3ad");
-function cartAt(x,z,r,fallen){const G=new THREE.Group();const b=box(0.6,0.5,0.95,cartM);b.position.y=0.75;G.add(b);const h=box(0.6,0.06,0.06,mat("#ef5350"));h.position.set(0,1.05,-0.5);G.add(h);
-  for(const sx of[-0.25,0.25])for(const sz of[-0.38,0.38]){const w=box(0.06,0.5,0.06,cartM);w.position.set(sx,0.25,sz);G.add(w);}
-  G.position.set(x,0,z);G.rotation.y=r;if(fallen){G.rotation.z=1.5;G.position.y=0.3;}scene.add(G);}
-const shelter=box(7,0.15,2.6,mat("#7a8592"));shelter.position.set(24,2.4,-10.5);scene.add(shelter);
-for(const x of[20.7,27.3]){const p=box(0.15,2.4,0.15,mat("#7a8592"));p.position.set(x,1.2,-11.6);scene.add(p);}
-for(let i=0;i<6;i++)cartAt(21.5+i*1,-10.5,0);solid(24,-10.5,7,2.4);
-cartAt(-15,12,0.7,true);cartAt(3,20,2,false);cartAt(30,9,1,true);cartAt(-30,25,0.3,false);
-/* detriti */
-const deb=[mat("#6b6560"),mat("#8a837b"),mat("#a87a4a")];
-for(let i=0;i<70;i++){const d=box(0.2+rr()*0.5,0.1+rr()*0.2,0.2+rr()*0.5,deb[i%3]);d.position.set(-38+rr()*76,0.08,-5+rr()*34);d.rotation.y=rr()*3;scene.add(d);}
-/* muretti del parcheggio sui bordi */
-const kerb=mat("#c9c3b8");
-[[0,29.6,80,0.6],[-39.7,8,0.6,44],[39.7,8,0.6,44]].forEach(([x,z,w,d])=>{const k=box(w,0.5,d,kerb);k.position.set(x,0.25,z);scene.add(k);});
-/* rampa al -1 (chiusa) */
-const ramp=box(8,0.05,10,mat("#2a2c30"));ramp.position.set(34,0.03,23);scene.add(ramp);
-const rb=box(8,1.1,0.25,mat({map:plk}));rb.position.set(34,0.8,18);scene.add(rb);solid(34,23,8,10);
+[[-34, 3.5], [-28, 3.5], [-19, 3.5], [-10, 3.5], [-4, 3.5], [5, 3.5], [14, 3.5], [23, 3.5], [32, 3.5], [-31, 15.5], [-22, 15.5], [-13, 15.5], [-1, 15.5], [8, 15.5], [17, 15.5], [29, 15.5]].forEach(([x, z], k) => {
+  if (rnd() < 0.22) return; makeCar(x + 0.5 + rnd() * 0.4, z + rnd() * 0.6, (rnd() < 0.5 ? 0 : Math.PI) + (rnd() - 0.5) * 0.2, CARC[k % CARC.length], rnd() < 0.3);
+});
+makeCar(-6, 10.2, Math.PI / 2 + 0.3, '#2e2a28', true); makeCar(20, 23, Math.PI / 2 - 0.2, '#3f7fc0', false);
 
+/* lampioni */
+const pole = M('#3d4350', { roughness: 0.5, metalness: 0.5 });
+for (const [x, z] of [[-26, 9.6], [-8, 9.6], [10, 9.6], [28, 9.6], [-18, 22], [12, 24]]) {
+  mesh(new THREE.CylinderGeometry(0.09, 0.13, 5.2, 10), pole, scene, [x, 2.6, z]);
+  mesh(rbox(1.3, 0.14, 0.4, 0.06), pole, scene, [x + 0.55, 5.15, z]);
+  mesh(rbox(0.8, 0.05, 0.3, 0.02), M('#fff2c0', { emissive: '#ffd890', emissiveIntensity: 0.6 }), scene, [x + 0.75, 5.07, z]);
+  solid(x, z, 0.4, 0.4);
+}
+/* carrelli */
+const cartM = M('#aab2bb', { roughness: 0.3, metalness: 0.75 }), redM = M('#e0403a', { roughness: 0.5 });
+export function cart(parent, x, z, r, fallen) {
+  const G = new THREE.Group();
+  mesh(rbox(0.62, 0.48, 0.95, 0.04), new THREE.MeshStandardMaterial({ color: '#aab2bb', roughness: 0.3, metalness: 0.75, wireframe: true }), G, [0, 0.78, 0]);
+  mesh(rbox(0.62, 0.03, 0.95, 0.01), cartM, G, [0, 0.55, 0]);
+  mesh(rbox(0.64, 0.05, 0.05, 0.02), redM, G, [0, 1.08, -0.52]);
+  for (const sx of [-0.25, 0.25]) for (const sz of [-0.38, 0.38]) { mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), cartM, G, [sx, 0.3, sz]); mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.04, 10), M('#222'), G, [sx, 0.05, sz], [0, 0, Math.PI / 2]); }
+  G.position.set(x, 0, z); G.rotation.y = r; if (fallen) { G.rotation.z = 1.45; G.position.y = 0.32; }
+  G.traverse(m => { if (m.isMesh) m.castShadow = true; }); parent.add(G); return G;
+}
+mesh(rbox(7.2, 0.14, 2.7, 0.05), M('#7a8592', { roughness: 0.4, metalness: 0.5 }), scene, [24, 2.45, -10.5]);
+for (const x of [20.6, 27.4]) mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.4, 8), pole, scene, [x, 1.2, -11.7]);
+for (let i = 0; i < 6; i++) cart(scene, 21.5 + i * 1, -10.5, 0); solid(24, -10.5, 7, 2.4);
+cart(scene, -15, 12, 0.7, true); cart(scene, 3, 20, 2); cart(scene, 30, 9, 1, true); cart(scene, -30, 25, 0.3);
+/* paletti davanti all'ingresso */
+const bollM = M('#a9b1ba', { roughness: 0.35, metalness: 0.6 });
+for (let x = 2.6; x < 14; x += 1.5) mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.9, 12), bollM, scene, [x, 0.5, -12.4]);
+/* detriti */
+const deb = [M('#6b6560'), M('#8a837b'), M('#a87a4a'), M('#d8d0c0')]; setSeed(40);
+for (let i = 0; i < 90; i++) mesh(rbox(0.12 + rnd() * 0.4, 0.04 + rnd() * 0.1, 0.12 + rnd() * 0.4, 0.02), deb[i % 4], scene, [-38 + rnd() * 76, 0.05, -5 + rnd() * 34], [0, rnd() * 3, 0]);
+
+/* rampa verso il seminterrato (chiusa) */
+mesh(rbox(8, 0.06, 10, 0.02), M('#2a2c30', { roughness: 0.95 }), scene, [34, 0.03, 23]);
+const stripe = ctex(64, 16, (g) => { for (let x = 0; x < 64; x += 16) { g.fillStyle = '#f2c14e'; g.fillRect(x, 0, 8, 16); g.fillStyle = '#1a1a1a'; g.fillRect(x + 8, 0, 8, 16); } }, 6, 1);
+const stripeM = texMat(stripe, { roughness: 0.6 });
+mesh(rbox(8, 0.3, 0.12, 0.04), stripeM, scene, [34, 1.0, 18]); for (const x of [30.2, 37.8]) mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1, 8), pole, scene, [x, 0.55, 18]);
+solid(34, 23, 8, 10);
+
+/* gazebo Buongusto: tettoia, pali, tavolini rotondi */
+mesh(rbox(24, 0.22, 8.4, 0.08), M('#eceae4', { roughness: 0.6 }), scene, [-24, 3.4, -10]).castShadow = true;
+for (let x = -36; x <= -12; x += 6) mesh(new THREE.CylinderGeometry(0.1, 0.1, 3.4, 10), M('#dedcd6', { roughness: 0.5, metalness: 0.3 }), scene, [x, 1.7, -6.2]);
+const tableM = M('#f2f2ee', { roughness: 0.5 }), chairM = M('#4a4440', { roughness: 0.7 });
+[[-32, -10], [-27, -8.4], [-22, -10.4], [-17, -8.6], [-30, -12.4], [-19, -12.4]].forEach(([x, z], k) => {
+  mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.05, 24), tableM, scene, [x, 0.95, z]); mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.95, 8), tableM, scene, [x, 0.47, z]);
+  mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 16), tableM, scene, [x, 0.02, z]); solid(x, z, 1.4, 1.4);
+  [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dz], j) => {
+    const c = new THREE.Group(); mesh(rbox(0.45, 0.06, 0.45, 0.02), chairM, c, [0, 0.47, 0]); mesh(rbox(0.45, 0.45, 0.05, 0.02), chairM, c, [0, 0.72, -0.2]);
+    for (const sx of [-0.18, 0.18]) for (const sz of [-0.18, 0.18]) mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.47, 6), chairM, c, [sx, 0.23, sz]);
+    c.position.set(x + dx * 1.05, 0, z + dz * 1.05); c.rotation.y = Math.atan2(-dx, -dz); if (k === 2 && j === 1) { c.rotation.z = 1.45; c.position.y = 0.25; }
+    c.traverse(m => { if (m.isMesh) m.castShadow = true; }); scene.add(c);
+  });
+});
+/* barriera del gazebo (si compra) */
+export const gzBar = new THREE.Group();
+function plank(x, z, len, rot) { for (const y of [0.55, 1.2]) { const p = mesh(rbox(len, 0.3, 0.12, 0.04), stripeM, gzBar, [x, y, z]); p.rotation.y = rot; } }
+plank(-24, -6, 24, 0); plank(-12, -10, 8, Math.PI / 2); scene.add(gzBar);
+export const gzSolids = [solid(-24, -6, 24, 0.4), solid(-12, -10, 0.4, 8)];

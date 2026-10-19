@@ -9,12 +9,14 @@
 export const WEAPONS = {
   pistola: { n: 'Pistola', dmg: 25, rate: 0.24, mag: 8, res: 64, spread: 0.012, auto: false, pel: 1, reload: 1.3, sound: 0 },
   fucile:  { n: 'Fucile',  dmg: 60, rate: 0.6,  mag: 5, res: 35, spread: 0.004, auto: false, pel: 1, reload: 2.0, sound: 2 },
+  mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
 
 /* armi da comprare al muro: la prima volta compri l'arma, dopo compri le munizioni */
 export const WALL_BUYS = [
-  { id: 'fucile', cost: 500, ammoCost: 250, x: -4.5, z: -13.9, zone: 'parcheggio' },
+  { id: 'fucile', cost: 500, ammoCost: 250, x: -4.5, z: -13.9, rot: 0, zone: 'parcheggio' },
+  { id: 'mitra', cost: 1200, ammoCost: 600, x: -11.9, z: -31, rot: Math.PI / 2, zone: 'negozio' },
 ];
 
 /* ---------- NEMICI ----------

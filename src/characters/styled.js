@@ -34,8 +34,8 @@ export function rbox(w, h, d, r, seg = 3) {
     g.computeVertexNormals(); return g;
   });
 }
-const sph = (r, ws = 18, hs = 12) => cached(`s${r},${ws},${hs}`, () => new THREE.SphereGeometry(r, ws, hs));
-function mesh(geo, mat, parent, pos, rot, scl) {
+export const sph = (r, ws = 18, hs = 12) => cached(`s${r},${ws},${hs}`, () => new THREE.SphereGeometry(r, ws, hs));
+export function mesh(geo, mat, parent, pos, rot, scl) {
   const m = new THREE.Mesh(geo, mat); if (pos) m.position.set(...pos); if (rot) m.rotation.set(...rot); if (scl) m.scale.set(...scl);
   if (parent) parent.add(m); return m;
 }
@@ -70,6 +70,13 @@ export function buildWeapon(id) {
     mesh(rbox(0.035, 0.1, 0.04, 0.01), dark, g, [0, -0.06, 0.05]);
     mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.16, 10), M('#111', { roughness: 0.3, metalness: 0.6 }), g, [0, 0.085, 0.18], [Math.PI / 2, 0, 0]);
     g.userData.muzzle = new V3(0, 0.04, 0.84);
+  } else if (id === 'mitra') {
+    mesh(rbox(0.06, 0.09, 0.42, 0.02), dark, g, [0, 0.02, 0.12]);
+    mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.22, 10), dark, g, [0, 0.03, 0.42], [Math.PI / 2, 0, 0]);
+    mesh(rbox(0.04, 0.2, 0.06, 0.012), M('#1a1c20', { roughness: 0.5 }), g, [0, -0.11, 0.16], [0.15, 0, 0]);
+    mesh(rbox(0.035, 0.1, 0.045, 0.012), dark, g, [0, -0.06, 0.0]);
+    mesh(rbox(0.03, 0.04, 0.22, 0.01), dark, g, [0, 0.0, -0.18]);
+    g.userData.muzzle = new V3(0, 0.03, 0.54);
   } else {
     mesh(rbox(0.04, 0.06, 0.2, 0.012), dark, g, [0, 0.02, 0.06]);
     mesh(rbox(0.035, 0.1, 0.05, 0.012), dark, g, [0, -0.04, 0]);
