@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mammutones al Tigros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Fredoka:wght@500;600;700&display=swap">
+</head>
+<body>
+<div id="game"></div>
+<div class="dmg" id="dmg"></div>
+<div class="hud" id="hud" hidden>
+  <div class="tl"><div class="wave" id="wave">1<small>Ondata</small></div><div class="coins"><i></i><span id="coins">500</span></div></div>
+  <div class="feed" id="feed"></div>
+  <div class="cross" id="cross"></div>
+  <div class="prompt" id="prompt" hidden></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="bl">
+    <div class="who"><canvas id="who" width="17" height="16"></canvas></div>
+    <div class="bars">
+      <div class="nm" id="pname"></div>
+      <div class="bar"><i id="hpb"></i><span id="hpt"></span></div>
+      <div class="bar ar"><i id="arb"></i></div>
+      <div class="power" id="pw"><span class="k">Q</span><span id="pwn"></span><span class="pb"><i id="pwb"></i></span></div>
+    </div>
+  </div>
+  <div class="br"><div class="wname" id="wname"></div><div class="ammo" id="ammo"></div><div class="slots" id="slots"></div></div>
+</div>
+
+<div class="over" id="sel">
+  <div class="box">
+    <h1>Mammutones <span>al Tigros</span></h1>
+    <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
+    <div class="pick" id="pick"></div>
+    <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span></div>
+    <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
+    <div class="warn" id="touchwarn" hidden>Per giocare servono tastiera e mouse: aprilo dal computer.</div>
+  </div>
+</div>
+<div class="over" id="pause" hidden>
+  <div class="box" style="align-items:flex-start">
+    <h1>Pausa</h1>
+    <p>Clicca per tornare a giocare. Il mouse viene catturato dal gioco: premi Esc per liberarlo.</p>
+    <div class="btns"><button class="btn" id="resume" type="button">Continua</button><button class="btn ghost" id="quit" type="button">Cambia personaggio</button></div>
+  </div>
+</div>
+<div class="over" id="dead" hidden>
+  <div class="box" style="align-items:flex-start">
+    <h1>Ti hanno <span>preso</span></h1>
+    <p id="deadmsg"></p>
+    <div class="stats" id="deadstats"></div>
+    <div class="btns"><button class="btn" id="again" type="button">Rigioca</button><button class="btn ghost" id="change" type="button">Cambia personaggio</button></div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
