@@ -1,6 +1,6 @@
 /* Texture pixel (canvas), materiali e cubi */
 import * as THREE from 'three';
-export const tex=(w,h,draw)=>{const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;return t;};
+export const tex=(w,h,draw)=>{const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.encoding=THREE.sRGBEncoding;return t;};
 export const mat=(o)=>new THREE.MeshLambertMaterial(typeof o==="string"?{color:o}:o);
 export const box=(w,h,d,m)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
 let rs=11;export const setSeed=v=>{rs=v;};export const rr=()=>{rs=(rs*16807)%2147483647;return(rs-1)/2147483646};

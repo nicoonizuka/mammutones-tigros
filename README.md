@@ -37,10 +37,12 @@ src/
   characters/
     sprites.js          disegni pixel art dei 6 amici e di Mirko
     data.js             capelli, poteri, sprite pronti
-    models.js           modelli 3D a blocchi di amici e Mammutones
+    styled.js           modelli 3D modellati di amici, Mirko, Mammutones, Fab La Rue e armi
   render/
     engine.js           renderer, scena, luci, camera, collisioni
     textures.js         texture pixel, materiali, cubi, insegne
+  config/
+    balance.js          tutti i numeri: armi, nemici, monete, zone, ondate
   world/
     parking.js          zona 1 (parcheggio) e zona 2 (gazebo Buongusto)
 ```
@@ -65,7 +67,11 @@ src/
 5. Magazzino: celle frigo, scaffali, muletto
 6. Zona controllo: boss finale Loris Busato
 
+## Bilanciamento
+
+La legenda completa di armi, monete, nemici e zone è in [docs/legenda.md](docs/legenda.md).
+
 ## Note
 
 - Le foto di riferimento degli amici stanno in `reference/`, che è escluso da Git perché il repository è pubblico.
-- Three.js è fissato alla versione 0.128.0.
+- Three.js è fissato alla versione 0.149.0.
