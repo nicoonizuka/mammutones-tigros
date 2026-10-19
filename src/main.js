@@ -355,7 +355,7 @@ function portraits() {
   const pc = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
   const shots = ROSTER.map((c, i) => {
     const m = buildHuman(c.model); m.rotation.y = 0.35; ps.add(m); const h = m.userData.height;
-    pr.setSize(220, 300); pc.aspect = 220 / 300; pc.updateProjectionMatrix(); pc.position.set(0.4, h * 0.6, h * 1.55); pc.lookAt(0, h * 0.52, 0); pr.render(ps, pc);
+    pr.setSize(220, 300); pc.aspect = 220 / 300; pc.updateProjectionMatrix(); pc.position.set(0.5, 1.1, 4.0); pc.lookAt(0, 0.98, 0); pr.render(ps, pc);
     const body = pr.domElement.toDataURL();
     pr.setSize(128, 128); pc.aspect = 1; pc.updateProjectionMatrix(); pc.position.set(0.12, h * 0.93, 0.85); pc.lookAt(0, h * 0.91, 0); pr.render(ps, pc);
     const face = new Image(); face.src = pr.domElement.toDataURL(); FACES[i] = face;
