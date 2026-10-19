@@ -27,6 +27,8 @@ Poi apri l'indirizzo che compare nel terminale, di solito http://localhost:5173.
 | Spazio | saltare |
 | P o Esc | pausa |
 
+Col controller (PlayStation, Xbox): levetta sinistra muovi, destra mira, R2 spara, L1/R1 potere, Quadrato ricarica, Cerchio compra/apri, Triangolo cambia arma, X salta, L3 corri, Options pausa. Nei menu: frecce per scegliere, X per confermare.
+
 ## Struttura
 
 ```
@@ -34,6 +36,8 @@ src/
   main.js               avvio, giocatore, nemici, armi, interazioni, HUD, loop
   style.css             stile di HUD e schermate
   audio.js              suoni sintetizzati (WebAudio)
+  input/
+    gamepad.js          controller tramite la Gamepad API
   characters/
     roster.js           personaggi giocabili e poteri
     sprites.js          ritratti in pixel art per la scelta del personaggio

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import './style.css';
 import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
 import { CH as SPRITES } from './characters/sprites.js';
+import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
 import { buildHuman, buildMammutones, buildWeapon } from './characters/styled.js';
 import { mat, box, sign } from './render/textures.js';
@@ -17,6 +18,7 @@ const V3 = THREE.Vector3;
 
 /* ===================== STATO ===================== */
 let P, charIdx = 0, pModel, state = 'menu', enemies = [], drops = [], tracers = [], sparks = [];
+let sprintToggle = false, menuIdx = 0;
 let wave = 0, toSpawn = 0, spawnT = 0, breakT = 0, alive = 0, kills = 0, coins = ECONOMY.start, mirko = null, zone = 0, time = 0;
 const keys = {}; let yaw = Math.PI, pitch = -0.12, mouseDown = false, fireT = 0, locked = false, rDrag = false, everLocked = false;
 const SPAWN = {
@@ -242,6 +244,7 @@ function hud() {
 let last = performance.now();
 function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000); last = t;
+  pollPad(); if (pad.connected) padMenus();
   if (state === 'play') { time += dt; update(dt); }
   else { time += dt * 0.3; if (state === 'menu') { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } }
   renderer.render(scene, camera);
@@ -260,8 +263,18 @@ function update(dt) {
   const fwd = new V3(-Math.sin(yaw), 0, -Math.cos(yaw)), right = new V3(Math.cos(yaw), 0, -Math.sin(yaw));
   if (keys.ArrowLeft) yaw += dt * 2.2; if (keys.ArrowRight) yaw -= dt * 2.2;
   const mv = new V3(); if (keys.KeyW) mv.add(fwd); if (keys.KeyS) mv.sub(fwd); if (keys.KeyD) mv.add(right); if (keys.KeyA) mv.sub(right);
-  const moving = mv.lengthSq() > 0; let spd = keys.ShiftLeft || keys.ShiftRight ? 7.2 : 4.8; if (P.pwT > 0 && P.pw.k === 'speed') spd *= 1.9;
-  if (moving) { mv.normalize().multiplyScalar(spd * dt); P.pos.add(mv); P.walk += dt * spd * 1.9; }
+  let padSprint = false;
+  if (pad.connected) {
+    mv.addScaledVector(fwd, -pad.ly).addScaledVector(right, pad.lx);
+    yaw -= pad.rx * 2.6 * dt; pitch = Math.max(-1.1, Math.min(0.9, pitch - pad.ry * 1.9 * dt));
+    if (pad.pressed[BTN.L3]) sprintToggle = !sprintToggle; if (Math.hypot(pad.lx, pad.ly) < 0.2) sprintToggle = false; padSprint = sprintToggle;
+    if (pad.pressed[BTN.SQUARE]) startReload(); if (pad.pressed[BTN.CIRCLE]) useInter(); if (pad.pressed[BTN.L1] || pad.pressed[BTN.R1]) usePower();
+    if (pad.pressed[BTN.TRIANGLE] && P.weapons.length > 1) switchWeapon(1 - P.cur);
+    if (pad.pressed[BTN.X] && P.pos.y <= 0.001) P.vy = 6.2; if (pad.pressed[BTN.OPTIONS]) { pauseGame(); return; }
+    if (pad.pressed[BTN.R2] && fireT <= 0) shoot();
+  }
+  const moving = mv.lengthSq() > 0.0001; let spd = keys.ShiftLeft || keys.ShiftRight || padSprint ? 7.2 : 4.8; if (P.pwT > 0 && P.pw.k === 'speed') spd *= 1.9;
+  if (moving) { if (mv.lengthSq() > 1) mv.normalize(); mv.multiplyScalar(spd * dt); P.pos.add(mv); P.walk += dt * spd * 1.9; }
   P.vy -= 18 * dt; P.pos.y = Math.max(0, P.pos.y + P.vy * dt); if (P.pos.y === 0) P.vy = 0;
   collide(P.pos, 0.4);
   pModel.position.copy(P.pos); pModel.rotation.y = yaw + Math.PI; animLimbs(pModel, P.walk, moving ? 0.6 : 0);
@@ -278,7 +291,7 @@ function update(dt) {
   else { cam.x = Math.max(-39.5, Math.min(39.5, cam.x)); cam.z = Math.max(-13.6, Math.min(29.5, cam.z)); }
   camera.position.copy(cam); camera.lookAt(cam.clone().add(d));
   /* sparo */
-  fireT -= dt; const w = P.weapons[P.cur]; if (mouseDown && w.auto && fireT <= 0) shoot();
+  fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire) && w.auto && fireT <= 0) shoot();
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
   else if (w.ammo === 0 && w.res > 0 && !(P.pwT > 0 && P.pw.k === 'ammo')) startReload();
   /* nemici */
@@ -346,6 +359,18 @@ function gameOver() {
 }
 function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
+
+/* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
+function padMenus() {
+  const vis = ['sel', 'pause', 'dead'].find(id => !$(id).hidden); if (!vis) return;
+  const btns = [...$(vis).querySelectorAll('button')]; if (!btns.length) return;
+  const step = (pad.pressed[BTN.RIGHT] || pad.pressed[BTN.DOWN]) ? 1 : (pad.pressed[BTN.LEFT] || pad.pressed[BTN.UP]) ? -1 : 0;
+  if (step) { menuIdx = (menuIdx + step + btns.length) % btns.length; btns[menuIdx].focus(); }
+  if (vis === 'pause' && pad.pressed[BTN.OPTIONS]) { resume(); return; }
+  if (pad.pressed[BTN.X]) { (btns[menuIdx] || btns[0]).click(); menuIdx = 0; }
+}
+addEventListener('gamepadconnected', () => { feedSafe('Controller collegato'); });
+function feedSafe(t) { if (state === 'play') feed(t); }
 
 /* schermata di scelta: ritratti in pixel art */
 ROSTER.forEach((c, i) => {
