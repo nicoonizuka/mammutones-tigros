@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import './style.css';
 import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
+import { CH as SPRITES } from './characters/sprites.js';
+const SPR = SPRITES.map(c => c.fn());
 import { buildHuman, buildMammutones, buildWeapon } from './characters/styled.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
@@ -330,7 +332,8 @@ function resetWorld() {
 function startGame(i) {
   charIdx = i; resetWorld(); newPlayer(i); state = 'play'; ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
-  const wc = $('who'); wc.width = 128; wc.height = 128; wc.style.imageRendering = 'auto'; const g = wc.getContext('2d'); g.clearRect(0, 0, 128, 128); if (FACES[i]) g.drawImage(FACES[i], 0, 0, 128, 128);
+  const wc = $('who'); const sp = SPR[ROSTER[i].sprite]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = sp.g[sp.top - 3 + y] && sp.g[sp.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
   lock(); banner('Sopravvivi al parcheggio', 'Il fucile è appeso al muro del Tigros'); audio();
 }
 function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
@@ -344,29 +347,10 @@ function gameOver() {
 function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
-/* schermata di scelta: ritratti 3D renderizzati una volta all'avvio */
-const FACES = [];
-function portraits() {
-  const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-  pr.outputEncoding = THREE.sRGBEncoding; pr.toneMapping = THREE.ACESFilmicToneMapping; pr.setPixelRatio(1);
-  const ps = new THREE.Scene(); ps.add(new THREE.HemisphereLight('#ffe2c8', '#4a3a40', 1.1));
-  const l = new THREE.DirectionalLight('#ffd8a8', 2.2); l.position.set(-1.5, 3, 3); ps.add(l);
-  const rimL = new THREE.DirectionalLight('#9ab8ff', 1.2); rimL.position.set(2, 2, -3); ps.add(rimL);
-  const pc = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
-  const shots = ROSTER.map((c, i) => {
-    const m = buildHuman(c.model); m.rotation.y = 0.35; ps.add(m); const h = m.userData.height;
-    pr.setSize(220, 300); pc.aspect = 220 / 300; pc.updateProjectionMatrix(); pc.position.set(0.5, 1.1, 4.0); pc.lookAt(0, 0.98, 0); pr.render(ps, pc);
-    const body = pr.domElement.toDataURL();
-    pr.setSize(128, 128); pc.aspect = 1; pc.updateProjectionMatrix(); pc.position.set(0.12, h * 0.93, 0.85); pc.lookAt(0, h * 0.91, 0); pr.render(ps, pc);
-    const face = new Image(); face.src = pr.domElement.toDataURL(); FACES[i] = face;
-    ps.remove(m); return body;
-  });
-  pr.dispose(); return shots;
-}
-const BODIES = portraits();
+/* schermata di scelta: ritratti in pixel art */
 ROSTER.forEach((c, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.className = 'pc'; b.style.setProperty('--c', c.c);
-  const img = document.createElement('img'); img.src = BODIES[i]; img.alt = ''; b.append(img);
+  const can = document.createElement('canvas'); SPR[c.sprite].draw(can, 3); b.append(can);
   b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>`); b.title = POWERS[c.power].d; b.onclick = () => startGame(i); $('pick').append(b);
 });
 if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;

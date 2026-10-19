@@ -36,6 +36,7 @@ src/
   audio.js              suoni sintetizzati (WebAudio)
   characters/
     roster.js           personaggi giocabili e poteri
+    sprites.js          ritratti in pixel art per la scelta del personaggio
     styled.js           modelli 3D modellati di amici, Mirko, Mammutones, Fab La Rue e armi
   render/
     engine.js           renderer, scena, luci, camera, collisioni
