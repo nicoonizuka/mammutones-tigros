@@ -26,7 +26,8 @@ plane(10, 2, new THREE.MeshStandardMaterial({ map: label('Buongusto', { font: 'i
 /* muri del negozio */
 wall(-4, -14.25, 16, 0.5); wall(26, -14.25, 28, 0.5);
 mesh(new THREE.BoxGeometry(8, 3, 0.5), brickM(3, 1), scene, [8, 5.5, -14.25]).castShadow = true;
-wall(14, -44.25, 52.5, 0.5); wall(40.25, -29, 0.5, 30.5);
+wall(11.775, -44.25, 48.05, 0.5); wall(39.85, -44.25, 1.3, 0.5); wall(40.25, -29, 0.5, 30.5);
+mesh(new THREE.BoxGeometry(3.4, 3.6, 0.5), brickM(1, 1), scene, [37.5, 5.2, -44.25]);
 const roof = mesh(new THREE.BoxGeometry(53, 0.4, 31), M('#6a625a', { roughness: 0.95 }), scene, [14, 7.2, -29.2]); roof.castShadow = true;
 /* insegna e ingresso */
 plane(12, 3, new THREE.MeshStandardMaterial({ map: label('TIGROS'), transparent: true, roughness: 0.5 }), scene, [8, 5.6, -13.98]);
@@ -43,7 +44,7 @@ const tiles = TEX.tiles(); tiles.wrapS = tiles.wrapT = THREE.RepeatWrapping; til
 const floor = plane(52, 30, texMat(tiles, { roughness: 0.55 }), scene, [14, 0.012, -29.25], [-Math.PI / 2, 0, 0]); floor.receiveShadow = true;
 plane(52, 30, M('#3a3a40', { roughness: 0.9 }), scene, [14, 6, -29.25], [Math.PI / 2, 0, 0]);
 /* pareti interne dipinte */
-plane(52, 6, paint, scene, [14, 3, -43.99]); plane(30, 6, paint, scene, [39.99, 3, -29.25], [0, -Math.PI / 2, 0]);
+plane(47.8, 6, paint, scene, [11.9, 3, -43.99]); plane(0.8, 6, paint, scene, [39.6, 3, -43.99]); plane(3.4, 2.6, paint, scene, [37.5, 4.7, -43.99]); plane(30, 6, paint, scene, [39.99, 3, -29.25], [0, -Math.PI / 2, 0]);
 plane(30, 6, paint, scene, [-11.99, 3, -29.25], [0, Math.PI / 2, 0]);
 for (const [x, w] of [[-4, 16], [26, 28]]) plane(w, 6, paint, scene, [x, 3, -14.51], [0, Math.PI, 0]);
 /* luci a soffitto */
@@ -145,9 +146,12 @@ const tape = ctex(64, 16, (g) => { for (let x = 0; x < 64; x += 16) { g.fillStyl
 mesh(rbox(3.4, 0.25, 0.08, 0.03), texMat(tape, { roughness: 0.6 }), scene, [37.6, 0.9, -23.8]);
 solid(37.6, -29, 3.6, 10.2);
 /* porte del magazzino (chiuse per ora) */
-export const WAREHOUSE_DOOR = { x: 37.5, z: -43.7 };
+export const WAREHOUSE_DOOR = { x: 37.5, z: -44.25 };
 const strip = M('#cfe3ec', { roughness: 0.2, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
-for (let k = 0; k < 10; k++) plane(0.32, 3.2, strip, scene, [36.1 + k * 0.31, 1.6, -43.95 + (k % 2) * 0.02]);
+export const wareDoor = new THREE.Group(); scene.add(wareDoor);
+for (let k = 0; k < 11; k++) plane(0.32, 3.4, strip, wareDoor, [35.95 + k * 0.31, 1.7, -44.25 + (k % 2) * 0.03]);
+mesh(rbox(3.4, 0.25, 0.1, 0.03), texMat(ctex(64, 16, (g) => { for (let x = 0; x < 64; x += 16) { g.fillStyle = '#f2c14e'; g.fillRect(x, 0, 8, 16); g.fillStyle = '#1a1a1a'; g.fillRect(x + 8, 0, 8, 16); } }, 3, 1)), wareDoor, [37.5, 1.1, -44.0]);
+export const wareDoorSolid = solid(37.5, -44.25, 3.4, 0.5, wareDoor.children[0], 7);
 mesh(rbox(3.6, 0.3, 0.3, 0.05), M('#5b636d'), scene, [37.5, 3.3, -43.9]);
 /* detriti e carrelli dentro */
 const deb = [M('#c8c0b0'), M('#8a837b'), M('#a87a4a'), M('#f4f0e6')];

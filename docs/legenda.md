@@ -12,8 +12,10 @@ L'idea di fondo: il gioco è **facile all'inizio** e diventa più difficile **ma
 | Fucile | appeso al muro del Tigros, parcheggio | 60 | 120 | 5 | 35 | 1 colpo ogni 0,6 s, niente raffica | 2,0 s |
 | Fucile a pompa | al muro del seminterrato | 30 × 8 pallini | 60 × 8 | 6 | 36 | 1 colpo ogni 0,85 s | 2,6 s |
 | Mitra | al muro dell'ortofrutta, negozio | 22 | 44 | 30 | 150 | raffica, 10 colpi al secondo | 2,0 s |
+| AK-47 | al muro del magazzino | 40 | 80 | 30 | 210 | raffica, circa 10 colpi al secondo | 2,2 s |
+| Desert Eagle | al muro della zona controllo | 2500 | 5000 | 1 | 0 | un solo colpo, poi va ripagato al muro | — |
 
-Le armi delle zone successive (cassa armi, armi al muro del seminterrato e del magazzino) saranno ancora più forti.
+La Desert Eagle ha un colpo solo che attraversa i nemici e abbatte chiunque tranne Loris; per ricaricarla torni al muro e paghi di nuovo.
 
 ### Comprare al muro
 
@@ -22,6 +24,8 @@ Le armi delle zone successive (cassa armi, armi al muro del seminterrato e del m
 | Fucile | 500 | 250 |
 | Mitra | 1200 | 600 |
 | Fucile a pompa | 1500 | 750 |
+| AK-47 | 3000 | 1500 |
+| Desert Eagle | 1500 | 800 per ogni colpo |
 
 Puoi portare **due armi**. Se ne hai già due, quella nuova prende il posto di quella che hai in mano.
 
@@ -52,6 +56,7 @@ Mammutones normale nel parcheggio:
 |---|---|---|---|---|---|
 | Mammutones | 100 | 2,1 m/s | 8 ogni 1,2 s | 50 | Parcheggio |
 | Mammutones Cornuto | 80 | 4,0 m/s | 9 ogni 1,0 s | 70 | Negozio |
+| Mammutones Furia | 45 | 6,3 m/s | 28 ogni 1,1 s | 90 | Magazzino: pochissima vita, velocissimo, colpisce fortissimo |
 | Ratto | 35 | 5,0 m/s | 4 ogni 0,8 s | 25 | Seminterrato (45% dei nemici lì sotto) |
 | Mammutones Grosso | 420 | 1,4 m/s | 18 ogni 1,5 s | 160 | Seminterrato |
 
@@ -67,7 +72,8 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 | Gazebo Buongusto | 750 | ×1,1 | ×1,1 | ×1,15 | solo Mammutones |
 | Negozio | 1250 | ×1,25 | ×1,2 | ×1,35 | 70% normali, 30% Cornuti |
 | Seminterrato | 2000 | ×1,45 | ×1,35 | ×1,6 | 55% normali, 30% Cornuti, 15% Grossi |
-| Magazzino | 3000 | ×1,7 | ×1,5 | ×1,9 | 45% normali, 35% Cornuti, 20% Grossi |
+| Magazzino | 3000, dopo la corrente | ×1,7 | ×1,5 | ×1,9 | 35% normali, 25% Cornuti, 15% Grossi, 25% Furia |
+| Zona controllo | 3 generatori da 1000 | ×1,9 | ×1,6 | ×2,2 | 30% normali, 25% Cornuti, 15% Grossi, 30% Furia |
 
 ## Ondate
 
@@ -104,10 +110,32 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 | Valore | |
 |---|---|
 | Dove | tana dei ratti, in fondo al seminterrato |
-| Quando | 12 secondi dopo che scendi la prima volta |
+| Quando | dall'ondata 8, quando sei nel seminterrato |
 | Vita | 3000, +4% per ogni ondata già passata |
 | Danno | 22 ogni 1,3 s |
 | Speciale | ogni 7 secondi chiama 3 ratti |
 | Ricompensa | 1500 monete |
 
 Quando lo sconfiggi i ratti scappano e puoi riaccendere la corrente dal quadro elettrico nel locale tecnico. La corrente servirà ad aprire il magazzino.
+
+## Boss finale: Loris Busato
+
+| Valore | |
+|---|---|
+| Dove | l'ufficio della zona controllo, in fondo al magazzino |
+| Come ci arrivi | apri il magazzino (3000, serve la corrente), poi accendi i 3 generatori (1000 l'uno) |
+| Quando | dall'ondata 15, con l'ufficio aperto |
+| Vita | 12000, +3% per ogni ondata già passata |
+| Danno | 32 ogni 1,2 s |
+| Speciale | ogni 9 secondi chiama 2 Mammutones Furia e 2 normali |
+| Ricompensa | 5000 monete e la vittoria |
+
+## Inventario
+
+Si apre con **Tab** o **I** (sul controller: tasto Share o touchpad).
+
+| Cosa | Costo | Effetto |
+|---|---|---|
+| Pacco di munizioni | 400 | ne porti fino a 3; con **H** (freccia su sul controller) riempie subito l'arma in mano |
+| Zaino livello 1 | 800 | munizioni di riserva massime ×1,5 |
+| Zaino livello 2 | 2000 | munizioni di riserva massime ×2 |

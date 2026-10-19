@@ -16,7 +16,7 @@
   <div class="cross" id="cross"></div>
   <div class="prompt" id="prompt" hidden></div>
   <div class="banner" id="banner" hidden></div>
-  <div class="bossbar" id="boss" hidden><span>Fab La Rue · Re dei ratti</span><div><i id="bossb"></i></div></div>
+  <div class="bossbar" id="boss" hidden><span id="bossn">Fab La Rue · Re dei ratti</span><div><i id="bossb"></i></div></div>
   <div class="bl">
     <div class="who"><canvas id="who" width="17" height="16"></canvas></div>
     <div class="bars">
@@ -34,10 +34,18 @@
     <h1>Mammutones <span>al Tigros</span></h1>
     <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
     <div class="pick" id="pick"></div>
-    <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span></div>
+    <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span><span><kbd>Tab</kbd>inventario</span><span><kbd>H</kbd>usa pacco munizioni</span></div>
     <div class="keys"><span><kbd>Controller</kbd>levetta sinistra muovi, destra mira, <kbd>R2</kbd> spara, <kbd>L1</kbd> potere, <kbd>□</kbd> ricarica, <kbd>○</kbd> compra / apri, <kbd>△</kbd> cambia arma, <kbd>X</kbd> salta, <kbd>L3</kbd> corri, <kbd>Options</kbd> pausa</span></div>
     <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
     <div class="warn" id="touchwarn" hidden>Per giocare servono tastiera e mouse: aprilo dal computer.</div>
+  </div>
+</div>
+<div class="over" id="inv" hidden>
+  <div class="box" style="align-items:flex-start">
+    <h1>Inventario</h1>
+    <p id="invinfo"></p>
+    <div id="invw" class="invw"></div>
+    <div class="btns"><button class="btn" id="buyPack" type="button"></button><button class="btn" id="usePack" type="button"></button><button class="btn" id="buyBag" type="button"></button><button class="btn ghost" id="closeInv" type="button">Chiudi<small>Tab, I o Esc</small></button></div>
   </div>
 </div>
 <div class="over" id="pause" hidden>
@@ -49,7 +57,7 @@
 </div>
 <div class="over" id="dead" hidden>
   <div class="box" style="align-items:flex-start">
-    <h1>Ti hanno <span>preso</span></h1>
+    <h1 id="deadtitle">Ti hanno <span>preso</span></h1>
     <p id="deadmsg"></p>
     <div class="stats" id="deadstats"></div>
     <div class="btns"><button class="btn" id="again" type="button">Rigioca</button><button class="btn ghost" id="change" type="button">Cambia personaggio</button></div>

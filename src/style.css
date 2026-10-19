@@ -74,3 +74,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .bossbar{position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(520px,70vw);text-align:center;font-family:var(--pix);font-size:16px;text-shadow:0 2px 0 #000}
 .bossbar div{margin-top:4px;height:16px;border:3px solid var(--o);border-radius:8px;background:#2a2f37;overflow:hidden}
 .bossbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#b23a5a,#e8577a)}
+.btn small{display:block;font-family:var(--ui);font-size:12px;font-weight:600;opacity:.8}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.invw{display:flex;flex-direction:column;gap:6px;width:100%}
+.iw{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#1b222c;border:2px solid var(--line);border-radius:10px;padding:8px 12px}
+.iw b{font-family:var(--pix);font-size:18px}.iw span{color:var(--muted);font-size:14px}

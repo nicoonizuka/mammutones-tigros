@@ -70,6 +70,20 @@ export function buildWeapon(id) {
     mesh(rbox(0.035, 0.1, 0.04, 0.01), dark, g, [0, -0.06, 0.05]);
     mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.16, 10), M('#111', { roughness: 0.3, metalness: 0.6 }), g, [0, 0.085, 0.18], [Math.PI / 2, 0, 0]);
     g.userData.muzzle = new V3(0, 0.04, 0.84);
+  } else if (id === 'ak47') {
+    const wood = M('#8a4a22', { roughness: 0.5 });
+    mesh(rbox(0.06, 0.09, 0.4, 0.02), dark, g, [0, 0.02, 0.1]);
+    mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.4, 10), dark, g, [0, 0.04, 0.48], [Math.PI / 2, 0, 0]);
+    mesh(rbox(0.055, 0.06, 0.22, 0.02), wood, g, [0, 0.0, 0.36]);
+    mesh(rbox(0.045, 0.22, 0.08, 0.02), dark, g, [0, -0.13, 0.17], [0.35, 0, 0]);
+    mesh(rbox(0.04, 0.1, 0.05, 0.012), wood, g, [0, -0.06, -0.02]);
+    mesh(rbox(0.055, 0.11, 0.28, 0.025), wood, g, [0, -0.03, -0.22], [0.12, 0, 0]);
+    g.userData.muzzle = new V3(0, 0.04, 0.69);
+  } else if (id === 'deagle') {
+    const chrome = M('#d8dce2', { roughness: 0.15, metalness: 0.95 });
+    mesh(rbox(0.05, 0.075, 0.27, 0.012), chrome, g, [0, 0.025, 0.08]);
+    mesh(rbox(0.045, 0.12, 0.06, 0.012), M('#2a2420', { roughness: 0.6 }), g, [0, -0.05, -0.01], [0.2, 0, 0]);
+    g.userData.muzzle = new V3(0, 0.03, 0.23);
   } else if (id === 'pompa') {
     const wood = M('#5a3a22', { roughness: 0.6 });
     mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.62, 12), dark, g, [0, 0.04, 0.32], [Math.PI / 2, 0, 0]);
@@ -348,6 +362,7 @@ const MAMM_LOOK = {
   base: { fur: ['#2a2220', '#3a2e29', '#1c1513', '#4a3a32'], mask: '#16100e', maskHi: '#2c201a', kerch: '#6e4226', scale: 1 },
   cornuto: { fur: ['#e9e4da', '#d2cabd', '#f8f5ee', '#c4bbac'], mask: '#7a2e1c', maskHi: '#a8462c', kerch: '#efe9de', scale: 0.96, horns: 1 },
   grosso: { fur: ['#4a5568', '#39424f', '#5d6a7e', '#2f3642'], mask: '#141114', maskHi: '#2e282e', kerch: '#2f3640', scale: 1.4, eyes: 1 },
+  furia: { fur: ['#3a1414', '#5a1e1a', '#2a0e0c', '#6a2a22'], mask: '#e8e0d0', maskHi: '#ffffff', kerch: '#8a1a1a', scale: 0.86, eyes: 1 },
 };
 const mammTemplates = {};
 function makeMammutones(type) {
@@ -462,5 +477,36 @@ export function buildFabBoss() {
   const body = mesh(new THREE.BoxGeometry(0.62, 1.5, 0.45), inv, G, [0, 0.78, 0]); body.name = 'hitBody';
   const head = mesh(new THREE.SphereGeometry(0.2, 8, 6), inv, G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
   G.userData.hit = { body, head }; G.userData.P.bells = []; G.userData.height = 1.75 * 1.35;
+  return G;
+}
+
+/* ---------- Loris Busato: il boss finale ---------- */
+export function buildLoris() {
+  const G = human({
+    h: 1.85, w: 1.15, chest: 1.08, arm: 1.15, skin: '#e8b896', top: '#1e1816', pants: '#26262e', shoe: '#3a2416', sole: '#2a1a10', sleeve: 'long', cuff: '#2a2220', hair: '#3a2618', brow: 1, browTilt: 0.2,
+    hairFn: (H) => {
+      const curl = [M('#3a2618', { roughness: 0.6 }), M('#4e3420', { roughness: 0.6 })]; hairCap(H, curl[0], 0.142, 0.46); backHair(H, curl[0]); seed = 77;
+      for (let i = 0; i < 80; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.15; const front = Math.sin(a) * rr; const y = 0.12 + Math.sqrt(Math.max(0, 0.024 - rr * rr)) * 0.5 + rnd() * 0.04 - (front > 0.08 ? 0.04 : 0); mesh(sph(0.034 + rnd() * 0.014, 8, 6), curl[i % 2], H, [Math.cos(a) * rr, y, front + 0.005]); }
+    },
+    extra: (G, T, H, P) => {
+      const black = M('#0d0e10', { roughness: 0.15, metalness: 0.4 });
+      for (const sd of [-1, 1]) { mesh(rbox(0.075, 0.05, 0.022, 0.012), black, H, [sd * 0.047, 0.012, 0.13]); mesh(rbox(0.014, 0.014, 0.13, 0.005), black, H, [sd * 0.124, 0.02, 0.07]); mesh(sph(0.012, 6, 4), new THREE.MeshBasicMaterial({ color: '#ff2a2a' }), H, [sd * 0.047, 0.012, 0.142]); }
+      mesh(rbox(0.035, 0.014, 0.014, 0.005), black, H, [0, 0.025, 0.137]);
+      /* mantello di pelliccia da capo dei Mammutones con i campanacci */
+      const fur = [M('#1e1816', { roughness: 1 }), M('#2e2422', { roughness: 1 }), M('#141010', { roughness: 1 })]; seed = 78;
+      for (let i = 0; i < 70; i++) { const a = rnd() * Math.PI * 2, y = 0.25 + rnd() * 0.35; mesh(sph(0.07 + rnd() * 0.04, 8, 6), fur[i % 3], T, [Math.cos(a) * 0.2, y, Math.sin(a) * 0.15 - 0.02], null, [1, 1.4, 1]); }
+      const bronze = M('#b88634', { roughness: 0.32, metalness: 0.85 });
+      for (let k = 0; k < 5; k++) mesh(bellGeo(0.8), bronze, T, [-0.16 + k * 0.08, 0.3 - Math.abs(k - 2) * 0.03, 0.17]);
+      for (let k = 0; k < 3; k++) mesh(bellGeo(1.3), bronze, T, [-0.12 + k * 0.12, 0.42, -0.2]);
+      const mk = new THREE.Group(); mk.position.copy(P.armL.userData.hand.position); mk.position.y -= 0.1; mk.position.z += 0.05; P.armL.add(mk);
+      mesh(sph(0.15, 18, 12), M('#16100e', { roughness: 0.38 }), mk, [0, 0, 0], null, [0.95, 1.22, 0.45]); mesh(new THREE.ConeGeometry(0.035, 0.12, 8), M('#2c201a'), mk, [0, 0, 0.08], [Math.PI * 0.42, 0, 0]);
+      for (const sd of [-1, 1]) mesh(sph(0.03, 8, 6), M('#000'), mk, [sd * 0.05, 0.04, 0.05], null, [1.2, 0.8, 0.5]);
+    },
+  });
+  G.scale.setScalar(1.5);
+  const inv = new THREE.MeshBasicMaterial({ visible: false });
+  const body = mesh(new THREE.BoxGeometry(0.7, 1.55, 0.5), inv, G, [0, 0.8, 0]); body.name = 'hitBody';
+  const head = mesh(new THREE.SphereGeometry(0.2, 8, 6), inv, G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
+  G.userData.hit = { body, head }; G.userData.P.bells = []; G.userData.height = 1.85 * 1.5;
   return G;
 }

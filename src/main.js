@@ -5,13 +5,14 @@ import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
 import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
-import { buildHuman, buildEnemy, buildWeapon, buildFabBoss } from './characters/styled.js';
+import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris } from './characters/styled.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
 import { gzBar, gzSolids } from './world/parking.js';
-import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR } from './world/store.js';
+import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
-import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE } from './config/balance.js';
+import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY } from './config/balance.js';
+import { WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoorSolid, OFFICE_DOOR, LORIS_SPOT, updateWare } from './world/warehouse.js';
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
 import { initFx, muzzleFlash, updateFx, shake } from './render/fx.js';
@@ -21,7 +22,10 @@ const V3 = THREE.Vector3;
 
 /* ===================== STATO ===================== */
 let P, charIdx = 0, pModel, state = 'menu', enemies = [], drops = [], tracers = [], sparks = [];
-let sprintToggle = false, menuIdx = 0, boss = null, bossT = -1, fabDead = false, power = false;
+let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead = false, power = false, packs = 0, bag = 0;
+const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
+const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
+const region = p => (inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
 let wave = 0, toSpawn = 0, spawnT = 0, breakT = 0, alive = 0, kills = 0, coins = ECONOMY.start, mirko = null, zone = 0, time = 0;
 const keys = {}; let yaw = Math.PI, pitch = -0.12, mouseDown = false, fireT = 0, locked = false, rDrag = false, everLocked = false;
 const SPAWN = {
@@ -48,7 +52,7 @@ function newPlayer(i) {
 function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; P.reloadT = 0; equip(); }
 
 /* ===================== NEMICI ===================== */
-function spawnPoints() { if (P && inBasement(P.pos)) return BASE_SPAWNS; let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); return pts; }
+function spawnPoints() { if (P && inBasement(P.pos)) return BASE_SPAWNS; let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); if (zone >= 4) pts = pts.concat(WARE_SPAWNS, WARE_SPAWNS, WARE_SPAWNS); return pts; }
 function spawnEnemy(forceType, at) {
   const pts = spawnPoints(); const p = at || pts[Math.floor(Math.random() * pts.length)];
   const down = P && inBasement(P.pos);
@@ -58,16 +62,19 @@ function spawnEnemy(forceType, at) {
   m.userData.hit.body.userData.enemy = e; m.userData.hit.head.userData.enemy = e; m.userData.hit.head.userData.head = true;
   enemies.push(e); alive++; if (type !== 'ratto') bell(); return e;
 }
-function spawnBoss() {
-  const m = buildFabBoss(); m.position.set(LAIR.x, 0, LAIR.z); scene.add(m);
-  const B = BOSS_FAB; const hp = Math.round(B.hp * (1 + 0.04 * wave));
-  boss = { m, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: 0.55, kick: 0, summon: B.summonEvery };
+function spawnBoss(kind = 'fab') {
+  const B = kind === 'loris' ? BOSS_LORIS : BOSS_FAB;
+  const m = kind === 'loris' ? buildLoris() : buildFabBoss();
+  const at = kind === 'loris' ? LORIS_SPOT : LAIR; m.position.set(at.x, 0, at.z); scene.add(m);
+  const hp = Math.round(B.hp * (1 + (kind === 'loris' ? 0.03 : 0.04) * wave));
+  boss = { m, kind, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: kind === 'loris' ? 0.65 : 0.55, kick: 0, summon: B.summonEvery };
   m.userData.hit.body.userData.enemy = boss; m.userData.hit.head.userData.enemy = boss; m.userData.hit.head.userData.head = true;
-  enemies.push(boss); alive++; $('boss').hidden = false; banner('Fab La Rue!', 'Il re dei ratti esce dalla tana'); tone(110, 0.8, 'sawtooth', 0.08, 60);
+  enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = kind === 'loris' ? 'Loris Busato · Capo dei Mammutones' : 'Fab La Rue · Re dei ratti';
+  banner(kind === 'loris' ? 'Loris Busato!' : 'Fab La Rue!', kind === 'loris' ? 'Il capo dei Mammutones esce dall\'ufficio' : 'Il re dei ratti esce dalla tana'); tone(110, 0.8, 'sawtooth', 0.08, 60);
 }
 function goDown() {
   despawnOther(true); P.pos.set(BASE_START.x, 0, BASE_START.z); yaw = BASE_START.yaw;
-  if (!fabDead && !boss && bossT < 0) { bossT = BOSS_FAB.delay; banner('Seminterrato', 'Senti dei ratti nel buio… riaccendi la corrente'); }
+  if (!fabDead) banner('Seminterrato', wave >= BOSS_FAB.wave ? 'Senti dei ratti nel buio…' : 'Fab La Rue uscirà all\'ondata ' + BOSS_FAB.wave);
 }
 function goUp() { despawnOther(false); P.pos.set(37.6, 0, -22.2); yaw = 0; }
 function despawnOther(down) {
@@ -139,7 +146,9 @@ function damageEnemy(e, d, head) {
   }
 }
 function bossDown() {
-  fabDead = true; boss = null; $('boss').hidden = true; banner('Fab La Rue è sconfitto!', 'I ratti scappano: riaccendi la corrente nel locale tecnico');
+  const kind = boss && boss.kind; boss = null; $('boss').hidden = true;
+  if (kind === 'loris') { lorisDead = true; setTimeout(victory, 2500); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo'); return; }
+  fabDead = true; banner('Fab La Rue è sconfitto!', 'I ratti scappano: riaccendi la corrente nel locale tecnico');
   for (const e of enemies) if (!e.dead && e.type === 'ratto') { e.dead = 1; e.deadT = 0; alive--; }
 }
 function startReload() { const w = P.weapons[P.cur]; if (P.reloadT > 0 || w.ammo >= w.mag || w.res <= 0) return; P.reloadT = w.reload; reloadSound(); }
@@ -155,7 +164,7 @@ function pickup(d) {
   const it = d.it;
   if (it.k === 'cura') P.hp = Math.min(100, P.hp + it.heal);
   else if (it.k === 'armatura') P.ar = Math.min(DROPS.maxArmor, P.ar + it.armor);
-  else P.weapons.forEach(w => { w.res = Math.min(WEAPONS[w.id].res, w.res + w.mag * 2); });
+  else P.weapons.forEach(w => { w.res = Math.min(maxRes(w), w.res + w.mag * 2); });
   feed('+ ' + DROPLOOK[it.k].n); pickS();
 }
 
@@ -177,7 +186,7 @@ const INTER = [
     cost: () => P.weapons.some(w => w.id === wb.id) ? wb.ammoCost : wb.cost,
     act: () => {
       const have = P.weapons.findIndex(w => w.id === wb.id);
-      if (have >= 0) { const w = P.weapons[have]; w.res = WEAPONS[wb.id].res; w.ammo = w.mag; feed('Munizioni piene'); return; }
+      if (have >= 0) { const w = P.weapons[have]; w.res = maxRes(w); w.ammo = w.mag; feed(WEAPONS[wb.id].noPack ? 'Colpo ricaricato' : 'Munizioni piene'); return; }
       if (P.weapons.length < 2) { P.weapons.push(newWeapon(wb.id)); switchWeapon(1); } else { P.weapons[P.cur] = newWeapon(wb.id); equip(); }
       feed('Hai comprato: ' + WEAPONS[wb.id].n);
     },
@@ -188,7 +197,12 @@ const INTER = [
   { x: ESCALATOR.x, z: -22.8, r: 2.6, label: () => zone >= 3 ? '<b>E</b> Scendi nel seminterrato' : `<b>E</b> Apri il seminterrato · <b>${ZONES[3].cost}</b>`, cost: () => zone >= 3 ? 0 : ZONES[3].cost, free: () => zone >= 3, act: () => { if (zone < 3) openZone(3); goDown(); } },
   { x: BASE_ESCALATOR.x, z: BASE_ESCALATOR.z - 1.5, r: 2.6, label: () => '<b>E</b> Torna su nel negozio', cost: () => 0, free: () => true, act: goUp },
   { x: PANEL.x + 1.4, z: PANEL.z, r: 2.4, label: () => power ? 'La corrente è accesa' : fabDead ? '<b>E</b> Riaccendi la corrente' : 'Il quadro non risponde: prima sconfiggi Fab La Rue', cost: () => 0, free: () => fabDead && !power, act: () => { power = true; panelLed.material.color.set('#3aff6a'); banner('Corrente riaccesa!', 'Il magazzino si aprirà nella prossima versione'); } },
-  { x: WAREHOUSE_DOOR.x, z: -42, r: 2.6, label: () => power ? 'Il magazzino arriva nella prossima versione' : 'Il magazzino è chiuso: serve la corrente del seminterrato', cost: () => 0 },
+  { x: WAREHOUSE_DOOR.x, z: -42.6, r: 2.6, label: () => zone >= 4 ? null : power ? `<b>E</b> Apri il magazzino · <b>${ZONES[4].cost}</b>` : 'Il magazzino è chiuso: serve la corrente del seminterrato', cost: () => (power && zone < 4 ? ZONES[4].cost : 0), act: () => openZone(4) },
+  ...GENERATORS.map(g => ({ x: g.x, z: g.z + 1.3, r: 2.4, label: () => g.on ? `Generatore ${g.n} acceso` : `<b>E</b> Accendi il generatore ${g.n} · <b>${GENERATOR_COST}</b>`, cost: () => (g.on ? 0 : GENERATOR_COST), act: () => {
+    g.on = true; g.led.material.color.set('#3aff6a'); const n = GENERATORS.filter(x => x.on).length;
+    if (n < 3) banner('Generatore ' + g.n + ' acceso', n + ' su 3'); else openZone(5);
+  } })),
+  { x: OFFICE_DOOR.x - 1.5, z: OFFICE_DOOR.z + 1.2, r: 2.4, label: () => zone >= 5 ? null : `Ufficio chiuso: accendi i 3 generatori (${GENERATORS.filter(x => x.on).length}/3)`, cost: () => 0 },
   { x: 34, z: 17.2, r: 2.6, label: () => 'La rampa per il seminterrato è bloccata, per ora', cost: () => 0 },
 ];
 function openZone(i) {
@@ -196,6 +210,8 @@ function openZone(i) {
   if (i === 1) { scene.remove(gzBar); gzSolids.forEach(s => (s.off = 1)); banner('Gazebo aperto', 'I Mammutones ora escono anche da qui'); }
   if (i === 2) { scene.remove(storeDoor); doorSolid.off = 1; banner('Negozio aperto', 'Attenti ai Mammutones Cornuti tra le corsie'); }
   if (i === 3) feed('Seminterrato aperto');
+  if (i === 4) { scene.remove(wareDoor); wareDoorSolid.off = 1; banner('Magazzino aperto', 'Attento ai Mammutones Furia: veloci e cattivi'); }
+  if (i === 5) { scene.remove(officeDoor); officeDoorSolid.off = 1; banner('Zona controllo aperta', 'Loris Busato arriverà all\'ondata ' + BOSS_LORIS.wave); }
 }
 let nearI = null;
 function useInter() {
@@ -229,8 +245,11 @@ function updMirko(dt) {
 const cv = renderer.domElement;
 function lock() { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (_) {} }
 addEventListener('keydown', e => {
-  keys[e.code] = true; if (state !== 'play') return;
-  if (e.code === 'KeyR') startReload(); if (e.code === 'KeyE') useInter(); if (e.code === 'KeyQ') usePower();
+  keys[e.code] = true;
+  if (state === 'inv') { if (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape') { e.preventDefault(); closeInv(); } return; }
+  if (state !== 'play') return;
+  if (e.code === 'KeyR') startReload(); if (e.code === 'KeyE') useInter(); if (e.code === 'KeyQ') usePower(); if (e.code === 'KeyH') usePack();
+  if (e.code === 'Tab' || e.code === 'KeyI') { e.preventDefault(); openInv(); return; }
   if (e.code === 'Digit1') switchWeapon(0); if (e.code === 'Digit2') switchWeapon(1);
   if (e.code === 'KeyP') pauseGame();
   if (e.code === 'Space' && P.pos.y <= 0.001) P.vy = 6.2;
@@ -256,6 +275,24 @@ function usePower() {
 }
 
 /* ===================== HUD ===================== */
+/* ===================== INVENTARIO ===================== */
+function openInv() { if (state !== 'play') return; state = 'inv'; try { document.exitPointerLock(); } catch (_) {} mouseDown = false; renderInv(); $('inv').hidden = false; }
+function closeInv() { $('inv').hidden = true; state = 'play'; last = performance.now(); lock(); }
+function usePack() { if (!packs) { feed('Non hai pacchi di munizioni'); denied(); return; } const w = P.weapons[P.cur]; if (WEAPONS[w.id].noPack) { feed('La Desert Eagle si ricarica solo al muro'); return; } packs--; w.res = maxRes(w); w.ammo = w.mag; feed('Pacco usato: munizioni piene'); pickS(); }
+function renderInv() {
+  const nb = INVENTORY.bags[bag];
+  $('invw').innerHTML = P.weapons.map(w => `<div class="iw"><b>${w.n}</b><span>${w.ammo} nel caricatore · ${w.res} / ${maxRes(w)} di riserva</span></div>`).join('');
+  $('invinfo').textContent = `Monete ${coins} · Pacchi di munizioni ${packs}/${INVENTORY.packMax} · Zaino livello ${bag} (munizioni massime ×${bagMult()})`;
+  $('buyPack').innerHTML = `Compra pacco munizioni<small>${INVENTORY.packCost} monete · ne porti fino a ${INVENTORY.packMax}</small>`; $('buyPack').disabled = packs >= INVENTORY.packMax;
+  $('usePack').innerHTML = `Usa un pacco<small>riempie l'arma in mano · tasto H o ↑ sul controller</small>`; $('usePack').disabled = !packs;
+  $('buyBag').innerHTML = nb ? `Zaino più grande<small>${nb.cost} monete · munizioni massime ×${nb.mult}</small>` : 'Zaino al massimo<small>non puoi ingrandirlo ancora</small>'; $('buyBag').disabled = !nb;
+}
+function invBuy(kind) {
+  if (kind === 'pack') { if (packs >= INVENTORY.packMax) return; if (coins < INVENTORY.packCost) { denied(); return; } coins -= INVENTORY.packCost; packs++; buy(); }
+  if (kind === 'bag') { const nb = INVENTORY.bags[bag]; if (!nb) return; if (coins < nb.cost) { denied(); return; } coins -= nb.cost; bag++; buy(); }
+  if (kind === 'use') usePack();
+  renderInv();
+}
 function feed(t) { const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); setTimeout(() => d.remove(), 2600); while ($('feed').children.length > 5) $('feed').lastChild.remove(); }
 let bannerT = 0; function banner(t, s) { $('banner').innerHTML = t + (s ? `<small>${s}</small>` : ''); $('banner').hidden = false; bannerT = 2.6; }
 function hud() {
@@ -263,7 +300,7 @@ function hud() {
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
   const w = P.weapons[P.cur]; const inf = P.pwT > 0 && P.pw.k === 'ammo'; $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
   $('ammo').innerHTML = inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
-  $('slots').innerHTML = P.weapons.map((x, i) => `<span class="${i === P.cur ? 'on' : ''}">${i + 1} ${x.n}</span>`).join('');
+  $('slots').innerHTML = P.weapons.map((x, i) => `<span class="${i === P.cur ? 'on' : ''}">${i + 1} ${x.n}</span>`).join('') + `<span>Pacchi ${packs} · H</span>`;
   const on = P.pwT > 0 || (P.pw.k === 'call' && mirko); $('pw').classList.toggle('on', !!on);
   $('pwb').style.width = (on ? (P.pw.k === 'call' && mirko ? mirko.t : P.pwT) / P.pw.dur * 100 : (1 - P.pwCd / P.pw.cd) * 100) + '%';
   const lbl = nearI && nearI.label(); $('prompt').hidden = !lbl; if (lbl) $('prompt').innerHTML = lbl;
@@ -297,6 +334,7 @@ function update(dt) {
     mv.addScaledVector(fwd, -pad.ly).addScaledVector(right, pad.lx);
     yaw -= pad.rx * 2.6 * dt; pitch = Math.max(-1.1, Math.min(0.9, pitch - pad.ry * 1.9 * dt));
     if (pad.pressed[BTN.L3]) sprintToggle = !sprintToggle; if (Math.hypot(pad.lx, pad.ly) < 0.2) sprintToggle = false; padSprint = sprintToggle;
+    if (pad.pressed[BTN.UP]) usePack(); if (pad.pressed[8] || pad.pressed[16] || pad.pressed[17]) { openInv(); return; }
     if (pad.pressed[BTN.SQUARE]) startReload(); if (pad.pressed[BTN.CIRCLE]) useInter(); if (pad.pressed[BTN.L1] || pad.pressed[BTN.R1]) usePower();
     if (pad.pressed[BTN.TRIANGLE] && P.weapons.length > 1) switchWeapon(1 - P.cur);
     if (pad.pressed[BTN.X] && P.pos.y <= 0.001) P.vy = 6.2; if (pad.pressed[BTN.OPTIONS]) { pauseGame(); return; }
@@ -317,6 +355,7 @@ function update(dt) {
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
   if (inBasement(P.pos)) { cam.x = Math.max(BASE.x1 + 0.4, Math.min(BASE.x2 - 0.4, cam.x)); cam.z = Math.max(BASE.z1 + 0.4, Math.min(BASE.z2 - 0.4, cam.z)); cam.y = Math.min(BASE.ceil - 0.3, cam.y); }
+  else if (inWare(P.pos)) { cam.x = Math.max(WARE.x1 + 0.4, Math.min(WARE.x2 - 0.4, cam.x)); cam.z = Math.max(WARE.z1 + 0.4, cam.z); cam.y = Math.min(WARE.ceil - 0.4, cam.y); }
   else if (inStore(P.pos)) { cam.x = Math.max(STORE.x1 + 0.4, Math.min(STORE.x2 - 0.4, cam.x)); cam.z = Math.max(STORE.z1 + 0.4, Math.min(STORE.z2 - 0.3, cam.z)); cam.y = Math.min(STORE.ceil - 0.4, cam.y); }
   else { cam.x = Math.max(-39.5, Math.min(39.5, cam.x)); cam.z = Math.max(-13.6, Math.min(29.5, cam.z)); }
   camera.position.copy(cam); camera.lookAt(cam.clone().add(d)); updateFx(dt, camera, P.pos, inBasement(P.pos));
@@ -330,8 +369,12 @@ function update(dt) {
     if (e.dead) { e.deadT += dt; m.rotation.x = Math.min(1.5, e.deadT * 4); m.position.y = -Math.max(0, e.deadT - 1.2) * 0.8; if (e.deadT > 2.6) { scene.remove(m); e.gone = 1; } continue; }
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
     EP.bells.forEach((b, k) => { b.rotation.x = Math.sin(time * 6 + k + e.walk) * 0.3; });
-    let goal = P.pos; const eIn = inStore(m.position);
-    if (!inBasement(P.pos) && eIn !== inStore(P.pos)) goal = new V3(Math.max(DOOR.x - 2.6, Math.min(DOOR.x + 2.6, m.position.x)), 0, eIn ? DOOR.z + 1.4 : DOOR.z - 1.4);
+    let goal = P.pos; const er = region(m.position), pr = region(P.pos);
+    if (pr !== 'base' && er !== pr) {
+      const viaShop = er === 'out' || (er === 'store' && pr === 'out');
+      if (viaShop) goal = new V3(Math.max(DOOR.x - 2.6, Math.min(DOOR.x + 2.6, m.position.x)), 0, er === 'out' ? DOOR.z - 1.4 : DOOR.z + 1.4);
+      else goal = new V3(Math.max(36.3, Math.min(38.7, m.position.x)), 0, er === 'ware' ? WAREHOUSE_DOOR.z + 1.4 : WAREHOUSE_DOOR.z - 1.4);
+    }
     const to = goal.clone().sub(m.position); to.y = 0; const dist = goal === P.pos ? to.length() : 99; m.rotation.y = Math.atan2(to.x, to.z);
     if (dist > 1.15 * m.scale.x) {
       to.normalize();
@@ -353,8 +396,11 @@ function update(dt) {
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
   updMirko(dt); updateStore(time); updateBasement(time, power);
-  if (bossT > 0) { bossT -= dt; if (bossT <= 0) spawnBoss(); }
-  if (boss && !boss.dead) { boss.summon -= dt; if (boss.summon <= 0) { boss.summon = BOSS_FAB.summonEvery; for (let k = 0; k < BOSS_FAB.summonCount; k++) spawnEnemy('ratto', [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3]); feed('Fab chiama i ratti!'); }
+  updateWare(time);
+  if (!boss && !fabDead && zone >= 3 && wave >= BOSS_FAB.wave && inBasement(P.pos)) spawnBoss('fab');
+  if (!boss && !lorisDead && zone >= 5 && wave >= BOSS_LORIS.wave && !inBasement(P.pos)) spawnBoss('loris');
+  if (boss && !boss.dead) { boss.summon -= dt; if (boss.summon <= 0) { const L = boss.kind === 'loris'; boss.summon = L ? BOSS_LORIS.summonEvery : BOSS_FAB.summonEvery;
+      const list = L ? ['furia', 'furia', 'base', 'base'] : ['ratto', 'ratto', 'ratto']; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(L ? 'Loris chiama i Mammutones!' : 'Fab chiama i ratti!'); }
     $('bossb').style.width = Math.max(0, boss.hp / boss.max * 100) + '%'; }
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
@@ -373,7 +419,9 @@ function resetWorld() {
   enemies.forEach(e => scene.remove(e.m)); drops.forEach(d => scene.remove(d.m)); enemies = []; drops = [];
   alive = 0; toSpawn = 0; wave = 0; kills = 0; coins = ECONOMY.start; breakT = 3;
   if (mirko) { scene.remove(mirko.m); mirko = null; }
-  if (boss) { scene.remove(boss.m); } boss = null; bossT = -1; fabDead = false; power = false; panelLed.material.color.set('#ff3030'); $('boss').hidden = true;
+  if (boss) { scene.remove(boss.m); } boss = null; fabDead = false; lorisDead = false; power = false; packs = 0; bag = 0; panelLed.material.color.set('#ff3030'); $('boss').hidden = true;
+  GENERATORS.forEach(g => { g.on = false; g.led.material.color.set('#ff3030'); });
+  if (zone >= 4) { scene.add(wareDoor); wareDoorSolid.off = 0; } if (zone >= 5) { scene.add(officeDoor); officeDoorSolid.off = 0; }
   if (zone >= 1) { scene.add(gzBar); gzSolids.forEach(s => (s.off = 0)); } if (zone >= 2) { scene.add(storeDoor); doorSolid.off = 0; } zone = 0; shieldMesh.visible = false;
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
@@ -390,16 +438,24 @@ function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause')
 function resume() { state = 'play'; $('pause').hidden = true; last = performance.now(); lock(); }
 function gameOver() {
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
-  $('hud').hidden = true; $('dead').hidden = false;
+  $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = 'Ti hanno <span>preso</span>';
   $('deadmsg').textContent = `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
   $('deadstats').innerHTML = `<div>${wave}<small>Ondata raggiunta</small></div><div>${kills}<small>Mammutones abbattuti</small></div>`;
 }
+function victory() {
+  if (state !== 'play') return; state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
+  $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = 'Il Tigros è <span>salvo</span>';
+  $('deadmsg').textContent = `${ROSTER[charIdx].name} ha sconfitto Loris Busato e la sua armata di Mammutones. Stasera si torna ai tavolini del Buongusto.`;
+  $('deadstats').innerHTML = `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>`;
+}
 function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
+$('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
 /* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
 function padMenus() {
-  const vis = ['sel', 'pause', 'dead'].find(id => !$(id).hidden); if (!vis) return;
+  const vis = ['sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
+  if (vis === 'inv' && (pad.pressed[BTN.CIRCLE] || pad.pressed[8] || pad.pressed[17])) { closeInv(); return; }
   const btns = [...$(vis).querySelectorAll('button')]; if (!btns.length) return;
   const step = (pad.pressed[BTN.RIGHT] || pad.pressed[BTN.DOWN]) ? 1 : (pad.pressed[BTN.LEFT] || pad.pressed[BTN.UP]) ? -1 : 0;
   if (step) { menuIdx = (menuIdx + step + btns.length) % btns.length; btns[menuIdx].focus(); }
@@ -419,8 +475,8 @@ if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, ...GENERATORS.map(g => g.led)]);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { spawnBoss: () => spawnBoss(), get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
+window.__game = { spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
 requestAnimationFrame(loop);

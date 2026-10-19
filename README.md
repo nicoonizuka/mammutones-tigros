@@ -34,6 +34,8 @@ Poi apri l'indirizzo che compare nel terminale, di solito http://localhost:5173.
 | Shift | correre |
 | Spazio | saltare |
 | P o Esc | pausa |
+| Tab o I | inventario |
+| H | usa un pacco di munizioni |
 
 Col controller (PlayStation, Xbox): levetta sinistra muovi, destra mira, R2 spara, L1/R1 potere, Quadrato ricarica, Cerchio compra/apri, Triangolo cambia arma, X salta, L3 corri, Options pausa. Nei menu: frecce per scegliere, X per confermare.
 
@@ -60,6 +62,7 @@ src/
     parking.js          zona 1 (parcheggio) e zona 2 (gazebo Buongusto)
     store.js            edificio del Tigros e zona 3 (negozio)
     basement.js         zona 4 (seminterrato e tana di Fab La Rue)
+    warehouse.js        zone 5 e 6 (magazzino, generatori, ufficio di Loris)
 ```
 
 ## Personaggi e poteri
@@ -81,8 +84,8 @@ src/
 2. Gazebo Buongusto (fatto, si apre a 750)
 3. Negozio (fatto, si apre a 1250 dopo il gazebo): corsie, ortofrutta, sushi, casse, mitra al muro
 4. Seminterrato (fatto, 2000 dalla scala mobile): ratti, boss Fab La Rue, fucile a pompa, corrente da riaccendere
-5. Magazzino: celle frigo, scaffali, muletto
-6. Zona controllo: boss finale Loris Busato
+5. Magazzino (fatto, 3000 dopo la corrente): scaffali alti, celle frigo, muletto, Mammutones Furia, AK-47
+6. Zona controllo (fatto, 3 generatori): Desert Eagle e boss finale Loris Busato all'ondata 15
 
 ## Bilanciamento
 

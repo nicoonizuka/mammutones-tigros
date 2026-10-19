@@ -38,5 +38,5 @@ export function bakeStatic(root,exclude){
   for(const {mat,cast,recv,geos} of groups.values()){const merged=mergeBufferGeometries(geos,false);geos.forEach(g=>g.dispose());if(!merged)continue;
     const m=new THREE.Mesh(merged,mat);m.castShadow=cast;m.receiveShadow=recv;m.matrixAutoUpdate=false;root.add(m);}
   return groups.size;}
-export const BOUNDS={x1:-40,x2:40,z1:-44,z2:30};
+export const BOUNDS={x1:-40,x2:40,z1:-70,z2:30};
 
