@@ -3,7 +3,15 @@
 Sparatutto 3D a blocchi in stile COD Zombies, ambientato al Tigros di Busto Arsizio.
 Loris Busato e la sua armata di Mammutones hanno invaso il supermercato: scegli uno dei sei amici e sopravvivi.
 
-## Avvio in locale
+## Giocare sul tuo PC
+
+In Windows: doppio clic su **Gioca.bat**. La prima volta installa quello che serve, poi apre il gioco a schermo intero in Chrome o Edge.
+
+Da terminale: `npm install` la prima volta, poi `npm run gioca`. Serve Node.js (versione LTS).
+
+Durante la partita premi **F** per entrare o uscire dallo schermo intero.
+
+## Avvio per sviluppare
 
 ```bash
 npm install
@@ -51,6 +59,7 @@ src/
     kit.js              materiali, forme e texture comuni
     parking.js          zona 1 (parcheggio) e zona 2 (gazebo Buongusto)
     store.js            edificio del Tigros e zona 3 (negozio)
+    basement.js         zona 4 (seminterrato e tana di Fab La Rue)
 ```
 
 ## Personaggi e poteri
@@ -71,7 +80,7 @@ src/
 1. Parcheggio (fatto)
 2. Gazebo Buongusto (fatto, si apre a 750)
 3. Negozio (fatto, si apre a 1250 dopo il gazebo): corsie, ortofrutta, sushi, casse, mitra al muro
-4. Seminterrato: parcheggio sotterraneo, ratti e boss Fab La Rue, riaccendere la corrente
+4. Seminterrato (fatto, 2000 dalla scala mobile): ratti, boss Fab La Rue, fucile a pompa, corrente da riaccendere
 5. Magazzino: celle frigo, scaffali, muletto
 6. Zona controllo: boss finale Loris Busato
 

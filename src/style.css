@@ -71,3 +71,6 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .stats{display:flex;gap:22px;flex-wrap:wrap;font-family:var(--pix);font-size:24px}
 .stats small{display:block;font-family:var(--ui);font-size:12px;color:var(--muted);font-weight:600}
 .warn{font-size:13px;color:#ffb37a}
+.bossbar{position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(520px,70vw);text-align:center;font-family:var(--pix);font-size:16px;text-shadow:0 2px 0 #000}
+.bossbar div{margin-top:4px;height:16px;border:3px solid var(--o);border-radius:8px;background:#2a2f37;overflow:hidden}
+.bossbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#b23a5a,#e8577a)}

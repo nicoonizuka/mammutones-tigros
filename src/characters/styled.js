@@ -70,6 +70,14 @@ export function buildWeapon(id) {
     mesh(rbox(0.035, 0.1, 0.04, 0.01), dark, g, [0, -0.06, 0.05]);
     mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.16, 10), M('#111', { roughness: 0.3, metalness: 0.6 }), g, [0, 0.085, 0.18], [Math.PI / 2, 0, 0]);
     g.userData.muzzle = new V3(0, 0.04, 0.84);
+  } else if (id === 'pompa') {
+    const wood = M('#5a3a22', { roughness: 0.6 });
+    mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.62, 12), dark, g, [0, 0.04, 0.32], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.5, 10), dark, g, [0, -0.005, 0.3], [Math.PI / 2, 0, 0]);
+    mesh(rbox(0.06, 0.06, 0.18, 0.02), wood, g, [0, -0.005, 0.34]);
+    mesh(rbox(0.06, 0.09, 0.2, 0.02), dark, g, [0, 0.02, 0.0]);
+    mesh(rbox(0.06, 0.12, 0.3, 0.025), wood, g, [0, -0.03, -0.24], [0.15, 0, 0]);
+    g.userData.muzzle = new V3(0, 0.04, 0.64);
   } else if (id === 'mitra') {
     mesh(rbox(0.06, 0.09, 0.42, 0.02), dark, g, [0, 0.02, 0.12]);
     mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.22, 10), dark, g, [0, 0.03, 0.42], [Math.PI / 2, 0, 0]);
@@ -415,5 +423,44 @@ export function buildMammutones(type) {
   G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; if (o.name === 'bell') P.bells.push(o); });
   G.userData.P = P; G.userData.height = 1.95 * MAMM_LOOK[type].scale;
   G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  return G;
+}
+
+/* ---------- ratto (nemico del seminterrato) ---------- */
+let ratTemplate = null;
+function makeRat() {
+  const G = new THREE.Group(); const fur = M('#6e6462', { roughness: 1 }), furD = M('#4e4644', { roughness: 1 }), pink = M('#e89aa8', { roughness: 0.5 });
+  const T = new THREE.Group(); T.name = 'torso'; T.position.y = 0.32; G.add(T);
+  mesh(sph(0.26, 14, 10), fur, T, [0, 0, -0.05], null, [0.9, 0.8, 1.35]);
+  const H = new THREE.Group(); H.name = 'head'; H.position.set(0, 0.06, 0.32); T.add(H);
+  mesh(sph(0.15, 12, 10), fur, H, [0, 0, 0], null, [0.9, 0.85, 1.1]);
+  mesh(new THREE.ConeGeometry(0.1, 0.22, 10), fur, H, [0, -0.02, 0.17], [Math.PI / 2, 0, 0]);
+  mesh(sph(0.03, 8, 6), M('#d86a80', { roughness: 0.3 }), H, [0, -0.02, 0.28]);
+  for (const sd of [-1, 1]) { mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.015, 14), pink, H, [sd * 0.1, 0.12, -0.02], [Math.PI / 2, 0, sd * 0.4]); mesh(sph(0.022, 8, 6), new THREE.MeshBasicMaterial({ color: '#ff3a3a' }), H, [sd * 0.06, 0.04, 0.11]); }
+  const curve = new THREE.CatmullRomCurve3([new V3(0, 0, -0.38), new V3(0, -0.05, -0.6), new V3(0.1, -0.2, -0.8), new V3(0.2, -0.28, -0.95)]);
+  mesh(new THREE.TubeGeometry(curve, 12, 0.025, 6, false), pink, T);
+  for (const [n, x, z] of [['legL', -0.14, 0.15], ['legR', 0.14, 0.15], ['armL', -0.14, -0.22], ['armR', 0.14, -0.22]]) {
+    const L = new THREE.Group(); L.name = n; L.position.set(x, 0.22, z); G.add(L); mesh(new THREE.CapsuleGeometry(0.045, 0.14, 3, 6), furD, L, [0, -0.11, 0]);
+  }
+  const inv = new THREE.MeshBasicMaterial({ visible: false });
+  const body = mesh(new THREE.BoxGeometry(0.6, 0.6, 0.95), inv, G, [0, 0.32, 0.05]); body.name = 'hitBody';
+  const head = mesh(new THREE.SphereGeometry(0.2, 8, 6), inv, H, [0, 0, 0.05]); head.name = 'hitHead';
+  finish(G); body.castShadow = head.castShadow = false; return G;
+}
+export function buildEnemy(type) {
+  if (type !== 'ratto') return buildMammutones(type);
+  if (!ratTemplate) ratTemplate = makeRat();
+  const G = ratTemplate.clone(true); const P = { bells: [] };
+  G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; });
+  G.userData.P = P; G.userData.height = 0.6; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  return G;
+}
+/* Fab La Rue come boss: piu' grande, con le hitbox */
+export function buildFabBoss() {
+  const G = buildFab(); G.scale.setScalar(1.35);
+  const inv = new THREE.MeshBasicMaterial({ visible: false });
+  const body = mesh(new THREE.BoxGeometry(0.62, 1.5, 0.45), inv, G, [0, 0.78, 0]); body.name = 'hitBody';
+  const head = mesh(new THREE.SphereGeometry(0.2, 8, 6), inv, G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
+  G.userData.hit = { body, head }; G.userData.P.bells = []; G.userData.height = 1.75 * 1.35;
   return G;
 }

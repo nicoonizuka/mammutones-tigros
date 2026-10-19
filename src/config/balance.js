@@ -9,6 +9,7 @@
 export const WEAPONS = {
   pistola: { n: 'Pistola', dmg: 25, rate: 0.24, mag: 8, res: 64, spread: 0.012, auto: false, pel: 1, reload: 1.3, sound: 0 },
   fucile:  { n: 'Fucile',  dmg: 60, rate: 0.6,  mag: 5, res: 35, spread: 0.004, auto: false, pel: 1, reload: 2.0, sound: 2 },
+  pompa:   { n: 'Fucile a pompa', dmg: 30, rate: 0.85, mag: 6, res: 36, spread: 0.075, auto: false, pel: 8, reload: 2.6, sound: 1 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
@@ -17,6 +18,7 @@ export const HEADSHOT = 2;
 export const WALL_BUYS = [
   { id: 'fucile', cost: 500, ammoCost: 250, x: -4.5, z: -13.9, rot: 0, zone: 'parcheggio' },
   { id: 'mitra', cost: 1200, ammoCost: 600, x: -11.9, z: -31, rot: Math.PI / 2, zone: 'negozio' },
+  { id: 'pompa', cost: 1500, ammoCost: 750, x: 60.0, z: -8, rot: Math.PI / 2, zone: 'seminterrato' },
 ];
 
 /* ---------- NEMICI ----------
@@ -25,6 +27,7 @@ export const WALL_BUYS = [
 export const ENEMIES = {
   base:    { n: 'Mammutones',         hp: 100, spd: 2.1, dmg: 8,  atkCd: 1.2, reward: 50,  radius: 0.45 },
   cornuto: { n: 'Mammutones Cornuto', hp: 80,  spd: 4.0, dmg: 9,  atkCd: 1.0, reward: 70,  radius: 0.45 },
+  ratto:   { n: 'Ratto',              hp: 35,  spd: 5.0, dmg: 4,  atkCd: 0.8, reward: 25,  radius: 0.3 },
   grosso:  { n: 'Mammutones Grosso',  hp: 420, spd: 1.4, dmg: 18, atkCd: 1.5, reward: 160, radius: 0.62 },
 };
 
@@ -65,7 +68,7 @@ export const DROPS = {
 };
 
 export function enemyStats(type, wave, zoneIdx) {
-  const E = ENEMIES[type], Z = ZONES[zoneIdx];
+  const E = ENEMIES[type], Z = ZONES[Math.min(zoneIdx, ZONES.length - 1)];
   return {
     hp: Math.round(E.hp * (1 + WAVES.hpGrowth * (wave - 1)) * Z.hp),
     dmg: E.dmg * Z.dmg,
@@ -78,3 +81,8 @@ export function pickType(zoneIdx) {
   for (const k in t) { r -= t[k]; if (r <= 0) return k; }
   return 'base';
 }
+
+/* ---------- BOSS ---------- */
+export const BOSS_FAB = { n: 'Fab La Rue', hp: 3000, spd: 2.5, dmg: 22, atkCd: 1.3, reward: 1500, summonEvery: 7, summonCount: 3, delay: 12 };
+/* nel seminterrato una parte dei nemici sono ratti */
+export const RAT_SHARE = 0.45;

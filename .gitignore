@@ -3,3 +3,4 @@ dist/
 .DS_Store
 # foto vere degli amici: restano fuori dal repository pubblico
 reference/
+.browser-profile/

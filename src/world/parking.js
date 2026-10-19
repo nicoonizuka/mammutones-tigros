@@ -34,7 +34,7 @@ for (let x = -36; x <= 36; x += 8) { const z = 32 + rnd() * 3; mesh(new THREE.Cy
 
 /* macchine */
 const CARC = ['#c94a42', '#3f7fc0', '#bfc4ca', '#34343e', '#6f9fc4', '#d9ad3c', '#5b6370', '#6a8a5a'];
-function makeCar(x, z, rot, col, burnt) {
+export function makeCar(x, z, rot, col, burnt) {
   const G = new THREE.Group();
   const body = M(burnt ? '#2e2826' : col, { roughness: burnt ? 0.9 : 0.35, metalness: burnt ? 0 : 0.4 });
   const glass = M(burnt ? '#141110' : '#203040', { roughness: 0.1, metalness: 0.5 }), tire = M('#121214', { roughness: 0.9 }), rim = M('#9aa3ad', { roughness: 0.3, metalness: 0.8 });

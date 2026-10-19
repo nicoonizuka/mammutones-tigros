@@ -10,6 +10,7 @@ L'idea di fondo: il gioco è **facile all'inizio** e diventa più difficile **ma
 |---|---|---|---|---|---|---|---|
 | Pistola | arma di partenza | 25 | 50 | 8 | 64 | 1 colpo ogni 0,24 s | 1,3 s |
 | Fucile | appeso al muro del Tigros, parcheggio | 60 | 120 | 5 | 35 | 1 colpo ogni 0,6 s, niente raffica | 2,0 s |
+| Fucile a pompa | al muro del seminterrato | 30 × 8 pallini | 60 × 8 | 6 | 36 | 1 colpo ogni 0,85 s | 2,6 s |
 | Mitra | al muro dell'ortofrutta, negozio | 22 | 44 | 30 | 150 | raffica, 10 colpi al secondo | 2,0 s |
 
 Le armi delle zone successive (cassa armi, armi al muro del seminterrato e del magazzino) saranno ancora più forti.
@@ -20,6 +21,7 @@ Le armi delle zone successive (cassa armi, armi al muro del seminterrato e del m
 |---|---|---|
 | Fucile | 500 | 250 |
 | Mitra | 1200 | 600 |
+| Fucile a pompa | 1500 | 750 |
 
 Puoi portare **due armi**. Se ne hai già due, quella nuova prende il posto di quella che hai in mano.
 
@@ -50,6 +52,7 @@ Mammutones normale nel parcheggio:
 |---|---|---|---|---|---|
 | Mammutones | 100 | 2,1 m/s | 8 ogni 1,2 s | 50 | Parcheggio |
 | Mammutones Cornuto | 80 | 4,0 m/s | 9 ogni 1,0 s | 70 | Negozio |
+| Ratto | 35 | 5,0 m/s | 4 ogni 0,8 s | 25 | Seminterrato (45% dei nemici lì sotto) |
 | Mammutones Grosso | 420 | 1,4 m/s | 18 ogni 1,5 s | 160 | Seminterrato |
 
 A ogni ondata la vita sale dell'**8%** e la velocità del **2%**, fino a un massimo di +30%.
@@ -95,3 +98,16 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 | Ponta | Chiama Mirko: spara al suo fianco, 30 di danno per colpo | 12 s | 35 s |
 | Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due, consumando un solo proiettile | 8 s | 24 s |
 | Corti | Monete doppie: tutte le monete guadagnate valgono il doppio | 12 s | 30 s |
+
+## Boss: Fab La Rue
+
+| Valore | |
+|---|---|
+| Dove | tana dei ratti, in fondo al seminterrato |
+| Quando | 12 secondi dopo che scendi la prima volta |
+| Vita | 3000, +4% per ogni ondata già passata |
+| Danno | 22 ogni 1,3 s |
+| Speciale | ogni 7 secondi chiama 3 ratti |
+| Ricompensa | 1500 monete |
+
+Quando lo sconfiggi i ratti scappano e puoi riaccendere la corrente dal quadro elettrico nel locale tecnico. La corrente servirà ad aprire il magazzino.
