@@ -35,8 +35,7 @@ src/
   style.css             stile di HUD e schermate
   audio.js              suoni sintetizzati (WebAudio)
   characters/
-    sprites.js          disegni pixel art dei 6 amici e di Mirko
-    data.js             capelli, poteri, sprite pronti
+    roster.js           personaggi giocabili e poteri
     styled.js           modelli 3D modellati di amici, Mirko, Mammutones, Fab La Rue e armi
   render/
     engine.js           renderer, scena, luci, camera, collisioni
@@ -57,6 +56,8 @@ src/
 | Slime | Scudo: immune ai colpi per qualche secondo |
 | Leonardo Ceriotti | Munizioni infinite |
 | Ponta | Chiama Mirko, che combatte al suo fianco |
+| Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due |
+| Corti | Monete doppie per qualche secondo |
 
 ## Percorso previsto
 

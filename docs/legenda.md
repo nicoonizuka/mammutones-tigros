@@ -91,3 +91,5 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 | Slime | Scudo: non subisce danni | 6 s | 24 s |
 | Leonardo Ceriotti | Munizioni infinite | 8 s | 24 s |
 | Ponta | Chiama Mirko: spara al suo fianco, 30 di danno per colpo | 12 s | 35 s |
+| Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due, consumando un solo proiettile | 8 s | 24 s |
+| Corti | Monete doppie: tutte le monete guadagnate valgono il doppio | 12 s | 30 s |

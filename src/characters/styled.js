@@ -245,6 +245,43 @@ const CONFIGS = [
       },
     });
   },
+  /* 7 Jacopo: ricci scuri sulla fronte, occhi verdi, maglietta nera col logo */
+  () => human({
+    h: 1.74, w: 1.02, skin: '#e2ab86', top: '#1b1c20', pants: '#2b303d', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'short', hair: '#1f1612', eye: '#5f9a6a', brow: 1,
+    hairFn: (H) => {
+      const curl = [M('#1f1612', { roughness: 0.6 }), M('#2c201a', { roughness: 0.6 })];
+      hairCap(H, curl[0], 0.141, 0.44); backHair(H, curl[0]); seed = 31;
+      for (let i = 0; i < 60; i++) {
+        const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.12; const front = Math.sin(a) * rr;
+        const y = 0.125 + Math.sqrt(Math.max(0, 0.016 - rr * rr)) * 0.45 + rnd() * 0.02 - (front > 0.06 ? 0.035 : 0);
+        mesh(sph(0.03 + rnd() * 0.012, 8, 6), curl[i % 2], H, [Math.cos(a) * rr, y, front + 0.01]);
+      }
+      for (let i = 0; i < 8; i++) mesh(sph(0.03, 8, 6), curl[i % 2], H, [-0.085 + i * 0.024, 0.075 + Math.sin(i * 1.7) * 0.01, 0.112]);
+    },
+    extra: (G, T, H) => {
+      mesh(rbox(0.03, 0.02, 0.006, 0.003), M('#c0303a'), T, [0.07, 0.43, 0.115]); mesh(rbox(0.012, 0.02, 0.007, 0.002), M('#f2f2f2'), T, [0.07, 0.43, 0.116]);
+      mesh(rbox(0.06, 0.02, 0.02, 0.008), M('#2c201a', { roughness: 0.95 }), H, [0, -0.118, 0.098]);
+    },
+  }),
+  /* 8 Corti: alto e grosso, felpa grigia col cappuccio, pantaloni della tuta, anelli */
+  () => human({
+    h: 1.88, w: 1.45, chest: 1.12, arm: 1.3, skin: '#dca07c', top: '#b9bcc2', pants: '#4a4d55', shoe: '#2a2a2e', sole: '#f0f0f0', sleeve: 'long', cuff: '#a9acb2', hem: '#a9acb2', hair: '#3a2618',
+    hairFn: (H, mat) => {
+      hairCap(H, M('#2a1c12', { roughness: 0.9 }), 0.139, 0.36);
+      const tip = M('#8a6440', { roughness: 0.7 }); fringe(H, mat, 8, 41, 0.45); clumps(H, mat, 10, 42, 0.07);
+      seed = 43; for (let i = 0; i < 8; i++) mesh(sph(0.03, 8, 6), tip, H, [-0.08 + i * 0.023, 0.13 + rnd() * 0.02, 0.06 + rnd() * 0.03], null, [1, 0.6, 1.4]);
+    },
+    extra: (G, T, H, P) => {
+      const hood = M('#a9acb2', { roughness: 0.95 });
+      mesh(sph(0.2, 16, 12), M('#b9bcc2', { roughness: 0.85 }), T, [0, 0.24, 0.08], null, [1.15, 0.95, 0.75]);
+      mesh(rbox(0.22, 0.1, 0.03, 0.02), hood, T, [0, 0.2, 0.2], [-0.15, 0, 0]);
+      mesh(new THREE.TorusGeometry(0.11, 0.045, 8, 20, Math.PI * 1.3), hood, T, [0, 0.58, -0.04], [Math.PI / 2 + 0.3, 0, Math.PI * 0.85]);
+      for (const sd of [-1, 1]) limb([sd * 0.03, 0.55, 0.12], [sd * 0.035, 0.42, 0.15], 0.006, M('#e8e8e8'), T);
+      mesh(rbox(0.035, 0.012, 0.004, 0.003), M('#ffffff'), T, [0.09, 0.45, 0.14], [0, 0, 0.3]);
+      const silver = M('#c8ccd2', { roughness: 0.2, metalness: 0.9 }); for (const A of [P.armL, P.armR]) mesh(new THREE.TorusGeometry(0.014, 0.004, 6, 12), silver, A, [A.userData.hand.position.x, A.userData.hand.position.y - 0.04, A.userData.hand.position.z + 0.01], [Math.PI / 2, 0, 0]);
+      for (const L of [P.legL, P.legR]) for (let k = 0; k < 3; k++) mesh(rbox(0.012, 0.09, 0.03, 0.004), M('#1d1e22'), L, [0, -0.5 - k * 0.11, 0.072]);
+    },
+  }),
 ];
 export function buildHuman(i) { return CONFIGS[i](); }
 

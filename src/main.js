@@ -1,7 +1,7 @@
 /* Mammutones al Tigros - avvio, giocatore, nemici, armi, HUD e loop */
 import * as THREE from 'three';
 import './style.css';
-import { CH, POWERS, SPR } from './characters/data.js';
+import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
 import { buildHuman, buildMammutones, buildWeapon } from './characters/styled.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS } from './render/engine.js';
@@ -33,8 +33,8 @@ function equip() {
 }
 function newPlayer(i) {
   if (pModel) scene.remove(pModel);
-  pModel = buildHuman(i); scene.add(pModel);
-  P = { pos: new V3(4, 0, -2), vy: 0, hp: 100, ar: 0, weapons: [newWeapon('pistola')], cur: 0, reloadT: 0, pw: POWERS[i], pwT: 0, pwCd: 0, hurtT: 0, walk: 0 };
+  pModel = buildHuman(ROSTER[i].model); scene.add(pModel);
+  P = { pos: new V3(4, 0, -2), vy: 0, hp: 100, ar: 0, weapons: [newWeapon('pistola')], cur: 0, reloadT: 0, pw: POWERS[ROSTER[i].power], pwT: 0, pwCd: 0, hurtT: 0, walk: 0 };
   yaw = 0; pitch = -0.1; equip();
 }
 function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; P.reloadT = 0; equip(); }
@@ -81,10 +81,11 @@ function shoot() {
     for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length(); if (d < bd && to.normalize().dot(pf) > 0.55) { bd = d; assist = e.m.userData.hit.body.getWorldPosition(new V3()); } }
   }
   let anyHit = false; const targets = hitTargets();
-  for (let k = 0; k < w.pel; k++) {
+  const dbl = P.pwT > 0 && P.pw.k === 'double'; const pellets = w.pel * (dbl ? 2 : 1);
+  for (let k = 0; k < pellets; k++) {
     let dir;
-    if (assist) dir = assist.clone().sub(camera.position).normalize();
-    else { dir = camDir.clone(); dir.x += (Math.random() - 0.5) * w.spread * 2; dir.y += (Math.random() - 0.5) * w.spread * 2; dir.z += (Math.random() - 0.5) * w.spread * 2; dir.normalize(); }
+    if (assist) { dir = assist.clone().sub(camera.position).normalize(); if (k > 0) { dir.x += (Math.random() - 0.5) * 0.02; dir.y += (Math.random() - 0.5) * 0.02; dir.normalize(); } }
+    else { const sp = w.spread + (dbl && k > 0 ? 0.012 : 0); dir = camDir.clone(); dir.x += (Math.random() - 0.5) * sp * 2; dir.y += (Math.random() - 0.5) * sp * 2; dir.z += (Math.random() - 0.5) * sp * 2; dir.normalize(); }
     ray.set(camera.position, dir); ray.far = 90;
     const hits = ray.intersectObjects(targets, false);
     let end = camera.position.clone().add(dir.clone().multiplyScalar(60)); const hitE = new Set();
@@ -101,10 +102,11 @@ function shoot() {
 }
 function tracer(a, b) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const l = new THREE.Line(g, tracerM); scene.add(l); tracers.push({ l, t: 0.06 }); }
 function spark(p, blood) { const m = new THREE.Mesh(sparkG, blood ? bloodM : sparkM); m.position.copy(p); scene.add(m); sparks.push({ m, t: 0.18 }); }
+function earn(n) { coins += n * (P && P.pwT > 0 && P.pw.k === 'coins' ? 2 : 1); }
 function damageEnemy(e, d, head) {
-  e.hp -= d; coins += ECONOMY.hit; e.kick = 0.18;
+  e.hp -= d; earn(ECONOMY.hit); e.kick = 0.18;
   if (e.hp <= 0 && !e.dead) {
-    e.dead = 1; e.deadT = 0; coins += e.reward + (head ? ECONOMY.headKill : 0); kills++; alive--;
+    e.dead = 1; e.deadT = 0; earn(e.reward + (head ? ECONOMY.headKill : 0)); kills++; alive--;
     if (head) feed('Colpo in testa +' + (e.reward + ECONOMY.headKill));
     if (Math.random() < DROPS.chance) dropItem(e.m.position.clone());
   }
@@ -168,7 +170,7 @@ function useInter() {
 /* ===================== MIRKO ===================== */
 function callMirko() {
   if (mirko) scene.remove(mirko.m);
-  const m = buildHuman(6); m.position.copy(P.pos).add(new V3(1.5, 0, 1.5)); scene.add(m);
+  const m = buildHuman(MIRKO_MODEL); m.position.copy(P.pos).add(new V3(1.5, 0, 1.5)); scene.add(m);
   const A = m.userData.P.armR; const g = buildWeapon('pistola'); g.position.copy(A.userData.hand.position); g.rotation.x = Math.PI / 2; A.add(g);
   mirko = { m, t: P.pw.dur, fire: 0, walk: 0 }; banner('Arriva Mirko!', 'Spara ai Mammutones per qualche secondo');
 }
@@ -320,9 +322,8 @@ function resetWorld() {
 }
 function startGame(i) {
   charIdx = i; resetWorld(); newPlayer(i); state = 'play'; ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
-  $('pname').textContent = CH[i].name; $('pwn').textContent = POWERS[i].n;
-  const wc = $('who'); const s = SPR[i]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
-  for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = s.g[s.top - 3 + y] && s.g[s.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
+  $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
+  const wc = $('who'); wc.width = 128; wc.height = 128; wc.style.imageRendering = 'auto'; const g = wc.getContext('2d'); g.clearRect(0, 0, 128, 128); if (FACES[i]) g.drawImage(FACES[i], 0, 0, 128, 128);
   lock(); banner('Sopravvivi al parcheggio', 'Il fucile è appeso al muro del Tigros'); audio();
 }
 function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
@@ -330,17 +331,36 @@ function resume() { state = 'play'; $('pause').hidden = true; last = performance
 function gameOver() {
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
   $('hud').hidden = true; $('dead').hidden = false;
-  $('deadmsg').textContent = `${CH[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
+  $('deadmsg').textContent = `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
   $('deadstats').innerHTML = `<div>${wave}<small>Ondata raggiunta</small></div><div>${kills}<small>Mammutones abbattuti</small></div>`;
 }
 function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
-/* schermata di scelta */
-CH.slice(0, 6).forEach((c, i) => {
+/* schermata di scelta: ritratti 3D renderizzati una volta all'avvio */
+const FACES = [];
+function portraits() {
+  const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  pr.outputEncoding = THREE.sRGBEncoding; pr.toneMapping = THREE.ACESFilmicToneMapping; pr.setPixelRatio(1);
+  const ps = new THREE.Scene(); ps.add(new THREE.HemisphereLight('#ffe2c8', '#4a3a40', 1.1));
+  const l = new THREE.DirectionalLight('#ffd8a8', 2.2); l.position.set(-1.5, 3, 3); ps.add(l);
+  const rimL = new THREE.DirectionalLight('#9ab8ff', 1.2); rimL.position.set(2, 2, -3); ps.add(rimL);
+  const pc = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
+  const shots = ROSTER.map((c, i) => {
+    const m = buildHuman(c.model); m.rotation.y = 0.35; ps.add(m); const h = m.userData.height;
+    pr.setSize(220, 300); pc.aspect = 220 / 300; pc.updateProjectionMatrix(); pc.position.set(0.4, h * 0.6, h * 1.55); pc.lookAt(0, h * 0.52, 0); pr.render(ps, pc);
+    const body = pr.domElement.toDataURL();
+    pr.setSize(128, 128); pc.aspect = 1; pc.updateProjectionMatrix(); pc.position.set(0.12, h * 0.93, 0.85); pc.lookAt(0, h * 0.91, 0); pr.render(ps, pc);
+    const face = new Image(); face.src = pr.domElement.toDataURL(); FACES[i] = face;
+    ps.remove(m); return body;
+  });
+  pr.dispose(); return shots;
+}
+const BODIES = portraits();
+ROSTER.forEach((c, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.className = 'pc'; b.style.setProperty('--c', c.c);
-  const can = document.createElement('canvas'); SPR[i].draw(can, 3); b.append(can);
-  b.insertAdjacentHTML('beforeend', `<b>${c.name.split(' ')[0]}</b><span>${POWERS[i].n}</span>`); b.onclick = () => startGame(i); $('pick').append(b);
+  const img = document.createElement('img'); img.src = BODIES[i]; img.alt = ''; b.append(img);
+  b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>`); b.title = POWERS[c.power].d; b.onclick = () => startGame(i); $('pick').append(b);
 });
 if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
