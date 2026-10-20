@@ -296,8 +296,12 @@ cart(G, 15, -6, 0.6, true, true); S(15, -6, 1.15, 1.15, null, 0, 0.75); cart(G, 
 let pointLights = null;
 export function applyWorldLook(w) {
   if (!pointLights) { pointLights = []; scene.traverse(o => { if (o.isPointLight && !o.userData.fx) pointLights.push(o); }); }
-  for (const l of pointLights) l.visible = w === 2 ? !!l.userData.hs : w === 3 ? !!l.userData.tr : !l.userData.hs && !l.userData.tr;
-  if (w === 3) {
+  for (const l of pointLights) l.visible = w === 4 ? !!l.userData.bu : w === 2 ? !!l.userData.hs : w === 3 ? !!l.userData.tr : !l.userData.hs && !l.userData.tr && !l.userData.bu;
+  if (w === 4) {
+    sun.position.set(1000 - 35, 62, 40); sun.target.position.set(1000, 0, 0); sun.color.set('#fff0d8'); sun.intensity = 2.3;
+    hemi.color.set('#dfe6f0'); hemi.groundColor.set('#5a5048'); hemi.intensity = 0.95;
+    scene.fog.color.set('#c4c0b4'); scene.fog.near = 60; scene.fog.far = 165; scene.background.set('#c4c0b4');
+  } else if (w === 3) {
     sun.position.set(400 - 20, 50, 34); sun.target.position.set(400, 0, -10); sun.color.set('#e8f0d8'); sun.intensity = 1.9;
     hemi.color.set('#cfd8c8'); hemi.groundColor.set('#3a3a34'); hemi.intensity = 0.9;
     scene.fog.color.set('#8a9484'); scene.fog.near = 38; scene.fog.far = 115; scene.background.set('#8a9484');

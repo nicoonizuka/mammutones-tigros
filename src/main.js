@@ -12,7 +12,8 @@ import { hemi } from './render/engine.js';
 import { makeSky, setSky, updateSky } from './render/sky.js';
 import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
-import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
+import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic, sun } from './render/engine.js';
+import { BX, BUB, MACIN, CHIESA, inMac, inChiesa, buRegion, BU_LOW, BU_START, updateBU, buAnim } from './world/busto.js';
 import { gzBar, gzSolids } from './world/parking.js';
 import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
@@ -35,7 +36,7 @@ let world = 1, pickWorld = 1, capoDead = false, rings = [];
 let wellDead = false, fabioDead = false, pikaFled = false, pikaDead = false, lorisScene = false, casaT = 0, hostile = [], hasKey = false, trPower = false, trKey = null;
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
-const region = p => (world === 3 ? trRegion(p) : world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
+const region = p => (world === 4 ? buRegion(p) : world === 3 ? trRegion(p) : world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
 const zoneIdx = () => (world === 3 ? TR_ZONE0 + zone : world === 2 ? HS_ZONE0 + zone : zone);
 let wave = 0, toSpawn = 0, spawnT = 0, breakT = 0, alive = 0, kills = 0, coins = ECONOMY.start, mirko = null, zone = 0, time = 0;
 const keys = {}; let yaw = Math.PI, pitch = -0.12, mouseDown = false, fireT = 0, locked = false, rDrag = false, everLocked = false;
@@ -78,8 +79,9 @@ function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; 
 
 /* ===================== NEMICI ===================== */
 /* in sandbox la difficolta' dipende da dove sei, in avventura dalla zona piu' avanzata aperta */
-function diffZone() { if (world === 3) return TR_ZONE0 + (P ? TR_ORDER[trRegion(P.pos)] : zone); if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
+function diffZone() { if (world === 4) return TR_ZONE0 + 3; if (world === 3) return TR_ZONE0 + (P ? TR_ORDER[trRegion(P.pos)] : zone); if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
 function spawnPoints() {
+  if (world === 4) return [[BX, 0]];
   if (world === 3) return TR_SPAWNS[P ? trRegion(P.pos) : 'trpark'];
   if (world === 2) { if (mode === 'sandbox' && P) return inHSStore(P.pos) ? HS_SPAWNS_IN : HS_SPAWNS_OUT; return zone >= 1 ? HS_SPAWNS_OUT.concat(HS_SPAWNS_IN) : HS_SPAWNS_OUT; }
   if (mode === 'sandbox' && P && !inBasement(P.pos)) { const r = region(P.pos); return r === 'ware' ? WARE_SPAWNS : r === 'store' ? STORE_SPAWNS : SPAWN.parcheggio.concat(SPAWN.gazebo); } if (P && inBasement(P.pos)) return BASE_SPAWNS; let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); if (zone >= 4) pts = pts.concat(WARE_SPAWNS, WARE_SPAWNS, WARE_SPAWNS); return pts; }
@@ -126,7 +128,7 @@ function despawnOther(down) {
 function groundY(pos) { let g = 0; for (const s of solids) { if (s.off || !s.top) continue; if (pos.x > s.x1 - 0.15 && pos.x < s.x2 + 0.15 && pos.z > s.z1 - 0.15 && pos.z < s.z2 + 0.15 && pos.y >= s.top - 0.35 && s.top > g) g = s.top; } return g; }
 const onGround = () => P.vy === 0 && P.pos.y <= groundY(P.pos) + 0.02;
 function collide(pos, r, extra, y) {
-  const Bd = world === 3 ? (inCasa(pos) ? CASA : TRB) : world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
+  const Bd = world === 4 ? BUB : world === 3 ? (inCasa(pos) ? CASA : TRB) : world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
   pos.x = Math.max(Bd.x1 + r, Math.min(Bd.x2 - r, pos.x)); pos.z = Math.max(Bd.z1 + r, Math.min(Bd.z2 - r, pos.z));
   for (const s of solids) {
     if (s.off) continue; if (y !== undefined && s.top && y >= s.top - 0.1) continue;
@@ -719,7 +721,7 @@ function invBuy(kind) {
 function feed(t) { const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); setTimeout(() => d.remove(), 2600); while ($('feed').children.length > 5) $('feed').lastChild.remove(); }
 let bannerT = 0; const bannerFn = (t, s) => banner(t, s); const feedFn = t => feed(t); function banner(t, s) { $('banner').innerHTML = t + (s ? `<small>${s}</small>` : ''); $('banner').hidden = false; bannerT = 2.6; }
 function hud() {
-  $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[world === 3 ? diffZone() : zoneIdx()].n + '</small>'; $('coins').textContent = coins;
+  $('wave').innerHTML = world === 4 ? '–<small>Centro di Busto · anteprima della mappa</small>' : wave + '<small>Ondata · ' + ZONES[world === 3 ? diffZone() : zoneIdx()].n + '</small>'; $('coins').textContent = coins;
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
   const w = P.weapons[P.cur]; const inf = infAmmo(); $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
   $('ammo').innerHTML = w.melee ? '⚔' : inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
@@ -738,13 +740,14 @@ function loop(t) {
   pollPad(); if (pad.connected) padMenus(dt);
   if (touchUI) { const show = state === 'play'; if (touchUI.hidden === show) touchUI.hidden = !show; if (!show) { touch.fire = false; touch.mx = touch.my = 0; } }
   if (state === 'play') { time += dt; update(dt); }
-  else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
+  else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 4) { camera.position.set(BX + Math.sin(time * 0.2) * 30, 15, 36 + Math.cos(time * 0.2) * 6); camera.lookAt(BX, 5, 2); } else if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   updateSky(sky, camera, dt); renderer.render(scene, camera);
   if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
 }
 function update(dt) {
-  /* ondate */
-  if (toSpawn > 0) { spawnT -= dt; if (spawnT <= 0 && alive < WAVES.maxAlive(wave)) { spawnEnemy(); toSpawn--; spawnT = WAVES.spawnEvery(wave); } }
+  /* ondate (il centro di Busto per ora e' solo da esplorare) */
+  if (world === 4) { sun.position.set(P.pos.x - 35, 62, P.pos.z + 40); sun.target.position.set(P.pos.x, 0, P.pos.z); sun.target.updateMatrixWorld(); }
+  else if (toSpawn > 0) { spawnT -= dt; if (spawnT <= 0 && alive < WAVES.maxAlive(wave)) { spawnEnemy(); toSpawn--; spawnT = WAVES.spawnEvery(wave); } }
   else if (alive <= 0) {
     if (breakT <= 0) { breakT = WAVES.break; if (wave > 0) { const b = ECONOMY.waveClear * Math.min(wave, 10); coins += b; banner('Ondata ' + wave + ' superata', '+' + b + ' monete · prossima ondata tra poco'); } }
     breakT -= dt; if (breakT <= 0) startWave();
@@ -788,7 +791,11 @@ function update(dt) {
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
-  if (world === 3) { const A = inCasa(P.pos) ? CASA : inGarage(P.pos) ? GARAGE : null;
+  if (world === 4) { const A = inMac(P.pos) ? MACIN : inChiesa(P.pos) ? CHIESA : null;
+    if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
+    else { cam.x = Math.max(BUB.x1 + 0.6, Math.min(BUB.x2 - 0.6, cam.x)); cam.z = Math.max(BUB.z1 + 0.6, Math.min(BUB.z2 - 0.6, cam.z));
+      for (const L of BU_LOW) if (P.pos.x > L.x1 && P.pos.x < L.x2 && P.pos.z > L.z1 && P.pos.z < L.z2) cam.y = Math.min(L.ceil - 0.3, cam.y); } }
+  else if (world === 3) { const A = inCasa(P.pos) ? CASA : inGarage(P.pos) ? GARAGE : null;
     if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
     else { cam.x = Math.max(TRB.x1 + 0.6, Math.min(TRB.x2 - 0.6, cam.x)); cam.z = Math.max(-29.4, Math.min(TRB.z2 - 0.6, cam.z));
       if (cam.z > 6.4 && P.pos.z > 6) cam.y = Math.min(3.9, cam.y); else if (cam.z < -19.8 && cam.x < TX + 4.5) cam.y = Math.min(4.15, cam.y); } }
@@ -850,7 +857,8 @@ function update(dt) {
   updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt); updHostile(dt); updBox(dt); updBottle(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
-  if (world === 3) { updateTR(time); updTR(dt); }
+  if (world === 4) updateBU(time, dt);
+  else if (world === 3) { updateTR(time); updTR(dt); }
   else if (world === 2) { updateHS(time);
     if (mode === 'sandbox') { if (!inHSStore(P.pos)) capoDead = false; if (!boss && !capoDead && inHSStore(P.pos)) spawnBoss('capo'); }
     else if (!boss && !capoDead && zone >= 1 && wave >= BOSS_CAPO.wave) spawnBoss('capo');
@@ -935,11 +943,13 @@ function startGame(i) {
   fullscreen();
   charIdx = i; resetWorld(); world = pickWorld; applyLook(world); newPlayer(i);
   if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; }
-  if (world === 3) { P.pos.set(TR_START.x, 0, TR_START.z); yaw = TR_START.yaw; coins = TR_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
+  if (world === 3) { P.pos.set(TR_START.x, 0, TR_START.z); yaw = TR_START.yaw; coins = TR_START_COINS; }
+  if (world === 4) { P.pos.set(BU_START.x, 0, BU_START.z); yaw = BU_START.yaw; coins = SANDBOX.coins; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
   const wc = $('who'); const sp = SPR[ROSTER[i].sprite]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
   for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = sp.g[sp.top - 3 + y] && sp.g[sp.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
   sinceHit = 99;
+  if (world === 4) { lock(); banner('Il centro di Busto', 'Anteprima della mappa: la fontana, i portici col Mac, il corso dei bar e la chiesa'); audio(); return; }
   if (world === 3) {
     if (mode === 'sandbox') { openTR(); coins = SANDBOX.coins; lock(); banner('Sandbox · Tribunale', 'Ogni zona ha il suo boss: entra e sfidalo'); audio(); return; }
     lock(); banner('Il Tribunale di Busto', 'Fab La Rue blocca la strada: arriva al round ' + TR_FAB_WAVE); audio(); return;
@@ -1011,7 +1021,7 @@ const PLACES = {
        t: 'Il bazar di Sant\'Edoardo. Parcheggio e negozio, Tefalin e Diego da ritrovare, il Capo da sconfiggere per liberare Debe.' },
   3: { n: 'Tribunale di Busto', open: () => !!unlocks.hs || mode === 'sandbox', state: () => unlocks.tr ? 'Liberato · Pika è libero dal maleficio' : unlocks.hs ? 'Disponibile · Mondo 3' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima l\'Happy Shopping' : 'Bloccato · finisci prima l\'Happy Shopping',
        t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Pierre e Fabio Regaglia, i garage e la casa di Pika.' },
-  4: { n: 'Il centro di Busto', open: () => false, state: () => 'Bloccato · prossimamente', t: 'L\'ultima tappa: liberare Busto Arsizio.' },
+  4: { n: 'Il centro di Busto', open: () => true, state: () => 'Anteprima della mappa · nemici e storia in arrivo', t: 'L\'ultima tappa: liberare Busto Arsizio. Dalla fontana di piazza Garibaldi si va al Mac sotto i portici, oppure lungo il corso dei bar fino a piazza San Giovanni e alla chiesa, dove si nascondono le catacombe.' },
 };
 function showPlace(k) {
   place = k; const Q = PLACES[k];
@@ -1086,6 +1096,7 @@ function setWorld(w) {
   const wi = $('worldinfo'); wi.hidden = w === 1;
   if ($('w3btn')) { $('w3btn').classList.toggle('locked', !unlocks.hs); $('w3sub').textContent = unlocks.hs ? 'Pika e il maleficio' : 'in Avventura: finisci l\'Happy Shopping'; }
   if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Pierre (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
+  if (w === 4) wi.textContent = 'Centro di Busto: per ora è solo la mappa da esplorare (piazza Garibaldi con la fontana, i portici e il Mac, il corso dei bar, piazza San Giovanni e la chiesa). Nemici, boss e storia arrivano presto.';
   if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
   if (state === 'menu') { world = w; applyLook(w); }
 }
@@ -1145,7 +1156,7 @@ if (isTouch) {
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
 const sky = makeSky(scene); setSky(sky, 1); skyRef = sky;
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim]);
 applyLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
