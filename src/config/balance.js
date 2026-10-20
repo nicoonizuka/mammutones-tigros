@@ -47,7 +47,12 @@ export const ZONES = [
   { id: 'seminterrato', n: 'Seminterrato',    cost: 2000, hp: 1.45, dmg: 1.35, coins: 1.6, types: { base: 0.55, cornuto: 0.3, grosso: 0.15 } },
   { id: 'magazzino',  n: 'Magazzino',         cost: 3000, hp: 1.7,  dmg: 1.5,  coins: 1.9, types: { base: 0.35, cornuto: 0.25, grosso: 0.15, furia: 0.25 } },
   { id: 'controllo',  n: 'Zona controllo',    cost: 0,    hp: 1.9,  dmg: 1.6,  coins: 2.2, types: { base: 0.3, cornuto: 0.25, grosso: 0.15, furia: 0.3 } },
+  /* mondo 2, Happy Shopping: parte piu' facile dello scontro con Loris e sale piano piano */
+  { id: 'hs-parcheggio', n: 'Parcheggio Happy Shopping', cost: 0, hp: 1.2, dmg: 1.15, coins: 1.3, types: { base: 0.7, cornuto: 0.3 } },
+  { id: 'hs-negozio', n: 'Negozio Happy Shopping', cost: 1000, hp: 1.4, dmg: 1.3, coins: 1.55, types: { base: 0.45, cornuto: 0.3, grosso: 0.15, furia: 0.1 } },
 ];
+/* indice in ZONES della prima zona del mondo 2 */
+export const HS_ZONE0 = 6;
 
 /* ---------- MONETE ---------- */
 export const ECONOMY = {
@@ -92,6 +97,10 @@ export function pickType(zoneIdx) {
 /* ---------- BOSS ---------- */
 export const BOSS_FAB = { n: 'Fab La Rue', hp: 2000, spd: 2.4, dmg: 16, atkCd: 1.4, reward: 1500, summonEvery: 9, summonCount: 2, wave: 8 };
 export const BOSS_LORIS = { n: 'Loris Busato', hp: 12000, spd: 2.6, dmg: 26, atkCd: 1.25, reward: 5000, summonEvery: 10, wave: 15 };
+/* il Capo dell'Happy Shopping: lento, tantissima vita, botte pesanti e ogni tanto carica a testa bassa */
+export const BOSS_CAPO = { n: "Il Capo dell'Happy Shopping", hp: 6000, spd: 1.9, dmg: 30, atkCd: 1.5, reward: 3000, summonEvery: 12, wave: 7,
+  charge: { every: 7, wind: 0.9, dur: 1.2, mult: 4.2, dmg: 45 } };
+export const HS_START_COINS = 900;
 export const GENERATOR_COST = 1000;
 /* inventario: pacchi di munizioni da portare con se' e zaino per alzare il massimo di munizioni */
 export const INVENTORY = { packCost: 400, packMax: 3, bags: [{ cost: 800, mult: 1.5 }, { cost: 2000, mult: 2 }] };

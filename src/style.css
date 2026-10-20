@@ -108,3 +108,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .pc.nope{animation:nope .3s}
 @keyframes nope{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .ending .unlock{font-family:var(--pix);font-size:20px;color:#ffd25e}
+
+.worlds .btn[aria-pressed="true"]{background:#7ad0ff;color:var(--o)}
+.worlds .btn[aria-pressed="false"]{background:#1b222c;color:var(--ink)}
+.worlds .btn.locked{opacity:.6}
+.endtext{display:flex;flex-direction:column;gap:12px}
+.map .node.free.hs .lbl{opacity:1}

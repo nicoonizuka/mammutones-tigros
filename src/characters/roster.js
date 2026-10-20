@@ -9,6 +9,9 @@ export const POWERS = {
   call:   { k: 'call',   n: 'Chiama Mirko',        d: 'Mirko arriva e combatte al tuo fianco',          dur: 12, cd: 35 },
   coins:  { k: 'coins',  n: 'Monete doppie',       d: 'Le monete che guadagni valgono il doppio',      dur: 12, cd: 30 },
   double: { k: 'double', n: 'Doppio colpo',        d: 'Ogni colpo ne spara due',                       dur: 8,  cd: 24 },
+  blast:  { k: 'blast',  n: "Onda d'urto",         d: 'Respinge e ferisce tutti i nemici vicini',      dur: 0,  cd: 20 },
+  rage:   { k: 'rage',   n: 'Furia',               d: 'Ogni colpo fa il doppio dei danni',             dur: 8,  cd: 24 },
+  freeze: { k: 'freeze', n: 'Occhiolino',          d: 'I nemici rallentano quasi fino a fermarsi',     dur: 7,  cd: 26 },
 };
 export const ROSTER = [
   { name: 'Nathan Mascheroni', short: 'Nathan', c: '#5ab0ff', sprite: 0, model: 0, power: 'aim' },
@@ -19,5 +22,10 @@ export const ROSTER = [
   { name: 'Ponta',             short: 'Ponta',  c: '#ff7a6a', sprite: 5, model: 5, power: 'call' },
   { name: 'Jacopo Castiglioni',short: 'Jacopo', c: '#c07ae8', sprite: 7, model: 7, power: 'double', unlock: 'fab' },
   { name: 'Corti',             short: 'Corti',  c: '#e8c35a', sprite: 8, model: 8, power: 'coins' },
+  /* arrivano dal mondo 2, l'Happy Shopping */
+  { name: 'Tefalin',           short: 'Tefalin', c: '#ff6a7a', sprite: 9,  model: 9,  power: 'blast' },
+  { name: 'Diego Margarito',   short: 'Diego',  c: '#f2a63b', sprite: 11, model: 11, power: 'rage' },
+  { name: 'Debe',              short: 'Debe',   c: '#7ad0ff', sprite: 10, model: 10, power: 'freeze', unlock: 'hs' },
 ];
+export const DAMIANO_MODEL = 12;
 export const MIRKO_MODEL = 6;

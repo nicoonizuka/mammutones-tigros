@@ -119,6 +119,32 @@ const CH=[
      s.rect(cx-4,t+13,8,2,"#a9acb2");s.rect(cx-2,t+15,1,4,"#e8e8e8");s.rect(cx+1,t+15,1,4,"#e8e8e8");
      s.rect(cx-4,t+21,8,4,"#a9acb2");s.px(cx+3,t+16,"#ffffff");s.px(cx+4,t+16,"#ffffff");
      for(let y=lt+4;y<57;y+=3){s.px(cx-6,y,"#1d1e22");s.px(cx+5,y,"#1d1e22");}}})},
+ {name:"Tefalin",role:"Capelli spettinati, occhiali rossi, piumino grigio",h:"1,70 m",c:"#ff6a7a",tag:"GIOCABILE",pw:"Onda d'urto",pd:"Respinge e ferisce i nemici vicini.",ic:"aim",
+  fn:()=>human({seed:31,H:47,bw:7,aw:4,skin:"#efc9ae",top:"#d3d6d9",topFn:(x,y)=>y%4===0?"#bfc2c6":"#d3d6d9",hem:"#c2c5c9",pants:"#2c3444",shoe:"#f0f0f0",nose:"#dcae90",brow:"#3a281c",
+   extra:(s,cx,t,T)=>{const H="#3a281c",L="#4e3626";
+     s.rect(cx-6,t,12,4,H);s.rect(cx-6,t+4,1,3,H);s.rect(cx+5,t+4,1,3,H);
+     [[-6,-1],[-4,-2],[-2,-2],[0,-3],[2,-2],[4,-2],[6,-1],[-7,1],[7,1],[-3,-1],[1,-1]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,1.8,1.6,k%3?H:L));
+     [[-5,4],[-3,5],[0,4],[2,5],[4,4]].forEach(([dx,y])=>s.rect(cx+dx,t+4,2,y-3,H));
+     const R="#9a1e28";s.rect(cx-5,t+5,4,1,R);s.rect(cx+1,t+5,4,1,R);s.px(cx-6,t+4,R);s.px(cx+5,t+4,R);s.rect(cx-1,t+5,2,1,R);
+     s.px(cx-5,t+6,R);s.px(cx+4,t+6,R);s.rect(cx-5,t+7,4,1,"#e8b8bc");s.rect(cx+1,t+7,4,1,"#e8b8bc");
+     s.rect(cx-1,t+14,3,T,"#22305a");s.rect(cx-2,t+14,1,T,"#121316");s.rect(cx+2,t+14,1,T,"#121316");
+     s.rect(cx-4,t+12,8,2,"#d3d6d9");}})},
+ {name:"Debe",role:"Ricci neri, sempre con l'occhiolino",h:"1,75 m",c:"#7ad0ff",tag:"GIOCABILE",pw:"Occhiolino",pd:"I nemici rallentano quasi fino a fermarsi.",ic:"aim",
+  fn:()=>human({seed:37,H:49,bw:7,aw:4,skin:"#e2b48e",top:"#1d2028",pants:"#2b2f38",shoe:"#1c1c20",sole:"#e8e8e8",nose:"#cf9c78",brow:"#16110e",mouth:"#ffffff",
+   extra:(s,cx,t)=>{const C=["#16110e","#241a15"];
+     [[-4,1],[-2,0],[0,0],[2,0],[4,1],[-5,3],[5,3],[-3,2],[1,2],[3,2],[-1,1]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,1.9,1.7,C[k%2]));
+     [[-4,4],[-2,4],[0,4],[2,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%2]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
+     s.rect(cx+1,t+6,2,1,"#e2b48e");s.rect(cx+1,t+7,2,1,"#3a2418");
+     s.rect(cx-1,t+9,3,1,"#ffffff");s.px(cx+2,t+8,"#a8564a");
+     s.px(cx-4,t+10,"#8a6a54");s.px(cx-2,t+11,"#8a6a54");s.px(cx+2,t+11,"#8a6a54");s.px(cx+3,t+10,"#8a6a54");
+     s.rect(cx-3,t+12,6,2,"#f2f0ea");s.rect(cx-1,t+14,2,6,"#f2f0ea");}})},
+ {name:"Diego Margarito",role:"Il più alto, ricci neri folti",h:"1,85 m",c:"#f2a63b",tag:"GIOCABILE",pw:"Furia",pd:"Per qualche secondo ogni colpo fa il doppio dei danni.",ic:"aim",
+  fn:()=>human({seed:41,H:52,bw:6,skin:"#ddab86",top:"#1a1a1d",sleeve:5,pants:"#383b43",shoe:"#f0f0f0",nose:"#c9946e",brow:"#120d0b",
+   extra:(s,cx,t)=>{const C=["#120d0b","#21170f","#2c2016"];
+     [[-5,1],[-3,0],[-1,-1],[1,-1],[3,0],[5,1],[-6,3],[6,3],[-4,-1],[2,-2],[0,-2],[-2,-2],[4,-1],[-6,5],[6,5]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.9,C[k%3]));
+     [[-4,4],[-2,4],[0,4],[2,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%3]));
+     s.rect(cx-4,t+5,3,1,"#120d0b");s.rect(cx+1,t+5,3,1,"#120d0b");
+     s.rect(cx-1,t+8,3,1,"#8a6a54");}})},
 ];
 
 export {Sprite,human,CH,OUT};

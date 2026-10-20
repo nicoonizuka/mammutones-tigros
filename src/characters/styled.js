@@ -311,6 +311,110 @@ const CONFIGS = [
       for (const L of [P.legL, P.legR]) for (let k = 0; k < 3; k++) mesh(rbox(0.012, 0.09, 0.03, 0.004), M('#1d1e22'), L, [0, -0.5 - k * 0.11, 0.072]);
     },
   }),
+  /* 9 Tefalin: 1,70 m, capelli spettinati voluminosi, occhiali rossi a gatto, piumino grigio chiaro aperto, maglia blu */
+  () => human({
+    h: 1.7, w: 1.08, chest: 1.08, arm: 1.12, skin: '#efc9ae', top: '#d3d6d9', pants: '#2c3444', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'long', cuff: '#c2c5c9', hem: '#c2c5c9', hair: '#3a281c',
+    hairFn: (H, mat) => {
+      hairCap(H, mat, 0.145, 0.45); backHair(H, mat); clumps(H, mat, 26, 51, 0.1); fringe(H, mat, 9, 52, 0.15);
+      const hl = M('#4e3626', { roughness: 0.7 }); seed = 53;
+      for (let i = 0; i < 14; i++) { const a = rnd() * Math.PI * 2, rr = 0.05 + rnd() * 0.08; mesh(sph(0.042, 10, 8), i % 2 ? hl : mat, H, [Math.cos(a) * rr, 0.16 + rnd() * 0.03, Math.sin(a) * rr - 0.01], [(rnd() - 0.5) * 1.2, a, (rnd() - 0.5) * 1.2], [1, 0.6, 1.6]); }
+      for (const sd of [-1, 1]) mesh(sph(0.045, 10, 8), mat, H, [sd * 0.13, 0.06, 0.0], [0.1, 0, sd * 0.3], [0.45, 1.3, 0.8]);
+    },
+    extra: (G, T, H) => {
+      /* piumino: trapuntature, collo alto, zip nere e maglia blu sotto */
+      const q = M('#bfc2c6', { roughness: 0.85 }); for (let k = 0; k < 4; k++) mesh(new THREE.TorusGeometry(0.16 - Math.abs(k - 1.5) * 0.008, 0.013, 6, 24), q, T, [0, 0.14 + k * 0.1, 0], [Math.PI / 2, 0, 0], [1.05, 0.68, 1]);
+      mesh(new THREE.TorusGeometry(0.1, 0.05, 8, 22), M('#d3d6d9', { roughness: 0.85 }), T, [0, 0.58, -0.005], [Math.PI / 2, 0, 0], [1, 0.8, 1]);
+      mesh(rbox(0.12, 0.44, 0.02, 0.01), M('#22305a', { roughness: 0.9 }), T, [0, 0.3, 0.12]);
+      for (const sd of [-1, 1]) limb([sd * 0.07, 0.08, 0.118], [sd * 0.065, 0.56, 0.1], 0.007, M('#121316'), T);
+      mesh(rbox(0.02, 0.012, 0.004, 0.002), M('#c0303a'), T, [0, 0.42, 0.131]); mesh(rbox(0.02, 0.012, 0.004, 0.002), M('#f2f2f2'), T, [0, 0.43, 0.132]);
+      /* occhiali a gatto rossi, sfumati verso il trasparente in basso */
+      const red = M('#8e1a26', { roughness: 0.3 }), clear = M('#e8b8bc', { roughness: 0.2, transparent: true, opacity: 0.55 }), lens = M('#d8ecf4', { roughness: 0.05, transparent: true, opacity: 0.25 });
+      for (const sd of [-1, 1]) {
+        mesh(rbox(0.082, 0.02, 0.014, 0.006), red, H, [sd * 0.048, 0.036, 0.13], [0, 0, sd * -0.12]);
+        mesh(rbox(0.026, 0.02, 0.014, 0.006), red, H, [sd * 0.088, 0.048, 0.126], [0, 0, sd * -0.6]);
+        mesh(rbox(0.012, 0.05, 0.012, 0.004), red, H, [sd * 0.086, 0.012, 0.127]);
+        mesh(rbox(0.078, 0.01, 0.012, 0.004), clear, H, [sd * 0.048, -0.017, 0.13]);
+        mesh(new THREE.PlaneGeometry(0.074, 0.05), lens, H, [sd * 0.048, 0.01, 0.137]);
+        mesh(rbox(0.008, 0.008, 0.12, 0.003), red, H, [sd * 0.126, 0.03, 0.07]);
+      }
+      mesh(rbox(0.024, 0.008, 0.01, 0.003), red, H, [0, 0.03, 0.136]);
+    },
+  }),
+  /* 10 Debe: 1,75 m, ricci neri, occhiolino, giacca scura e dolcevita bianco, un filo di barba */
+  () => human({
+    h: 1.75, w: 1.15, chest: 1.06, arm: 1.1, skin: '#e2b48e', top: '#1d2028', pants: '#2b2f38', shoe: '#1c1c20', sole: '#e8e8e8', sleeve: 'long', cuff: '#25282f', hair: '#16110e', brow: 1, browTilt: 0.05,
+    hairFn: (H) => {
+      const curl = [M('#16110e', { roughness: 0.6 }), M('#241a15', { roughness: 0.6 })];
+      hairCap(H, curl[0], 0.142, 0.42); backHair(H, curl[0]); seed = 61;
+      for (let i = 0; i < 64; i++) {
+        const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.13; const front = Math.sin(a) * rr;
+        const y = 0.12 + Math.sqrt(Math.max(0, 0.018 - rr * rr)) * 0.45 + rnd() * 0.02 - (front > 0.07 ? 0.03 : 0);
+        mesh(sph(0.03 + rnd() * 0.013, 8, 6), curl[i % 2], H, [Math.cos(a) * rr, y, front + 0.008]);
+      }
+      for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) mesh(sph(0.03, 8, 6), curl[k % 2], H, [sd * (0.125 + k * 0.004), 0.05 - k * 0.03, -0.01 - k * 0.025]);
+    },
+    extra: (G, T, H, P, skin) => {
+      mesh(new THREE.CylinderGeometry(0.075, 0.08, 0.1, 18), M('#f2f0ea', { roughness: 0.9 }), T, [0, 0.6, 0.005]);
+      mesh(rbox(0.1, 0.3, 0.02, 0.01), M('#f2f0ea', { roughness: 0.9 }), T, [0, 0.42, 0.112]);
+      for (const sd of [-1, 1]) mesh(rbox(0.05, 0.36, 0.02, 0.01), M('#2a2e38', { roughness: 0.8 }), T, [sd * 0.075, 0.36, 0.113], [0, 0, sd * 0.12]);
+      /* occhiolino: palpebra chiusa sull'occhio destro */
+      mesh(sph(0.024, 12, 8), skin, H, [0.048, 0.012, 0.114], null, [1.15, 0.9, 0.65]);
+      mesh(rbox(0.04, 0.007, 0.008, 0.003), M('#3a2418'), H, [0.048, 0.006, 0.131], [0, 0, -0.1]);
+      mesh(rbox(0.055, 0.016, 0.012, 0.005), M('#ffffff', { roughness: 0.3 }), H, [0.005, -0.085, 0.114], [0, 0, 0.15]);
+      const stub = M('#5a4434', { roughness: 1, transparent: true, opacity: 0.45 });
+      mesh(new THREE.SphereGeometry(0.11, 16, 10, 0, Math.PI * 2, Math.PI * 0.55, Math.PI * 0.3), stub, H, [0, -0.06, 0.025], null, [1.0, 0.85, 1.0]);
+    },
+  }),
+  /* 11 Diego Margarito: 1,85 m, il piu' alto, ricci neri folti, sopracciglia marcate, maglietta nera */
+  () => human({
+    h: 1.85, w: 1.0, skin: '#ddab86', top: '#1a1a1d', pants: '#383b43', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'short', hair: '#120d0b', eye: '#2a170e', brow: 1, browTilt: -0.05,
+    hairFn: (H) => {
+      const curl = [M('#120d0b', { roughness: 0.55 }), M('#21170f', { roughness: 0.6 }), M('#2c2016', { roughness: 0.6 })];
+      hairCap(H, curl[0], 0.143, 0.44); backHair(H, curl[0]); seed = 71;
+      for (let i = 0; i < 95; i++) {
+        const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.15; const front = Math.sin(a) * rr;
+        const y = 0.13 + Math.sqrt(Math.max(0, 0.026 - rr * rr)) * 0.55 + rnd() * 0.035 - (front > 0.09 ? 0.04 : 0);
+        mesh(sph(0.034 + rnd() * 0.016, 8, 6), curl[i % 3], H, [Math.cos(a) * rr, y, front]);
+      }
+      for (let i = 0; i < 9; i++) mesh(sph(0.033, 8, 6), curl[i % 3], H, [-0.095 + i * 0.024, 0.085 + Math.sin(i * 2.1) * 0.012, 0.11]);
+    },
+    extra: (G, T, H) => {
+      mesh(rbox(0.07, 0.014, 0.014, 0.006), M('#3a2a20', { roughness: 0.95, transparent: true, opacity: 0.7 }), H, [0, -0.062, 0.12]);
+    },
+  }),
+  /* 12 Damiano Ducaj (easter egg nella Mercedes): ricci scuri con la barba */
+  () => human({
+    h: 1.78, w: 1.1, skin: '#e4b896', top: '#2a2d33', pants: '#2b2f38', shoe: '#1c1c20', sleeve: 'long', cuff: '#24272c', hair: '#21160f', brow: 1,
+    hairFn: (H) => {
+      const curl = [M('#21160f', { roughness: 0.6 }), M('#30221a', { roughness: 0.6 })];
+      hairCap(H, curl[0], 0.142, 0.43); backHair(H, curl[0]); seed = 81;
+      for (let i = 0; i < 60; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.13; const front = Math.sin(a) * rr; const y = 0.12 + Math.sqrt(Math.max(0, 0.018 - rr * rr)) * 0.45 + rnd() * 0.02 - (front > 0.07 ? 0.03 : 0); mesh(sph(0.03 + rnd() * 0.012, 8, 6), curl[i % 2], H, [Math.cos(a) * rr, y, front + 0.008]); }
+    },
+    extra: (G, T, H) => {
+      const beard = M('#2a1c14', { roughness: 0.95 }); seed = 82;
+      for (let i = 0; i < 26; i++) { const a = Math.PI * (0.08 + 0.84 * (i / 25)); mesh(sph(0.034, 8, 6), beard, H, [Math.cos(a) * 0.11, -0.06 - Math.sin(a) * 0.055, 0.03 + Math.sin(a) * 0.075]); }
+      mesh(rbox(0.07, 0.02, 0.02, 0.008), beard, H, [0, -0.062, 0.122]);
+    },
+  }),
+  /* 13 il Capo dell'Happy Shopping (boss): grosso, capelli corti neri, occhiali, felpa grigia con la zip, jeans */
+  () => human({
+    h: 1.95, w: 1.8, chest: 1.28, arm: 1.5, skin: '#e8b894', top: '#b6bac0', pants: '#4a6a9a', shoe: '#2a2a2e', sole: '#e0e0e0', sleeve: 'long', cuff: '#a6aab0', hem: '#a6aab0', hair: '#141010', brow: 1, browTilt: 0.18,
+    hairFn: (H, mat) => { hairCap(H, mat, 0.14, 0.33); fringe(H, mat, 8, 91, 0.6); },
+    extra: (G, T, H, P, skin) => {
+      mesh(sph(0.27, 18, 14), M('#b6bac0', { roughness: 0.85 }), T, [0, 0.2, 0.1], null, [1.25, 1.05, 0.95]);
+      mesh(new THREE.TorusGeometry(0.13, 0.05, 8, 20, Math.PI * 1.3), M('#a6aab0', { roughness: 0.95 }), T, [0, 0.58, -0.05], [Math.PI / 2 + 0.3, 0, Math.PI * 0.85]);
+      limb([0, 0.58, 0.16], [0, 0.0, 0.33], 0.007, M('#d8dce2', { roughness: 0.3, metalness: 0.6 }), T);
+      for (const sd of [-1, 1]) limb([sd * 0.035, 0.56, 0.14], [sd * 0.04, 0.42, 0.2], 0.007, M('#e8e8e8'), T);
+      mesh(sph(0.1, 14, 10), skin, H, [0, -0.11, 0.04], null, [1.2, 0.7, 1]);
+      for (const sd of [-1, 1]) mesh(sph(0.05, 10, 8), skin, H, [sd * 0.085, -0.06, 0.07]);
+      const frame = M('#2a2420', { roughness: 0.4 }), lens = M('#d8ecf4', { roughness: 0.05, transparent: true, opacity: 0.22 });
+      for (const sd of [-1, 1]) {
+        mesh(rbox(0.07, 0.008, 0.01, 0.003), frame, H, [sd * 0.048, 0.035, 0.132]); mesh(rbox(0.07, 0.008, 0.01, 0.003), frame, H, [sd * 0.048, -0.012, 0.132]);
+        mesh(rbox(0.008, 0.05, 0.01, 0.003), frame, H, [sd * 0.083, 0.012, 0.13]); mesh(rbox(0.008, 0.05, 0.01, 0.003), frame, H, [sd * 0.013, 0.012, 0.134]);
+        mesh(new THREE.PlaneGeometry(0.066, 0.044), lens, H, [sd * 0.048, 0.012, 0.136]); mesh(rbox(0.006, 0.006, 0.12, 0.002), frame, H, [sd * 0.126, 0.03, 0.07]);
+      }
+    },
+  }),
 ];
 export function buildHuman(i) { return CONFIGS[i](); }
 
@@ -508,5 +612,15 @@ export function buildLoris() {
   const body = mesh(new THREE.BoxGeometry(0.7, 1.55, 0.5), inv, G, [0, 0.8, 0]); body.name = 'hitBody';
   const head = mesh(new THREE.SphereGeometry(0.2, 8, 6), inv, G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
   G.userData.hit = { body, head }; G.userData.P.bells = []; G.userData.height = 1.85 * 1.5;
+  return G;
+}
+
+/* ---------- il Capo dell'Happy Shopping: boss del mondo 2, enorme ---------- */
+export function buildCapo() {
+  const G = buildHuman(13); G.scale.setScalar(1.55);
+  const inv = new THREE.MeshBasicMaterial({ visible: false });
+  const body = mesh(new THREE.BoxGeometry(1.0, 1.65, 0.8), inv, G, [0, 0.85, 0]); body.name = 'hitBody';
+  const head = mesh(new THREE.SphereGeometry(0.21, 8, 6), inv, G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
+  G.userData.hit = { body, head }; G.userData.P.bells = []; G.userData.height = 1.95 * 1.55;
   return G;
 }

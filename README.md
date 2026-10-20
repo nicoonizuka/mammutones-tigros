@@ -1,7 +1,7 @@
 # Mammutones al Tigros
 
 Sparatutto 3D a blocchi in stile COD Zombies, ambientato al Tigros di Busto Arsizio.
-Loris Busato e la sua armata di Mammutones hanno invaso il supermercato: scegli uno degli otto amici e riprenditi il supermercato.
+Loris Busato e la sua armata di Mammutones hanno invaso il supermercato: scegli uno degli amici e riprenditi il supermercato.
 
 All'avvio c'è il prologo con la storia, poi la scelta della modalità:
 
@@ -68,6 +68,7 @@ src/
     store.js            edificio del Tigros e zona 3 (negozio)
     basement.js         zona 4 (seminterrato e tana di Fab La Rue)
     warehouse.js        zone 5 e 6 (magazzino, generatori, ufficio di Loris)
+    happyshopping.js    mondo 2: parcheggio, negozio, Mercedes di Damiano, luci del mondo
 ```
 
 ## Personaggi e poteri
@@ -82,6 +83,9 @@ src/
 | Ponta | Chiama Mirko, che combatte al suo fianco |
 | Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due (si sblocca battendo Fab La Rue) |
 | Corti | Monete doppie per qualche secondo |
+| Tefalin | Onda d'urto: respinge e ferisce i nemici vicini |
+| Diego Margarito | Furia: ogni colpo fa il doppio dei danni |
+| Debe | Occhiolino: i nemici rallentano quasi fino a fermarsi (si sblocca battendo il Capo dell'Happy Shopping) |
 
 ## Percorso previsto
 
@@ -92,7 +96,17 @@ src/
 5. Magazzino (fatto, 3000 dopo la corrente): scaffali alti, celle frigo, muletto, Mammutones Furia, AK-47
 6. Zona controllo (fatto, 3 generatori): Desert Eagle e boss finale Loris Busato all'ondata 15
 
-Dopo il Tigros (prossimamente, già oscurate nella mappa del mondo): Tribunale di Busto, Happy Shopping, il centro di Busto.
+## Mondo 2: Happy Shopping
+
+Si sceglie dal menu (Mondo 2). In Avventura si apre dopo aver battuto Loris Busato; in Sandbox si prova subito.
+
+1. Parcheggio in autobloccanti: pistola al muro accanto all'ingresso, fucile al muro di cemento in fondo. Nella Mercedes station wagon con l'aquila c'è Damiano: premi E per parlarci.
+2. Negozio (1000 monete): bazar con abbigliamento, intimo, scuola e casalinghi. Mitra e fucile a pompa al muro.
+3. All'ondata 7 esce dal magazzino il Capo: enorme, lento, picchia forte e ogni tanto si ferma, diventa rosso e carica. Spostati di lato: se sbatte contro uno scaffale resta stordito.
+
+Il codice della mappa è in `src/world/happyshopping.js`, i numeri in `src/config/balance.js` (`BOSS_CAPO`, zone `hs-parcheggio` e `hs-negozio`).
+
+Dopo l'Happy Shopping (prossimamente, già oscurati nella mappa del mondo): Tribunale di Busto, poi il centro di Busto.
 
 ## Bilanciamento
 

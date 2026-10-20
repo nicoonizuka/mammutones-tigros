@@ -170,3 +170,15 @@ Nella versione di prova il finale e la mappa si vedono anche senza giocare, col 
 | Altri personaggi | — | arriveranno con i prossimi mondi |
 
 I personaggi bloccati si vedono nella schermata di scelta, oscurati e con il lucchetto. Lo sblocco resta salvato nel browser.
+
+
+## Mondo 2: Happy Shopping
+
+| Zona | Costo | Vita nemici | Danno nemici | Monete |
+|---|---|---|---|---|
+| Parcheggio Happy Shopping | 0 | ×1,2 | ×1,15 | ×1,3 |
+| Negozio Happy Shopping | 1000 | ×1,4 | ×1,3 | ×1,55 |
+
+Si parte con 900 monete. Il mondo 2 parte più facile della fine del Tigros e sale piano piano.
+
+**Il Capo** (ondata 7): 6000 di vita, lento (1,9 m/s), 30 di danno a colpo. Ogni 7 secondi circa si ferma quasi un secondo, diventa rosso e carica dritto a velocità ×4,2: se ti prende fa 45 di danno (per il moltiplicatore della zona) e ti spinge via. Ogni 12 secondi chiama tre Mammutones. Battendolo in Avventura sblocchi Debe.

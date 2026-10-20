@@ -5,13 +5,14 @@ import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
 import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
-import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris } from './characters/styled.js';
+import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo } from './characters/styled.js';
+import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
 import { gzBar, gzSolids } from './world/parking.js';
 import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
-import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX } from './config/balance.js';
+import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS } from './config/balance.js';
 import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoorSolid, OFFICE_DOOR, LORIS_SPOT, updateWare } from './world/warehouse.js';
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
@@ -24,9 +25,12 @@ const V3 = THREE.Vector3;
 let P, charIdx = 0, pModel, state = 'menu', enemies = [], drops = [], tracers = [], sparks = [];
 let lastUnlock = null, mode = 'adv', quiet = false, sinceHit = 99, god = false, stickDir = 0;
 let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead = false, power = false, packs = 0, bag = 0;
+/* world 1 = Tigros, world 2 = Happy Shopping */
+let world = 1, pickWorld = 1, capoDead = false, rings = [];
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
-const region = p => (inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
+const region = p => (world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
+const zoneIdx = () => (world === 2 ? HS_ZONE0 + zone : zone);
 let wave = 0, toSpawn = 0, spawnT = 0, breakT = 0, alive = 0, kills = 0, coins = ECONOMY.start, mirko = null, zone = 0, time = 0;
 const keys = {}; let yaw = Math.PI, pitch = -0.12, mouseDown = false, fireT = 0, locked = false, rDrag = false, everLocked = false;
 const SPAWN = {
@@ -54,8 +58,9 @@ function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; 
 
 /* ===================== NEMICI ===================== */
 /* in sandbox la difficolta' dipende da dove sei, in avventura dalla zona piu' avanzata aperta */
-function diffZone() { if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
+function diffZone() { if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
 function spawnPoints() {
+  if (world === 2) { if (mode === 'sandbox' && P) return inHSStore(P.pos) ? HS_SPAWNS_IN : HS_SPAWNS_OUT; return zone >= 1 ? HS_SPAWNS_OUT.concat(HS_SPAWNS_IN) : HS_SPAWNS_OUT; }
   if (mode === 'sandbox' && P && !inBasement(P.pos)) { const r = region(P.pos); return r === 'ware' ? WARE_SPAWNS : r === 'store' ? STORE_SPAWNS : SPAWN.parcheggio.concat(SPAWN.gazebo); } if (P && inBasement(P.pos)) return BASE_SPAWNS; let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); if (zone >= 4) pts = pts.concat(WARE_SPAWNS, WARE_SPAWNS, WARE_SPAWNS); return pts; }
 function spawnEnemy(forceType, at) {
   const pts = spawnPoints(); const p = at || pts[Math.floor(Math.random() * pts.length)];
@@ -67,14 +72,16 @@ function spawnEnemy(forceType, at) {
   enemies.push(e); alive++; if (type !== 'ratto') bell(); return e;
 }
 function spawnBoss(kind = 'fab') {
-  const B = kind === 'loris' ? BOSS_LORIS : BOSS_FAB;
-  const m = kind === 'loris' ? buildLoris() : buildFabBoss();
-  const at = kind === 'loris' ? LORIS_SPOT : LAIR; m.position.set(at.x, 0, at.z); scene.add(m);
-  const hp = Math.round(B.hp * (1 + (kind === 'loris' ? 0.03 : 0.04) * wave));
-  boss = { m, kind, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: kind === 'loris' ? 0.65 : 0.55, kick: 0, summon: B.summonEvery };
+  const capo = kind === 'capo';
+  const B = kind === 'loris' ? BOSS_LORIS : capo ? BOSS_CAPO : BOSS_FAB;
+  const m = kind === 'loris' ? buildLoris() : capo ? buildCapo() : buildFabBoss();
+  const at = kind === 'loris' ? LORIS_SPOT : capo ? CAPO_SPOT : LAIR; m.position.set(at.x, 0, at.z); scene.add(m);
+  const hp = Math.round(B.hp * (1 + (kind === 'fab' ? 0.04 : 0.03) * wave));
+  boss = { m, kind, capo, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: kind === 'loris' ? 0.65 : capo ? 0.85 : 0.55, kick: 0, summon: B.summonEvery, ch: null, chCd: 4 };
   m.userData.hit.body.userData.enemy = boss; m.userData.hit.head.userData.enemy = boss; m.userData.hit.head.userData.head = true;
-  enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = kind === 'loris' ? 'Loris Busato · Capo dei Mammutones' : 'Fab La Rue · Re dei ratti';
-  banner(kind === 'loris' ? 'Loris Busato!' : 'Fab La Rue!', kind === 'loris' ? 'Il capo dei Mammutones esce dall\'ufficio' : 'Il re dei ratti esce dalla tana'); tone(110, 0.8, 'sawtooth', 0.08, 60);
+  enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = kind === 'loris' ? 'Loris Busato · Capo dei Mammutones' : capo ? 'Il Capo · Padrone dell\'Happy Shopping' : 'Fab La Rue · Re dei ratti';
+  if (capo) banner('Il Capo!', 'Esce dal magazzino: occhio quando abbassa la testa e carica');
+  else banner(kind === 'loris' ? 'Loris Busato!' : 'Fab La Rue!', kind === 'loris' ? 'Il capo dei Mammutones esce dall\'ufficio' : 'Il re dei ratti esce dalla tana'); tone(110, 0.8, 'sawtooth', 0.08, 60);
 }
 function goDown() {
   despawnOther(true); P.pos.set(BASE_START.x, 0, BASE_START.z); yaw = BASE_START.yaw;
@@ -86,7 +93,7 @@ function despawnOther(down) {
   enemies = enemies.filter(e => !e.gone);
 }
 function collide(pos, r, extra) {
-  const Bd = inBasement(pos) ? BASE : BOUNDS;
+  const Bd = world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
   pos.x = Math.max(Bd.x1 + r, Math.min(Bd.x2 - r, pos.x)); pos.z = Math.max(Bd.z1 + r, Math.min(Bd.z2 - r, pos.z));
   for (const s of solids) {
     if (s.off) continue;
@@ -95,7 +102,7 @@ function collide(pos, r, extra) {
       if (m === dx1) pos.x += dx1; else if (m === dx2) pos.x -= dx2; else if (m === dz1) pos.z += dz1; else pos.z -= dz2;
     }
   }
-  if (!gzOpen() && !extra && pos.x < -12 + r && pos.z < -6 + r) { if (-6 + r - pos.z < -12 + r - pos.x) pos.z = -6 + r; else pos.x = -12 + r; }
+  if (world === 1 && !gzOpen() && !extra && pos.x < -12 + r && pos.z < -6 + r) { if (-6 + r - pos.z < -12 + r - pos.x) pos.z = -6 + r; else pos.x = -12 + r; }
 }
 function animLimbs(m, phase, amp) { const p = m.userData.P; const s = Math.sin(phase) * amp; p.legL.rotation.x = s; p.legR.rotation.x = -s; if (p.armL) p.armL.rotation.x = -s * 0.8; }
 
@@ -129,7 +136,7 @@ function shoot() {
     for (const h of hits) {
       const e = h.object.userData.enemy; if (!e) { end = h.point; spark(h.point, false); break; }
       if (e.dead || hitE.has(e)) continue; hitE.add(e);
-      const head = !!h.object.userData.head; const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1);
+      const head = !!h.object.userData.head; const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1) * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1);
       damageEnemy(e, w.dmg * mult, head); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
     }
     tracer(muzzle(), end);
@@ -153,6 +160,11 @@ function bossDown() {
   const kind = boss && boss.kind; boss = null; $('boss').hidden = true;
   if (kind === 'loris' && mode === 'sandbox') { lorisDead = true; banner('Loris Busato è sconfitto!', 'Esci dall\'ufficio e rientra per sfidarlo di nuovo'); return; }
   if (kind === 'loris') { lorisDead = true; lastUnlock = unlockChar('loris'); setTimeout(victory, 2500); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo'); return; }
+  if (kind === 'capo') {
+    capoDead = true;
+    if (mode === 'sandbox') { banner('Il Capo è sconfitto!', 'Esci dal negozio e rientra per sfidarlo di nuovo'); return; }
+    lastUnlock = unlockChar('hs'); setTimeout(victory, 2500); banner('Il Capo è sconfitto!', 'L\'Happy Shopping è libero'); return;
+  }
   fabDead = true; const nu = unlockChar('fab');
   banner('Fab La Rue è sconfitto!', nu ? 'Hai sbloccato ' + nu.short + '! Ora riaccendi la corrente nel locale tecnico' : 'I ratti scappano: riaccendi la corrente nel locale tecnico');
   for (const e of enemies) if (!e.dead && e.type === 'ratto') { e.dead = 1; e.deadT = 0; alive--; }
@@ -175,7 +187,8 @@ function pickup(d) {
 }
 
 /* ---------- armi al muro ---------- */
-const wallMeshes = WALL_BUYS.map(wb => {
+const ALL_BUYS = WALL_BUYS.concat(HS_BUYS);
+const wallMeshes = ALL_BUYS.map(wb => {
   const G = new THREE.Group();
   const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.9), new THREE.MeshBasicMaterial({ map: sign(WEAPONS[wb.id].n.toUpperCase(), '700 30px Arial,sans-serif', '#f4f0e0', 190, 90), transparent: true, opacity: 0.9 }));
   chalk.position.set(0, -0.55, 0.02); G.add(chalk);
@@ -186,7 +199,7 @@ const wallMeshes = WALL_BUYS.map(wb => {
 
 /* ---------- punti interattivi ---------- */
 const INTER = [
-  ...WALL_BUYS.map(wb => ({
+  ...ALL_BUYS.map(wb => ({
     x: wb.x + Math.sin(wb.rot || 0) * 1.2, z: wb.z + Math.cos(wb.rot || 0) * 1.2, r: 2.4,
     label: () => P && P.weapons.some(w => w.id === wb.id) ? `<b>E</b> Munizioni ${WEAPONS[wb.id].n} · <b>${wb.ammoCost}</b>` : `<b>E</b> Compra ${WEAPONS[wb.id].n} · <b>${wb.cost}</b>`,
     cost: () => P.weapons.some(w => w.id === wb.id) ? wb.ammoCost : wb.cost,
@@ -210,7 +223,14 @@ const INTER = [
   } })),
   { x: OFFICE_DOOR.x - 1.5, z: OFFICE_DOOR.z + 1.2, r: 2.4, label: () => zone >= 5 ? null : `Ufficio chiuso: accendi i 3 generatori (${GENERATORS.filter(x => x.on).length}/3)`, cost: () => 0 },
   { x: 34, z: 17.2, r: 2.6, label: () => 'La rampa per il seminterrato è bloccata, per ora', cost: () => 0 },
+  /* mondo 2 */
+  { x: HS_DOOR.x, z: 1.7, r: 3, label: () => world !== 2 || zone >= 1 ? null : `<b>E</b> Apri l'Happy Shopping · <b>${ZONES[HS_ZONE0 + 1].cost}</b>`, cost: () => (zone < 1 ? ZONES[HS_ZONE0 + 1].cost : 0), act: () => openHS() },
+  { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => banner('Damiano Ducaj', '«Bel casino qua a Busto, stasera cosa facciamo?»') },
 ];
+function openHS() {
+  if (zone >= 1) return; zone = 1; scene.remove(hsDoor); hsDoorSolid.off = 1;
+  if (!quiet) banner('Happy Shopping aperto', 'Tra gli scaffali trovi il mitra e il fucile a pompa · il Capo arriva all\'ondata ' + BOSS_CAPO.wave);
+}
 function openZone(i) {
   if (zone >= i) return; zone = i; const banner = quiet ? () => {} : bannerFn; const feed = quiet ? () => {} : feedFn;
   if (i === 1) { scene.remove(gzBar); gzSolids.forEach(s => (s.off = 1)); banner('Gazebo aperto', 'Il fucile è appeso al muro sotto la tettoia'); }
@@ -276,8 +296,21 @@ function usePower() {
   if (P.pwCd > 0) return; const pw = P.pw; P.pwCd = pw.cd;
   if (pw.k === 'heal') { P.hp = Math.min(100, P.hp + 60); feed('Dado si cura'); pickS(); }
   else if (pw.k === 'call') callMirko();
+  else if (pw.k === 'blast') blast();
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
+}
+
+/* onda d'urto di Tefalin: ferisce e spinge via tutti i nemici vicini */
+function blast() {
+  const R = 7; for (const e of enemies) {
+    if (e.dead) continue; const d = e.m.position.clone().sub(P.pos); d.y = 0; const l = d.length(); if (l > R) continue;
+    damageEnemy(e, (e.boss ? 260 : 170) * (1 - l / (R * 1.6)), false); e.kick = 0.45;
+    if (!e.boss && l > 0.01) { e.m.position.addScaledVector(d.normalize(), 4 * (1 - l / R) + 0.6); collide(e.m.position, e.r, 1); }
+  }
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.12, 8, 40), new THREE.MeshBasicMaterial({ color: '#ff8aa0', transparent: true, opacity: 0.85 }));
+  ring.rotation.x = Math.PI / 2; ring.position.set(P.pos.x, 0.6, P.pos.z); scene.add(ring); rings.push({ m: ring, t: 0 });
+  shake(0.3); tone(70, 0.45, 'sawtooth', 0.09, 30); feed("Onda d'urto!");
 }
 
 /* ===================== HUD ===================== */
@@ -302,7 +335,7 @@ function invBuy(kind) {
 function feed(t) { const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); setTimeout(() => d.remove(), 2600); while ($('feed').children.length > 5) $('feed').lastChild.remove(); }
 let bannerT = 0; const bannerFn = (t, s) => banner(t, s); const feedFn = t => feed(t); function banner(t, s) { $('banner').innerHTML = t + (s ? `<small>${s}</small>` : ''); $('banner').hidden = false; bannerT = 2.6; }
 function hud() {
-  $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[zone].n + '</small>'; $('coins').textContent = coins;
+  $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[zoneIdx()].n + '</small>'; $('coins').textContent = coins;
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
   const w = P.weapons[P.cur]; const inf = P.pwT > 0 && P.pw.k === 'ammo'; $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
   $('ammo').innerHTML = inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
@@ -318,7 +351,7 @@ function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000); last = t;
   pollPad(); if (pad.connected) padMenus();
   if (state === 'play') { time += dt; update(dt); }
-  else { time += dt * 0.3; if (state === 'menu') { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } }
+  else { time += dt * 0.3; if (state === 'menu') { if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   renderer.render(scene, camera);
 }
 function update(dt) {
@@ -360,7 +393,8 @@ function update(dt) {
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
-  if (inBasement(P.pos)) { cam.x = Math.max(BASE.x1 + 0.4, Math.min(BASE.x2 - 0.4, cam.x)); cam.z = Math.max(BASE.z1 + 0.4, Math.min(BASE.z2 - 0.4, cam.z)); cam.y = Math.min(BASE.ceil - 0.3, cam.y); }
+  if (world === 2) { if (inHSStore(P.pos)) { cam.x = Math.max(HSTORE.x1 + 0.4, Math.min(HSTORE.x2 - 0.4, cam.x)); cam.z = Math.max(HSTORE.z1 + 0.4, Math.min(HSTORE.z2 - 0.3, cam.z)); cam.y = Math.min(HSTORE.ceil - 0.4, cam.y); } else { cam.x = Math.max(HSB.x1 + 0.6, Math.min(HSB.x2 - 0.6, cam.x)); cam.z = Math.max(0.7, Math.min(HSB.z2 - 0.6, cam.z)); } }
+  else if (inBasement(P.pos)) { cam.x = Math.max(BASE.x1 + 0.4, Math.min(BASE.x2 - 0.4, cam.x)); cam.z = Math.max(BASE.z1 + 0.4, Math.min(BASE.z2 - 0.4, cam.z)); cam.y = Math.min(BASE.ceil - 0.3, cam.y); }
   else if (inWare(P.pos)) { cam.x = Math.max(WARE.x1 + 0.4, Math.min(WARE.x2 - 0.4, cam.x)); cam.z = Math.max(WARE.z1 + 0.4, cam.z); cam.y = Math.min(WARE.ceil - 0.4, cam.y); }
   else if (inStore(P.pos)) { cam.x = Math.max(STORE.x1 + 0.4, Math.min(STORE.x2 - 0.4, cam.x)); cam.z = Math.max(STORE.z1 + 0.4, Math.min(STORE.z2 - 0.3, cam.z)); cam.y = Math.min(STORE.ceil - 0.4, cam.y); }
   else { cam.x = Math.max(-39.5, Math.min(39.5, cam.x)); cam.z = Math.max(-13.6, Math.min(29.5, cam.z)); }
@@ -370,13 +404,16 @@ function update(dt) {
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
   else if (w.ammo === 0 && w.res > 0 && !(P.pwT > 0 && P.pw.k === 'ammo')) startReload();
   /* nemici */
+  const slow = P.pwT > 0 && P.pw.k === 'freeze' ? 0.15 : 1;
   for (const e of enemies) {
     const m = e.m, EP = m.userData.P;
+    if (!e.dead && e.capo && updCapo(e, dt * slow)) continue;
     if (e.dead) { e.deadT += dt; m.rotation.x = Math.min(1.5, e.deadT * 4); m.position.y = -Math.max(0, e.deadT - 1.2) * 0.8; if (e.deadT > 2.6) { scene.remove(m); e.gone = 1; } continue; }
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
     EP.bells.forEach((b, k) => { b.rotation.x = Math.sin(time * 6 + k + e.walk) * 0.3; });
     let goal = P.pos; const er = region(m.position), pr = region(P.pos);
-    if (pr !== 'base' && er !== pr) {
+    if (world === 2) { if (er !== pr) goal = new V3(Math.max(HS_DOOR.x - 2.2, Math.min(HS_DOOR.x + 2.2, m.position.x)), 0, er === 'hsout' ? 1.6 : -1.6); }
+    else if (pr !== 'base' && er !== pr) {
       const viaShop = er === 'out' || (er === 'store' && pr === 'out');
       if (viaShop) goal = new V3(Math.max(DOOR.x - 2.6, Math.min(DOOR.x + 2.6, m.position.x)), 0, er === 'out' ? DOOR.z - 1.4 : DOOR.z + 1.4);
       else goal = new V3(Math.max(36.3, Math.min(38.7, m.position.x)), 0, er === 'ware' ? WAREHOUSE_DOOR.z + 1.4 : WAREHOUSE_DOOR.z - 1.4);
@@ -385,13 +422,13 @@ function update(dt) {
     if (dist > 1.15 * m.scale.x) {
       to.normalize();
       if (e.side) { const s = new V3(to.z, 0, -to.x).multiplyScalar(e.side); to.add(s).normalize(); e.sideT -= dt; if (e.sideT <= 0) e.side = 0; }
-      const before = m.position.clone(); m.position.add(to.multiplyScalar(e.spd * dt * (e.kick > 0 ? 0.3 : 1)));
+      const before = m.position.clone(); m.position.add(to.multiplyScalar(e.spd * dt * slow * (e.kick > 0 ? 0.3 : 1)));
       for (const o of enemies) { if (o === e || o.dead) continue; const dd = m.position.clone().sub(o.m.position); dd.y = 0; const l = dd.length(); if (l < 0.85 && l > 0) m.position.add(dd.multiplyScalar((0.85 - l) / l * 0.5)); }
       collide(m.position, e.r, 1); const moved = m.position.distanceTo(before);
-      if (moved < e.spd * dt * 0.3) { e.stuck += dt; if (e.stuck > 0.4) { e.side = Math.random() < 0.5 ? 1 : -1; e.sideT = 1.2; e.stuck = 0; } } else e.stuck = 0;
+      if (moved < e.spd * dt * slow * 0.3) { e.stuck += dt; if (e.stuck > 0.4) { e.side = Math.random() < 0.5 ? 1 : -1; e.sideT = 1.2; e.stuck = 0; } } else e.stuck = 0;
       e.walk += dt * e.spd * 2.2; animLimbs(m, e.walk, 0.55); EP.armR.rotation.x = -Math.sin(e.walk) * 0.45;
     } else {
-      e.atk -= dt; EP.armR.rotation.x = -1.4 + Math.sin(time * 12) * 0.4; EP.armL.rotation.x = -1.4 - Math.sin(time * 12) * 0.4;
+      e.atk -= dt * slow; EP.armR.rotation.x = -1.4 + Math.sin(time * 12) * 0.4; EP.armL.rotation.x = -1.4 - Math.sin(time * 12) * 0.4;
       if (e.atk <= 0) { e.atk = e.atkCd; hit(e.dmg); }
     }
   }
@@ -401,8 +438,13 @@ function update(dt) {
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt); updateStore(time); updateBasement(time, power);
-  updateWare(time);
+  updMirko(dt);
+  for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
+  rings = rings.filter(r => !r.gone);
+  if (world === 2) { updateHS(time);
+    if (mode === 'sandbox') { if (!inHSStore(P.pos)) capoDead = false; if (!boss && !capoDead && inHSStore(P.pos)) spawnBoss('capo'); }
+    else if (!boss && !capoDead && zone >= 1 && wave >= BOSS_CAPO.wave) spawnBoss('capo');
+  } else { updateStore(time); updateBasement(time, power); updateWare(time);
   if (mode === 'sandbox') {
     if (!inBasement(P.pos)) fabDead = false; if (!inOffice(P.pos)) lorisDead = false;
     if (!boss && !fabDead && inBasement(P.pos)) spawnBoss('fab');
@@ -410,16 +452,45 @@ function update(dt) {
   } else {
     if (!boss && !fabDead && zone >= 3 && wave >= BOSS_FAB.wave && inBasement(P.pos)) spawnBoss('fab');
     if (!boss && !lorisDead && zone >= 5 && wave >= BOSS_LORIS.wave && !inBasement(P.pos)) spawnBoss('loris');
-  }
+  } }
   /* vita che si ricarica dopo qualche secondo senza colpi */
   sinceHit += dt; if (sinceHit > REGEN.delay && P.hp < 100) P.hp = Math.min(100, P.hp + REGEN.perSec * dt);
-  if (boss && !boss.dead) { boss.summon -= dt; if (boss.summon <= 0) { const L = boss.kind === 'loris'; boss.summon = L ? BOSS_LORIS.summonEvery : BOSS_FAB.summonEvery;
-      const list = L ? ['furia', 'furia', 'base', 'base'] : ['ratto', 'ratto', 'ratto']; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(L ? 'Loris chiama i Mammutones!' : 'Fab chiama i ratti!'); }
+  if (boss && !boss.dead) { boss.summon -= dt; if (boss.summon <= 0) { const L = boss.kind === 'loris', C = boss.capo; boss.summon = L ? BOSS_LORIS.summonEvery : C ? BOSS_CAPO.summonEvery : BOSS_FAB.summonEvery;
+      const list = L ? ['furia', 'furia', 'base', 'base'] : C ? ['cornuto', 'base', 'base'] : ['ratto', 'ratto', 'ratto']; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(L ? 'Loris chiama i Mammutones!' : C ? 'Il Capo chiama i Mammutones dal magazzino!' : 'Fab chiama i ratti!'); }
     $('bossb').style.width = Math.max(0, boss.hp / boss.max * 100) + '%'; }
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
   P.hurtT = Math.max(0, P.hurtT - dt); $('dmg').style.boxShadow = `inset 0 0 120px 30px rgba(220,30,30,${Math.min(0.65, P.hurtT * 1.4)})`;
   hud();
+}
+/* il Capo: ogni tanto si ferma, si carica (diventa rosso) e corre dritto verso dove eri. Se ti prende fa malissimo */
+const capoRed = new THREE.MeshBasicMaterial({ color: '#ff3a2a', transparent: true, opacity: 0.35 });
+function updCapo(e, dt) {
+  const m = e.m, C = BOSS_CAPO.charge;
+  if (!e.ch) {
+    e.chCd -= dt; const to = P.pos.clone().sub(m.position); to.y = 0; const d = to.length();
+    if (e.chCd <= 0 && d > 3.5 && d < 26 && region(m.position) === region(P.pos)) {
+      e.ch = { ph: 'wind', t: C.wind, dir: to.normalize(), hit: 0 }; m.rotation.y = Math.atan2(e.ch.dir.x, e.ch.dir.z);
+      if (!e.glow) { e.glow = new THREE.Mesh(new THREE.SphereGeometry(1.4, 14, 10), capoRed); e.glow.position.y = 1.5; e.glow.scale.set(1, 1.6, 1); m.add(e.glow); }
+      e.glow.visible = true; tone(90, 0.6, 'sawtooth', 0.07, 50); feed('Il Capo sta per caricare!'); return true;
+    }
+    return false;
+  }
+  const ch = e.ch, EP = m.userData.P; ch.t -= dt;
+  if (ch.ph === 'wind') {
+    EP.torso.rotation.x = 0.45; EP.armL.rotation.x = EP.armR.rotation.x = 0.6; m.position.x += (Math.random() - 0.5) * 0.04;
+    if (ch.t <= 0) { ch.ph = 'run'; ch.t = C.dur; shake(0.2); }
+    return true;
+  }
+  const before = m.position.clone(); m.position.addScaledVector(ch.dir, e.spd * C.mult * dt); collide(m.position, e.r, 1);
+  e.walk += dt * 22; animLimbs(m, e.walk, 0.9); EP.torso.rotation.x = 0.35;
+  if (!ch.hit && m.position.distanceTo(P.pos) < 1.9) { ch.hit = 1; hit(C.dmg * ZONES[diffZone()].dmg); shake(0.35); P.pos.addScaledVector(ch.dir, 2.5); collide(P.pos, 0.4); }
+  for (const o of enemies) if (o !== e && !o.dead && !o.boss && o.m.position.distanceTo(m.position) < 1.6) { o.m.position.addScaledVector(ch.dir, 0.4); }
+  if (ch.t <= 0 || m.position.distanceTo(before) < e.spd * C.mult * dt * 0.25) {
+    if (ch.t > 0) { e.kick = 0.6; shake(0.25); tone(60, 0.3, 'square', 0.08, 30); feed('Il Capo sbatte contro il muro!'); }
+    e.ch = null; e.chCd = C.every * (0.8 + Math.random() * 0.4); e.glow.visible = false; EP.torso.rotation.x = 0;
+  }
+  return true;
 }
 function hit(dmg) {
   if (mode === 'sandbox' && god) { tone(1200, 0.04, 'square', 0.02); return; }
@@ -436,18 +507,26 @@ function resetWorld() {
   if (mirko) { scene.remove(mirko.m); mirko = null; }
   if (boss) { scene.remove(boss.m); } boss = null; fabDead = false; lorisDead = false; power = false; packs = 0; bag = 0; panelLed.material.color.set('#ff3030'); $('boss').hidden = true;
   GENERATORS.forEach(g => { g.on = false; g.led.material.color.set('#ff3030'); });
-  if (zone >= 4) { scene.add(wareDoor); wareDoorSolid.off = 0; } if (zone >= 5) { scene.add(officeDoor); officeDoorSolid.off = 0; }
-  if (zone >= 1) { scene.add(gzBar); gzSolids.forEach(s => (s.off = 0)); } if (zone >= 2) { scene.add(storeDoor); doorSolid.off = 0; } zone = 0; shieldMesh.visible = false;
+  if (world === 1) { if (zone >= 4) { scene.add(wareDoor); wareDoorSolid.off = 0; } if (zone >= 5) { scene.add(officeDoor); officeDoorSolid.off = 0; }
+    if (zone >= 1) { scene.add(gzBar); gzSolids.forEach(s => (s.off = 0)); } if (zone >= 2) { scene.add(storeDoor); doorSolid.off = 0; } }
+  if (hsDoorSolid.off) { scene.add(hsDoor); hsDoorSolid.off = 0; }
+  capoDead = false; rings.forEach(r => scene.remove(r.m)); rings = [];
+  zone = 0; shieldMesh.visible = false;
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
 addEventListener('keydown', e => { if (e.code === 'KeyF') { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else fullscreen(); } });
 function startGame(i) {
   fullscreen();
-  charIdx = i; resetWorld(); newPlayer(i); state = 'play'; ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
+  charIdx = i; resetWorld(); world = pickWorld; applyWorldLook(world); newPlayer(i);
+  if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; } state = 'play'; ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
   const wc = $('who'); const sp = SPR[ROSTER[i].sprite]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
   for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = sp.g[sp.top - 3 + y] && sp.g[sp.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
   sinceHit = 99;
+  if (world === 2) {
+    if (mode === 'sandbox') { quiet = true; openHS(); quiet = false; coins = SANDBOX.coins; lock(); banner('Sandbox · Happy Shopping', 'Tutto aperto: entra nel negozio per sfidare il Capo'); audio(); return; }
+    lock(); banner('Happy Shopping', 'Tefalin e Diego sono qui · difendi il parcheggio, poi apri il negozio'); audio(); return;
+  }
   if (mode === 'sandbox') {
     quiet = true; for (let z = 1; z <= 5; z++) openZone(z); quiet = false; coins = SANDBOX.coins; power = true; panelLed.material.color.set('#3aff6a');
     GENERATORS.forEach(g => { g.on = true; g.led.material.color.set('#3aff6a'); });
@@ -460,7 +539,7 @@ function resume() { state = 'play'; $('pause').hidden = true; last = performance
 function gameOver() {
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
   $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = 'Ti hanno <span>preso</span>';
-  $('deadmsg').textContent = `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
+  $('deadmsg').textContent = world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
   $('deadstats').innerHTML = `<div>${wave}<small>Ondata raggiunta</small></div><div>${kills}<small>Mammutones abbattuti</small></div>`;
 }
 function victory() {
@@ -471,12 +550,30 @@ function victory() {
 function showEnding(real) {
   ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true));
   $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
-  $('endwho').textContent = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
+  const who = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
+  const w2 = real ? world === 2 : pickWorld === 2;
+  $('endkick').textContent = w2 ? 'Mappa 2 completata' : 'Mappa 1 completata';
+  $('endtitle').innerHTML = w2 ? 'Complimenti, hai liberato <span>l\'Happy Shopping</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
+  $('endtext').innerHTML = w2
+    ? `<p><b>${who}</b> ha ripreso il bazar di Sant'Edoardo. Il Capo è a terra in mezzo ai jeans piegati e i Mammutones rimasti sono scappati verso la ferrovia.</p>
+       <p>Adesso il gruppo è al completo: <b>Tefalin</b>, <b>Diego</b> e <b>Debe</b> si sono uniti agli altri. Damiano ha acceso la Mercedes e vi aspetta nel parcheggio con la musica alta.</p>
+       <p>Ma Busto è ancora nel caos. La prossima tappa è il <b>Tribunale</b>, poi il centro. Lì vi aspettano nemici che non avete mai visto.</p>`
+    : `<p><b>${who}</b> ha ripreso il supermercato: la corrente è tornata, i generatori ronzano e stasera i tavolini del Buongusto sono di nuovo vostri.</p>
+       <p>Ma quando il fumo si è diradato, nell'ufficio della zona controllo non c'era nessuno. La maschera nera di <b>Loris Busato</b> era a terra, spaccata a metà. Dal tombino del seminterrato si sentiva solo uno squittio che si allontanava: <b>Fab La Rue</b> è scappato con i suoi ratti.</p>
+       <p>Non sono stati sconfitti davvero: <b>torneranno</b>. Ma per ora il Tigros è vostro. Fuori, però, Busto Arsizio è ancora nel caos: prossima tappa l'<b>Happy Shopping</b>, dove vi aspettano Tefalin e Diego.</p>`;
   $('endunlock').hidden = !(real && lastUnlock); if (real && lastUnlock) $('endunlock').textContent = 'Hai sbloccato ' + lastUnlock.name + '!'; lastUnlock = null;
   $('ending').hidden = false; menuIdx = 0;
 }
-function showWorld() { $('ending').hidden = true; $('world').hidden = false; menuIdx = 0; }
-function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
+function showWorld() {
+  $('ending').hidden = true; $('world').hidden = false; menuIdx = 0;
+  const open = hsOpen(), done = !!unlocks.hs;
+  $('hsNode').setAttribute('class', 'node ' + (open ? 'free' : 'locked')); if (open) $('hsFog').removeAttribute('filter'); else $('hsFog').setAttribute('filter', 'url(#fog)');
+  $('hsLbl').setAttribute('class', 'lbl' + (open ? '' : ' dim')); $('hsRect').setAttribute('stroke', open ? '#7ad0ff' : '#3a3f48'); $('hsQ').style.display = open ? 'none' : '';
+  $('hsSub').textContent = done ? 'Liberato · il gruppo è al completo' : open ? 'Disponibile · Tefalin e Diego ti aspettano' : 'Bloccato · finisci prima il Tigros';
+  $('playHS').hidden = !open;
+}
+const hsOpen = () => !!unlocks.loris || !!unlocks.hs;
+function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyWorldLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
@@ -497,15 +594,24 @@ addEventListener('gamepadconnected', () => { feedSafe('Controller collegato'); }
 function feedSafe(t) { if (state === 'play') feed(t); }
 
 /* storia e modalita' */
-document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto il Tigros aperto da subito, 25000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri il Tigros zona per zona, Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; $('godBtn').hidden = mode !== 'sandbox'; }));
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto aperto da subito, 25000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri la mappa zona per zona. Al Tigros Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; $('godBtn').hidden = mode !== 'sandbox'; setWorld(pickWorld); }));
 $('godBtn').onclick = () => { god = !god; $('godBtn').setAttribute('aria-pressed', god ? 'true' : 'false'); $('godBtn').firstChild.textContent = god ? 'Invincibile: sì' : 'Invincibile: no'; };
 $('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = showWorld; $('worldBack').onclick = toMenu;
+$('playHS').onclick = () => { setWorld(2); toMenu(); };
+function setWorld(w) {
+  pickWorld = w; document.querySelectorAll('[data-world]').forEach(x => { const on = +x.dataset.world === w; x.setAttribute('aria-pressed', on ? 'true' : 'false'); x.classList.toggle('ghost', !on); });
+  $('w2btn').classList.toggle('locked', !hsOpen()); $('w2sub').textContent = hsOpen() ? 'il Capo del bazar' : 'in Avventura: finisci il Tigros';
+  const wi = $('worldinfo'); wi.hidden = w !== 2;
+  if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
+  if (state === 'menu') { world = w; applyWorldLook(w); }
+}
+document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => setWorld(+b.dataset.world)));
 $('storyGo').onclick = () => { $('story').hidden = true; $('sel').hidden = false; menuIdx = 0; };
 $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = false; };
 
 /* schermata di scelta: ritratti in pixel art */
 /* personaggi da sbloccare: Jacopo battendo Fab La Rue, Leo finendo la storia (solo in Avventura) */
-const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato' };
+const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo' };
 let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
 const isLocked = c => !!c.unlock && !unlocks[c.unlock];
 function unlockChar(k) {
@@ -521,7 +627,9 @@ function renderPick() {
     const can = document.createElement('canvas'); SPR[c.sprite].draw(can, 3); b.append(can);
     b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>` + (lock ? LOCK_SVG + `<em>${UNLOCK_TXT[c.unlock]}</em>` : ''));
     b.title = lock ? 'Bloccato: ' + UNLOCK_TXT[c.unlock] : POWERS[c.power].d;
-    b.onclick = () => { if (isLocked(c)) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); tone(160, 0.12, 'square', 0.04); return; } startGame(i); };
+    b.onclick = () => {
+      const w2lock = pickWorld === 2 && mode === 'adv' && !hsOpen();
+      if (isLocked(c) || w2lock) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); tone(160, 0.12, 'square', 0.04); if (w2lock) $('worldinfo').hidden = false; return; } startGame(i); };
     $('pick').append(b);
   });
 }
@@ -530,8 +638,9 @@ if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, ...GENERATORS.map(g => g.led)]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, ...GENERATORS.map(g => g.led)]);
+applyWorldLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
+window.__game = { setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
 requestAnimationFrame(loop);

@@ -5,7 +5,7 @@ let flashLight, flashMesh, flashT = 0, shakeA = 0, ash, ashPos;
 const N = 700, SPAN = 46, HGT = 12;
 
 export function initFx(scene) {
-  flashLight = new THREE.PointLight('#ffc870', 0, 7, 2); scene.add(flashLight);
+  flashLight = new THREE.PointLight('#ffc870', 0, 7, 2); flashLight.userData.fx = 1; scene.add(flashLight);
   flashMesh = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffe0a0', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
   flashMesh.visible = false; scene.add(flashMesh);
   const g = new THREE.BufferGeometry(); ashPos = new Float32Array(N * 3);
