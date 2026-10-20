@@ -59,7 +59,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 @media (max-width:1000px){.pick{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:480px){.pick{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .pc{background:#1b222c;border:3px solid var(--o);border-radius:14px;box-shadow:0 4px 0 var(--o);padding:8px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--ink);font-family:var(--ui);text-align:center;transition:transform .1s}
-.pc:hover,.pc:focus-visible{transform:translateY(-4px);border-color:var(--c);outline:none}
+.btn:focus-visible{outline:3px solid #ffd25e;outline-offset:3px}
+.pc:hover,.pc:focus-visible,.pc.padfocus{transform:translateY(-4px);border-color:var(--c);outline:none}
 .pc canvas{width:100%;max-width:150px;image-rendering:pixelated;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 30%,#1b222c),#151b23);border-radius:9px}
 .pc b{font-family:var(--pix);font-size:16px;line-height:1.1}
 .pc span{font-size:12px;font-weight:700;color:var(--c)}

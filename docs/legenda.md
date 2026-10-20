@@ -189,7 +189,7 @@ Si parte con 900 monete. Il mondo 2 parte più facile della fine del Tigros e sa
 
 | Arma | Dove | Costo | Danno | Note |
 |---|---|---|---|---|
-| Katana | muro in fondo al parcheggio dell'Happy Shopping | 1500 | 150 a colpo (corpo a corpo, 3 m) | colpisce tutti i nemici davanti a te, niente munizioni |
+| Pistola automatica | muro in fondo al parcheggio dell'Happy Shopping | 1200 (munizioni 600) | 15 a colpo, 13 colpi al secondo | raffica come il mitra ma più debole; caricatore da 20, riserva 160 |
 | Bazooka | muro in fondo al negozio dell'Happy Shopping | 5000 (ricarica 3000) | 600 al centro, metà al bordo | 10 colpi in tutto, esplode con danno ad area (raggio 4,5 m) |
 
 ### Prezzi del Tigros (più alti)
@@ -224,3 +224,9 @@ All'inizio dell'Happy Shopping in Avventura c'è la sua intro. Il finale dice ch
 | Debe | Proiettili lenti: per 9 s ogni nemico che colpisci va a un terzo della velocità per 3,5 s | 9 s · 22 s |
 
 Onda d'urto e Furia restano nel gioco, pronti per i personaggi dei prossimi mondi.
+
+### Dopo il boss finale
+
+In Avventura, quando sconfiggi Loris compare il finale del Tigros con due scelte: **Vai all'Happy Shopping** (parti dal mondo 2 con lo stesso personaggio, dopo l'intro) oppure **Resta al Tigros** (le ondate continuano all'infinito). Lo stesso vale dopo il Capo: puoi restare all'Happy Shopping.
+
+La katana è tolta per ora (troppo forte): il codice resta nel gioco per usarla più avanti.

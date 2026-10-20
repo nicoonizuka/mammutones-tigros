@@ -61,7 +61,14 @@ function finish(G) {
 /* ---------- armi ---------- */
 export function buildWeapon(id) {
   const g = new THREE.Group(); const dark = M('#2a2d33', { roughness: 0.4, metalness: 0.55 });
-  if (id === 'katana') {
+  if (id === 'pistauto') {
+    mesh(rbox(0.045, 0.065, 0.22, 0.012), dark, g, [0, 0.02, 0.06]);
+    mesh(rbox(0.035, 0.1, 0.05, 0.012), dark, g, [0, -0.04, 0]);
+    mesh(rbox(0.03, 0.2, 0.04, 0.01), M('#3a3d44', { roughness: 0.4, metalness: 0.5 }), g, [0, -0.14, 0.005]);
+    mesh(rbox(0.05, 0.05, 0.06, 0.012), M('#c8a03a', { roughness: 0.3, metalness: 0.8 }), g, [0, 0.025, 0.19]);
+    mesh(rbox(0.012, 0.03, 0.05, 0.006), M('#d84040'), g, [0.026, 0.0, 0.02]);
+    g.userData.muzzle = new V3(0, 0.03, 0.23);
+  } else if (id === 'katana') {
     const steel = M('#e4e8ee', { roughness: 0.12, metalness: 0.95 }), wrap = M('#1a1a20', { roughness: 0.7 }), gold = M('#d8a83a', { roughness: 0.3, metalness: 0.8 });
     mesh(rbox(0.012, 0.035, 0.78, 0.006), steel, g, [0, 0.02, 0.5]);
     mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 16), gold, g, [0, 0.02, 0.1], [Math.PI / 2, 0, 0]);

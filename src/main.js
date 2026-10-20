@@ -613,6 +613,8 @@ function victory() {
 }
 /* finale: complimenti, i boss scappano, poi la mappa del mondo */
 function showEnding(real, wf) {
+  if (!real) { const ww = wf || pickWorld; if (state !== 'play' && world !== ww) { world = ww; applyWorldLook(ww); } }
+  $('endNext').hidden = !(real && world === 1 && mode === 'adv'); $('endCont').hidden = !real; $('endCont').firstChild.textContent = world === 2 ? 'Resta all\'Happy Shopping' : 'Resta al Tigros';
   ['sel', 'dead', 'pause', 'world', 'tale'].forEach(id => ($(id).hidden = true));
   $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
   const who = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
@@ -627,7 +629,7 @@ function showEnding(real, wf) {
     : `<p><b>${who}</b> ha ripreso il supermercato: la corrente è tornata, i generatori ronzano e stasera i tavolini del Buongusto sono di nuovo vostri.</p>
        <p>Ma quando il fumo si è diradato, nell'ufficio della zona controllo non c'era nessuno. La maschera nera di <b>Loris Busato</b> era a terra, spaccata a metà. Dal tombino del seminterrato si sentiva solo uno squittio che si allontanava: <b>Fab La Rue</b> è scappato con i suoi ratti.</p>
        <p>Non sono stati sconfitti davvero: <b>torneranno</b>. Ma per ora il Tigros è vostro. Fuori, però, Busto Arsizio è ancora nel caos: prossima tappa l'<b>Happy Shopping</b>, dove vi aspettano Tefalin e Diego.</p>`;
-  $('endunlock').hidden = !(real && lastUnlock); if (real && lastUnlock) $('endunlock').textContent = 'Hai sbloccato ' + lastUnlock.name + '!'; lastUnlock = null;
+  $('endunlock').hidden = !(real && lastUnlock); if (real && lastUnlock) $('endunlock').textContent = 'Hai sbloccato ' + lastUnlock.name + '!' + (world === 1 ? ' E da adesso puoi giocare anche con Tefalin e Diego.' : ''); lastUnlock = null;
   $('ending').hidden = false; menuIdx = 0;
 }
 function showWorld() {
@@ -644,17 +646,33 @@ $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
 /* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
+let lastVis = null, stickX = 0, stickY = 0;
 function padMenus() {
-  const vis = ['story', 'tale', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
+  const vis = ['story', 'tale', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) { lastVis = null; return; }
   if (vis === 'inv' && (pad.pressed[BTN.CIRCLE] || pad.pressed[8] || pad.pressed[17])) { closeInv(); return; }
-  const btns = [...$(vis).querySelectorAll('button')].filter(b => !b.hidden); if (!btns.length) return;
-  /* anche la levetta sinistra: uno scatto ogni volta che la spingi */
-  const sv = Math.abs(pad.lx) > Math.abs(pad.ly) ? pad.lx : pad.ly, sd = sv > 0.55 ? 1 : sv < -0.55 ? -1 : 0;
-  const stick = sd !== 0 && sd !== stickDir ? sd : 0; stickDir = Math.abs(sv) < 0.3 ? 0 : sd || stickDir;
-  const step = (pad.pressed[BTN.RIGHT] || pad.pressed[BTN.DOWN]) ? 1 : (pad.pressed[BTN.LEFT] || pad.pressed[BTN.UP]) ? -1 : stick;
-  if (step) { menuIdx = (menuIdx + step + btns.length) % btns.length; btns[menuIdx].focus(); }
+  const btns = [...$(vis).querySelectorAll('button')].filter(b => !b.hidden && b.offsetParent !== null); if (!btns.length) return;
+  /* schermata nuova: si riparte dal primo pulsante */
+  let cur = btns.indexOf(document.activeElement);
+  if (vis !== lastVis) { lastVis = vis; cur = 0; btns[0].focus({ preventScroll: true }); }
+  if (cur < 0) cur = Math.min(menuIdx, btns.length - 1);
+  /* frecce o levetta sinistra: uno scatto per ogni spinta */
+  const sx = pad.lx > 0.55 ? 1 : pad.lx < -0.55 ? -1 : 0, sy = pad.ly > 0.55 ? 1 : pad.ly < -0.55 ? -1 : 0;
+  let dx = pad.pressed[BTN.RIGHT] ? 1 : pad.pressed[BTN.LEFT] ? -1 : 0, dy = pad.pressed[BTN.DOWN] ? 1 : pad.pressed[BTN.UP] ? -1 : 0;
+  if (!dx && !dy) { if (sx && sx !== stickX && Math.abs(pad.lx) >= Math.abs(pad.ly)) dx = sx; else if (sy && sy !== stickY && Math.abs(pad.ly) > Math.abs(pad.lx)) dy = sy; }
+  stickX = Math.abs(pad.lx) < 0.3 ? 0 : sx || stickX; stickY = Math.abs(pad.ly) < 0.3 ? 0 : sy || stickY;
+  if (dx || dy) {
+    /* va al pulsante piu' vicino nella direzione scelta (funziona anche con le schede in griglia) */
+    const r0 = btns[cur].getBoundingClientRect(), c0x = r0.left + r0.width / 2, c0y = r0.top + r0.height / 2;
+    let best = -1, bs = Infinity;
+    btns.forEach((b, k) => { if (k === cur) return; const r = b.getBoundingClientRect(), vx = r.left + r.width / 2 - c0x, vy = r.top + r.height / 2 - c0y;
+      const along = dx ? vx * dx : vy * dy, across = dx ? Math.abs(vy) : Math.abs(vx); if (along <= 4) return;
+      const sc = along + across * 2.2; if (sc < bs) { bs = sc; best = k; } });
+    if (best < 0) best = (cur + (dx || dy) + btns.length) % btns.length;
+    cur = best; btns[cur].focus({ preventScroll: true }); btns[cur].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  menuIdx = cur;
   if (vis === 'pause' && pad.pressed[BTN.OPTIONS]) { resume(); return; }
-  if (pad.pressed[BTN.X]) { (btns[menuIdx] || btns[0]).click(); menuIdx = 0; }
+  if (pad.pressed[BTN.X]) { const b = btns[cur]; lastVis = null; menuIdx = 0; b.click(); }
 }
 addEventListener('gamepadconnected', () => { feedSafe('Controller collegato'); });
 function feedSafe(t) { if (state === 'play') feed(t); }
@@ -666,13 +684,16 @@ $('godBtn').onclick = () => { god = !god; $('godBtn').setAttribute('aria-pressed
 let taleDone = null;
 function showTale(id, btn, done) { $('taleBody').innerHTML = $(id).innerHTML; $('taleGo').textContent = btn; taleDone = done; ['sel', 'world', 'ending'].forEach(k => ($(k).hidden = true)); $('tale').hidden = false; menuIdx = 0; }
 $('taleGo').onclick = () => { $('tale').hidden = true; const d = taleDone; taleDone = null; if (d) d(); };
-const backToMap = () => { $('world').hidden = false; menuIdx = 0; };
+const backToMap = () => { $('world').hidden = false; menuIdx = 0; if (state === 'menu' && world !== pickWorld) { world = pickWorld; applyWorldLook(world); } };
 $('mapIntro1').onclick = () => { $('world').hidden = true; $('story').hidden = false; storyBack = true; };
 $('mapEnd1').onclick = () => { showEnding(false, 1); endBack = true; };
 $('mapIntro2').onclick = () => showTale('hsIntro', 'Torna alla mappa', backToMap);
 $('mapEnd2').onclick = () => { showEnding(false, 2); endBack = true; };
 let storyBack = false, endBack = false;
-$('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = () => { endBack = false; showWorld(); }; $('worldBack').onclick = toMenu;
+$('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = () => { endBack = false; showWorld(); };
+/* dopo il boss finale: continuare con le ondate infinite o passare al mondo dopo */
+$('endCont').onclick = () => { $('ending').hidden = true; state = 'play'; $('hud').hidden = false; last = performance.now(); lock(); banner('Ondate infinite', 'Resisti finché ce la fai'); };
+$('endNext').onclick = () => { const c = charIdx; toMenu(); setWorld(2); startGame(ROSTER[c] && !isLocked(ROSTER[c]) ? c : 0); }; $('worldBack').onclick = toMenu;
 $('playHS').onclick = () => { setWorld(2); toMenu(); };
 function setWorld(w) {
   pickWorld = w; document.querySelectorAll('[data-world]').forEach(x => { const on = +x.dataset.world === w; x.setAttribute('aria-pressed', on ? 'true' : 'false'); x.classList.toggle('ghost', !on); });

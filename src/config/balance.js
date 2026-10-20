@@ -14,6 +14,7 @@ export const WEAPONS = {
   deagle:  { n: 'Desert Eagle', dmg: 1000, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0.5, sound: 2, pierce: 1, noPack: 1 },
   katana:  { n: 'Katana',  dmg: 150, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0, sound: 0, melee: 1, range: 3.0, noPack: 1 },
   bazooka: { n: 'Bazooka', dmg: 600, rate: 1.3, mag: 1, res: 9, spread: 0, auto: false, pel: 1, reload: 1.8, sound: 2, explode: 4.5 },
+  pistauto: { n: 'Pistola automatica', dmg: 15, rate: 0.075, mag: 20, res: 160, spread: 0.032, auto: true, pel: 1, reload: 1.5, sound: 0 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
