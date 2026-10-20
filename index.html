@@ -82,6 +82,18 @@
     <div class="btns"><button class="btn" id="toWorld" type="button">Apri la mappa del mondo</button></div>
   </div>
 </div>
+<div class="over" id="tale" hidden>
+  <div class="box story"><div id="taleBody"></div><div class="btns"><button class="btn" id="taleGo" type="button">Continua</button></div></div>
+</div>
+<template id="hsIntro">
+  <p class="kicker">Mondo 2 · Sant'Edoardo, il giorno dopo</p>
+  <h1>Happy <span>Shopping</span></h1>
+  <p>Il Tigros è libero, ma il gruppo non è al completo. Mancano amici all'appello e nessuno risponde al telefono.</p>
+  <p>A due passi, sempre nel quartiere di Sant'Edoardo, c'è l'<b>Happy Shopping</b>, il bazar dove trovi di tutto, dalle pentole alle valigie. Da giorni lì succede il finimondo: Mammutones sbandati che girano per il parcheggio, merce che si muove da sola tra gli scaffali e un <b>Capo</b> che chiude le porte e non fa uscire nessuno.</p>
+  <p>Lì dentro ci sono <b>Tefalin</b> e <b>Diego</b>. E c'è <b>Debe</b>: il Capo lo tiene dietro le casse a lavorare, sfruttato, giorno e notte.</p>
+  <p class="kicker">Il piano</p>
+  <ol class="plan"><li>Ripulire il parcheggio e ritrovare Tefalin e Diego</li><li>Aprire il negozio e farsi strada tra gli scaffali</li><li>Sconfiggere il Capo e liberare Debe</li><li>Radunare tutti e partire verso il Tribunale</li></ol>
+</template>
 <div class="over" id="world" hidden>
   <div class="box">
     <h1>Busto Arsizio <span>nel caos</span></h1>
@@ -136,6 +148,8 @@
       </svg>
     </div>
     <div class="legend"><span><i class="sw on"></i>Disponibile</span><span><i class="sw off"></i>Oscurato: nuovi nemici e nuovi boss in arrivo</span></div>
+    <p class="kicker">Rivedi le storie</p>
+    <div class="modes tales"><button class="btn ghost" type="button" id="mapIntro1">Tigros · intro<small>il prologo</small></button><button class="btn ghost" type="button" id="mapEnd1">Tigros · finale<small>Loris e Fab scappano</small></button><button class="btn ghost" type="button" id="mapIntro2">Happy Shopping · intro<small>recupera gli amici</small></button><button class="btn ghost" type="button" id="mapEnd2">Happy Shopping · finale<small>la lettera</small></button></div>
     <div class="btns"><button class="btn" id="playHS" type="button" hidden>Vai all'Happy Shopping<small>mondo 2</small></button><button class="btn ghost" id="worldBack" type="button">Torna al menu</button></div>
   </div>
 </div>

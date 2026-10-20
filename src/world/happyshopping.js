@@ -28,6 +28,8 @@ export const HS_BUYS = [
   { id: 'fucile', cost: 500, ammoCost: 250, x: OX - 20, z: 33.9, rot: Math.PI, zone: 'hs-parcheggio' },
   { id: 'mitra', cost: 1200, ammoCost: 600, x: OX - 25.65, z: -20, rot: Math.PI / 2, zone: 'hs-negozio' },
   { id: 'pompa', cost: 1500, ammoCost: 750, x: OX + 25.65, z: -17, rot: -Math.PI / 2, zone: 'hs-negozio' },
+  { id: 'katana', cost: 1500, ammoCost: 0, x: OX + 24, z: 33.9, rot: Math.PI, zone: 'hs-parcheggio' },
+  { id: 'bazooka', cost: 5000, ammoCost: 3000, x: OX + 18, z: -31.55, rot: 0, zone: 'hs-negozio' },
 ];
 
 /* ---------- cielo: giorno sporco di fumo ---------- */

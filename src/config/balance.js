@@ -12,18 +12,20 @@ export const WEAPONS = {
   pompa:   { n: 'Fucile a pompa', dmg: 30, rate: 0.85, mag: 6, res: 36, spread: 0.075, auto: false, pel: 8, reload: 2.6, sound: 1 },
   ak47:    { n: 'AK-47',   dmg: 40, rate: 0.095, mag: 30, res: 210, spread: 0.02, auto: true, pel: 1, reload: 2.2, sound: 0 },
   deagle:  { n: 'Desert Eagle', dmg: 1000, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0.5, sound: 2, pierce: 1, noPack: 1 },
+  katana:  { n: 'Katana',  dmg: 150, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0, sound: 0, melee: 1, range: 3.0, noPack: 1 },
+  bazooka: { n: 'Bazooka', dmg: 600, rate: 1.3, mag: 1, res: 9, spread: 0, auto: false, pel: 1, reload: 1.8, sound: 2, explode: 4.5 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
 
 /* armi da comprare al muro: la prima volta compri l'arma, dopo compri le munizioni */
 export const WALL_BUYS = [
-  { id: 'pistola', cost: 300, ammoCost: 150, x: -4.5, z: -13.9, rot: 0, zone: 'parcheggio' },
-  { id: 'fucile', cost: 500, ammoCost: 250, x: -25.5, z: -13.9, rot: 0, zone: 'gazebo' },
-  { id: 'mitra', cost: 1200, ammoCost: 600, x: -11.9, z: -31, rot: Math.PI / 2, zone: 'negozio' },
-  { id: 'pompa', cost: 1500, ammoCost: 750, x: 60.0, z: -8, rot: Math.PI / 2, zone: 'seminterrato' },
-  { id: 'ak47', cost: 3000, ammoCost: 1500, x: -12.0, z: -58.2, rot: Math.PI / 2, zone: 'magazzino' },
-  { id: 'deagle', cost: 1500, ammoCost: 800, x: 38, z: -69.95, rot: 0, zone: 'controllo' },
+  { id: 'pistola', cost: 400, ammoCost: 200, x: -4.5, z: -13.9, rot: 0, zone: 'parcheggio' },
+  { id: 'fucile', cost: 750, ammoCost: 350, x: -25.5, z: -13.9, rot: 0, zone: 'gazebo' },
+  { id: 'mitra', cost: 1600, ammoCost: 800, x: -11.9, z: -31, rot: Math.PI / 2, zone: 'negozio' },
+  { id: 'pompa', cost: 2500, ammoCost: 1200, x: 60.0, z: -8, rot: Math.PI / 2, zone: 'seminterrato' },
+  { id: 'ak47', cost: 5000, ammoCost: 2500, x: -12.0, z: -58.2, rot: Math.PI / 2, zone: 'magazzino' },
+  { id: 'deagle', cost: 3000, ammoCost: 1500, x: 38, z: -69.95, rot: 0, zone: 'controllo' },
 ];
 
 /* ---------- NEMICI ----------
@@ -42,10 +44,10 @@ export const ENEMIES = {
    types: quali Mammutones possono uscire quando quella e' la zona piu' avanzata aperta */
 export const ZONES = [
   { id: 'parcheggio', n: 'Parcheggio',        cost: 0,    hp: 1.0,  dmg: 1.0,  coins: 1.0, types: { base: 1 } },
-  { id: 'gazebo',     n: 'Gazebo Buongusto',  cost: 750,  hp: 1.1,  dmg: 1.1,  coins: 1.15, types: { base: 1 } },
-  { id: 'negozio',    n: 'Negozio',           cost: 1250, hp: 1.25, dmg: 1.2,  coins: 1.35, types: { base: 0.7, cornuto: 0.3 } },
-  { id: 'seminterrato', n: 'Seminterrato',    cost: 2000, hp: 1.45, dmg: 1.35, coins: 1.6, types: { base: 0.55, cornuto: 0.3, grosso: 0.15 } },
-  { id: 'magazzino',  n: 'Magazzino',         cost: 3000, hp: 1.7,  dmg: 1.5,  coins: 1.9, types: { base: 0.35, cornuto: 0.25, grosso: 0.15, furia: 0.25 } },
+  { id: 'gazebo',     n: 'Gazebo Buongusto',  cost: 1000, hp: 1.1,  dmg: 1.1,  coins: 1.15, types: { base: 1 } },
+  { id: 'negozio',    n: 'Negozio',           cost: 1750, hp: 1.25, dmg: 1.2,  coins: 1.35, types: { base: 0.7, cornuto: 0.3 } },
+  { id: 'seminterrato', n: 'Seminterrato',    cost: 3000, hp: 1.45, dmg: 1.35, coins: 1.6, types: { base: 0.55, cornuto: 0.3, grosso: 0.15 } },
+  { id: 'magazzino',  n: 'Magazzino',         cost: 5000, hp: 1.7,  dmg: 1.5,  coins: 1.9, types: { base: 0.35, cornuto: 0.25, grosso: 0.15, furia: 0.25 } },
   { id: 'controllo',  n: 'Zona controllo',    cost: 0,    hp: 1.9,  dmg: 1.6,  coins: 2.2, types: { base: 0.3, cornuto: 0.25, grosso: 0.15, furia: 0.3 } },
   /* mondo 2, Happy Shopping: parte piu' facile dello scontro con Loris e sale piano piano */
   { id: 'hs-parcheggio', n: 'Parcheggio Happy Shopping', cost: 0, hp: 1.2, dmg: 1.15, coins: 1.3, types: { base: 0.7, cornuto: 0.3 } },
@@ -101,9 +103,9 @@ export const BOSS_LORIS = { n: 'Loris Busato', hp: 12000, spd: 2.6, dmg: 26, atk
 export const BOSS_CAPO = { n: "Il Capo dell'Happy Shopping", hp: 6000, spd: 1.9, dmg: 30, atkCd: 1.5, reward: 3000, summonEvery: 12, wave: 7,
   charge: { every: 7, wind: 0.9, dur: 1.2, mult: 4.2, dmg: 45 } };
 export const HS_START_COINS = 900;
-export const GENERATOR_COST = 1000;
+export const GENERATOR_COST = 2000;
 /* inventario: pacchi di munizioni da portare con se' e zaino per alzare il massimo di munizioni */
-export const INVENTORY = { packCost: 400, packMax: 3, bags: [{ cost: 800, mult: 1.5 }, { cost: 2000, mult: 2 }] };
+export const INVENTORY = { packCost: 600, packMax: 3, bags: [{ cost: 1500, mult: 1.5 }, { cost: 3500, mult: 2 }] };
 /* nel seminterrato una parte dei nemici sono ratti */
 export const RAT_SHARE = 0.45;
 
@@ -111,4 +113,4 @@ export const RAT_SHARE = 0.45;
 export const REGEN = { delay: 5, perSec: 6 };   // dopo 5 s senza colpi la vita torna su di 6 al secondo
 
 /* ---------- MODALITA' SANDBOX ---------- */
-export const SANDBOX = { coins: 25000 };        // tutto aperto, corrente e generatori accesi, boss appena entri
+export const SANDBOX = { coins: 40000 };        // tutto aperto, corrente e generatori accesi, boss appena entri

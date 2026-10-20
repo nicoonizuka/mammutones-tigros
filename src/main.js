@@ -113,6 +113,7 @@ function muzzle() { const g = pModel.userData.gun; const v = g.userData.muzzle.c
 function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.dead) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
 function shoot() {
   const w = P.weapons[P.cur]; if (P.reloadT > 0) return;
+  if (w.melee) { slash(w); return; }
   const inf = P.pwT > 0 && P.pw.k === 'ammo';
   if (w.ammo <= 0 && !inf) { if (w.res > 0) startReload(); else click(); return; }
   if (!inf) w.ammo--;
@@ -137,12 +138,30 @@ function shoot() {
       const e = h.object.userData.enemy; if (!e) { end = h.point; spark(h.point, false); break; }
       if (e.dead || hitE.has(e)) continue; hitE.add(e);
       const head = !!h.object.userData.head; const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1) * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1);
-      damageEnemy(e, w.dmg * mult, head); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
+      if (!w.explode) damageEnemy(e, w.dmg * mult, head); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
     }
+    if (w.explode) { explode(end, w.explode, w.dmg * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1)); anyHit = true; }
     tracer(muzzle(), end);
   }
   if (anyHit) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
   pModel.userData.P.armR.rotation.x -= 0.25;
+}
+/* katana: colpisce tutti i nemici davanti a te entro pochi metri */
+function slash(w) {
+  fireT = w.rate; tone(900, 0.07, 'sawtooth', 0.05, 200); shake(0.06);
+  const pf = new V3(-Math.sin(yaw), 0, -Math.cos(yaw)); let n = 0; const mult = P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1;
+  for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length();
+    if (d < w.range + (e.r || 0.4) && (d < 0.8 || to.normalize().dot(pf) > 0.3)) { damageEnemy(e, w.dmg * mult, false); spark(e.m.userData.hit.body.getWorldPosition(new V3()), true); n++; } }
+  if (n) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
+  const A = pModel.userData.P.armR; A.rotation.x -= 1.1; A.rotation.z = 0.8; setTimeout(() => { A.rotation.z = 0; }, 160);
+}
+/* bazooka: esplosione con danno ad area */
+const boomM = new THREE.MeshBasicMaterial({ color: '#ff9a3a', transparent: true, opacity: 0.85, depthWrite: false });
+function explode(p, R, dmg) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), boomM.clone()); m.position.copy(p); scene.add(m); let t = 0;
+  const step = () => { t += 0.016; m.scale.setScalar(0.5 + t * R * 6); m.material.opacity = Math.max(0, 0.85 - t * 2.6); if (t < 0.33) requestAnimationFrame(step); else { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } }; step();
+  tone(70, 0.6, 'sawtooth', 0.12, 30); shake(0.4);
+  for (const e of enemies) { if (e.dead) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
 }
 function tracer(a, b) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const l = new THREE.Line(g, tracerM); scene.add(l); tracers.push({ l, t: 0.06 }); }
 function spark(p, blood) { const m = new THREE.Mesh(sparkG, blood ? bloodM : sparkM); m.position.copy(p); scene.add(m); sparks.push({ m, t: 0.18 }); }
@@ -201,7 +220,7 @@ const wallMeshes = ALL_BUYS.map(wb => {
 const INTER = [
   ...ALL_BUYS.map(wb => ({
     x: wb.x + Math.sin(wb.rot || 0) * 1.2, z: wb.z + Math.cos(wb.rot || 0) * 1.2, r: 2.4,
-    label: () => P && P.weapons.some(w => w.id === wb.id) ? `<b>E</b> Munizioni ${WEAPONS[wb.id].n} · <b>${wb.ammoCost}</b>` : `<b>E</b> Compra ${WEAPONS[wb.id].n} · <b>${wb.cost}</b>`,
+    label: () => P && WEAPONS[wb.id].melee && P.weapons.some(w => w.id === wb.id) ? null : P && P.weapons.some(w => w.id === wb.id) ? `<b>E</b> Munizioni ${WEAPONS[wb.id].n} · <b>${wb.ammoCost}</b>` : `<b>E</b> Compra ${WEAPONS[wb.id].n} · <b>${wb.cost}</b>`,
     cost: () => P.weapons.some(w => w.id === wb.id) ? wb.ammoCost : wb.cost,
     act: () => {
       const have = P.weapons.findIndex(w => w.id === wb.id);
@@ -317,7 +336,7 @@ function blast() {
 /* ===================== INVENTARIO ===================== */
 function openInv() { if (state !== 'play') return; state = 'inv'; try { document.exitPointerLock(); } catch (_) {} mouseDown = false; renderInv(); $('inv').hidden = false; }
 function closeInv() { $('inv').hidden = true; state = 'play'; last = performance.now(); lock(); }
-function usePack() { if (!packs) { feed('Non hai pacchi di munizioni'); denied(); return; } const w = P.weapons[P.cur]; if (WEAPONS[w.id].noPack) { feed('La Desert Eagle si ricarica solo al muro'); return; } packs--; w.res = maxRes(w); w.ammo = w.mag; feed('Pacco usato: munizioni piene'); pickS(); }
+function usePack() { if (!packs) { feed('Non hai pacchi di munizioni'); denied(); return; } const w = P.weapons[P.cur]; if (WEAPONS[w.id].noPack) { feed(WEAPONS[w.id].melee ? 'La katana non ha bisogno di munizioni' : WEAPONS[w.id].n + ' si ricarica solo al muro'); return; } packs--; w.res = maxRes(w); w.ammo = w.mag; feed('Pacco usato: munizioni piene'); pickS(); }
 function renderInv() {
   const nb = INVENTORY.bags[bag];
   $('invw').innerHTML = P.weapons.map(w => `<div class="iw"><b>${w.n}</b><span>${w.ammo} nel caricatore · ${w.res} / ${maxRes(w)} di riserva</span></div>`).join('');
@@ -338,7 +357,7 @@ function hud() {
   $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[zoneIdx()].n + '</small>'; $('coins').textContent = coins;
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
   const w = P.weapons[P.cur]; const inf = P.pwT > 0 && P.pw.k === 'ammo'; $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
-  $('ammo').innerHTML = inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
+  $('ammo').innerHTML = w.melee ? '⚔' : inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
   $('slots').innerHTML = P.weapons.map((x, i) => `<span class="${i === P.cur ? 'on' : ''}">${i + 1} ${x.n}</span>`).join('') + `<span>Pacchi ${packs} · H</span>`;
   const on = P.pwT > 0 || (P.pw.k === 'call' && mirko); $('pw').classList.toggle('on', !!on);
   $('pwb').style.width = (on ? (P.pw.k === 'call' && mirko ? mirko.t : P.pwT) / P.pw.dur * 100 : (1 - P.pwCd / P.pw.cd) * 100) + '%';
@@ -515,10 +534,12 @@ function resetWorld() {
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
 addEventListener('keydown', e => { if (e.code === 'KeyF') { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else fullscreen(); } });
+let seenHS = false;
 function startGame(i) {
+  if (pickWorld === 2 && mode === 'adv' && !seenHS) { seenHS = true; $('sel').hidden = true; showTale('hsIntro', 'Entra nel parcheggio', () => startGame(i)); return; }
   fullscreen();
   charIdx = i; resetWorld(); world = pickWorld; applyWorldLook(world); newPlayer(i);
-  if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; } state = 'play'; ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
+  if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
   const wc = $('who'); const sp = SPR[ROSTER[i].sprite]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
   for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = sp.g[sp.top - 3 + y] && sp.g[sp.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
@@ -547,17 +568,18 @@ function victory() {
   $('hud').hidden = true; showEnding(true);
 }
 /* finale: complimenti, i boss scappano, poi la mappa del mondo */
-function showEnding(real) {
-  ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true));
+function showEnding(real, wf) {
+  ['sel', 'dead', 'pause', 'world', 'tale'].forEach(id => ($(id).hidden = true));
   $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
   const who = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
-  const w2 = real ? world === 2 : pickWorld === 2;
+  const w2 = real ? world === 2 : wf ? wf === 2 : pickWorld === 2;
   $('endkick').textContent = w2 ? 'Mappa 2 completata' : 'Mappa 1 completata';
-  $('endtitle').innerHTML = w2 ? 'Complimenti, hai liberato <span>l\'Happy Shopping</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
+  $('endtitle').innerHTML = w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
   $('endtext').innerHTML = w2
-    ? `<p><b>${who}</b> ha ripreso il bazar di Sant'Edoardo. Il Capo è a terra in mezzo ai jeans piegati e i Mammutones rimasti sono scappati verso la ferrovia.</p>
-       <p>Adesso il gruppo è al completo: <b>Tefalin</b>, <b>Diego</b> e <b>Debe</b> si sono uniti agli altri. Damiano ha acceso la Mercedes e vi aspetta nel parcheggio con la musica alta.</p>
-       <p>Ma Busto è ancora nel caos. La prossima tappa è il <b>Tribunale</b>, poi il centro. Lì vi aspettano nemici che non avete mai visto.</p>`
+    ? `<p><b>${who}</b> ha messo al tappeto il Capo in mezzo ai jeans piegati. Dietro le casse c'era <b>Debe</b>, costretto a lavorare lì giorno e notte: adesso è libero e si unisce al gruppo insieme a <b>Tefalin</b> e <b>Diego</b>.</p>
+       <p>Nel cassetto della cassa principale, sotto una pila di scontrini, c'era una lettera:</p>
+       <div class="letter">«Gli altri vostri amici non sono spariti. Sono tenuti in segreto nel <b>garage di Pika</b>, al <b>Tribunale</b>. Se volete liberare Busto Arsizio, dovete andare a prendere anche loro.»</div>
+       <p>Adesso raduna tutti gli amici e preparatevi: si va al <b>Tribunale</b>. Damiano ha già acceso la Mercedes.</p>`
     : `<p><b>${who}</b> ha ripreso il supermercato: la corrente è tornata, i generatori ronzano e stasera i tavolini del Buongusto sono di nuovo vostri.</p>
        <p>Ma quando il fumo si è diradato, nell'ufficio della zona controllo non c'era nessuno. La maschera nera di <b>Loris Busato</b> era a terra, spaccata a metà. Dal tombino del seminterrato si sentiva solo uno squittio che si allontanava: <b>Fab La Rue</b> è scappato con i suoi ratti.</p>
        <p>Non sono stati sconfitti davvero: <b>torneranno</b>. Ma per ora il Tigros è vostro. Fuori, però, Busto Arsizio è ancora nel caos: prossima tappa l'<b>Happy Shopping</b>, dove vi aspettano Tefalin e Diego.</p>`;
@@ -573,13 +595,13 @@ function showWorld() {
   $('playHS').hidden = !open;
 }
 const hsOpen = () => !!unlocks.loris || !!unlocks.hs;
-function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyWorldLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
+function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyWorldLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
 /* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
 function padMenus() {
-  const vis = ['story', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
+  const vis = ['story', 'tale', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
   if (vis === 'inv' && (pad.pressed[BTN.CIRCLE] || pad.pressed[8] || pad.pressed[17])) { closeInv(); return; }
   const btns = [...$(vis).querySelectorAll('button')].filter(b => !b.hidden); if (!btns.length) return;
   /* anche la levetta sinistra: uno scatto ogni volta che la spingi */
@@ -594,9 +616,19 @@ addEventListener('gamepadconnected', () => { feedSafe('Controller collegato'); }
 function feedSafe(t) { if (state === 'play') feed(t); }
 
 /* storia e modalita' */
-document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto aperto da subito, 25000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri la mappa zona per zona. Al Tigros Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; $('godBtn').hidden = mode !== 'sandbox'; setWorld(pickWorld); }));
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto aperto da subito, 40000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri la mappa zona per zona. Al Tigros Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; $('godBtn').hidden = mode !== 'sandbox'; setWorld(pickWorld); renderPick(); }));
 $('godBtn').onclick = () => { god = !god; $('godBtn').setAttribute('aria-pressed', god ? 'true' : 'false'); $('godBtn').firstChild.textContent = god ? 'Invincibile: sì' : 'Invincibile: no'; };
-$('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = showWorld; $('worldBack').onclick = toMenu;
+/* racconti: intro e finali di ogni mondo, si rivedono anche dalla mappa */
+let taleDone = null;
+function showTale(id, btn, done) { $('taleBody').innerHTML = $(id).innerHTML; $('taleGo').textContent = btn; taleDone = done; ['sel', 'world', 'ending'].forEach(k => ($(k).hidden = true)); $('tale').hidden = false; menuIdx = 0; }
+$('taleGo').onclick = () => { $('tale').hidden = true; const d = taleDone; taleDone = null; if (d) d(); };
+const backToMap = () => { $('world').hidden = false; menuIdx = 0; };
+$('mapIntro1').onclick = () => { $('world').hidden = true; $('story').hidden = false; storyBack = true; };
+$('mapEnd1').onclick = () => { showEnding(false, 1); endBack = true; };
+$('mapIntro2').onclick = () => showTale('hsIntro', 'Torna alla mappa', backToMap);
+$('mapEnd2').onclick = () => { showEnding(false, 2); endBack = true; };
+let storyBack = false, endBack = false;
+$('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = () => { endBack = false; showWorld(); }; $('worldBack').onclick = toMenu;
 $('playHS').onclick = () => { setWorld(2); toMenu(); };
 function setWorld(w) {
   pickWorld = w; document.querySelectorAll('[data-world]').forEach(x => { const on = +x.dataset.world === w; x.setAttribute('aria-pressed', on ? 'true' : 'false'); x.classList.toggle('ghost', !on); });
@@ -606,14 +638,16 @@ function setWorld(w) {
   if (state === 'menu') { world = w; applyWorldLook(w); }
 }
 document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => setWorld(+b.dataset.world)));
-$('storyGo').onclick = () => { $('story').hidden = true; $('sel').hidden = false; menuIdx = 0; };
+$('storyGo').onclick = () => { $('story').hidden = true; if (storyBack) { storyBack = false; backToMap(); return; } $('sel').hidden = false; menuIdx = 0; };
 $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = false; };
 
 /* schermata di scelta: ritratti in pixel art */
 /* personaggi da sbloccare: Jacopo battendo Fab La Rue, Leo finendo la storia (solo in Avventura) */
 const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo' };
 let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
-const isLocked = c => !!c.unlock && !unlocks[c.unlock];
+/* Tefalin, Diego e Debe vengono dall'Happy Shopping: in Avventura servono Loris battuto (e Debe il Capo), in Sandbox sempre disponibili */
+const isLocked = c => { if (c.world === 2) { if (mode === 'sandbox') return false; if (!unlocks.loris) return true; } return !!c.unlock && !unlocks[c.unlock]; };
+const lockTxt = c => c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
 function unlockChar(k) {
   if (mode !== 'adv' || unlocks[k]) return null; unlocks[k] = 1; try { localStorage.setItem('mt_unlocks', JSON.stringify(unlocks)); } catch (_) {}
   renderPick(); const c = ROSTER.find(r => r.unlock === k); return c;
@@ -625,8 +659,8 @@ function renderPick() {
     const lock = isLocked(c);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'pc' + (lock ? ' locked' : ''); b.style.setProperty('--c', c.c);
     const can = document.createElement('canvas'); SPR[c.sprite].draw(can, 3); b.append(can);
-    b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>` + (lock ? LOCK_SVG + `<em>${UNLOCK_TXT[c.unlock]}</em>` : ''));
-    b.title = lock ? 'Bloccato: ' + UNLOCK_TXT[c.unlock] : POWERS[c.power].d;
+    b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>` + (lock ? LOCK_SVG + `<em>${lockTxt(c)}</em>` : ''));
+    b.title = lock ? 'Bloccato: ' + lockTxt(c) : POWERS[c.power].d;
     b.onclick = () => {
       const w2lock = pickWorld === 2 && mode === 'adv' && !hsOpen();
       if (isLocked(c) || w2lock) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); tone(160, 0.12, 'square', 0.04); if (w2lock) $('worldinfo').hidden = false; return; } startGame(i); };

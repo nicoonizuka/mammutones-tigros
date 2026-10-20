@@ -182,3 +182,35 @@ I personaggi bloccati si vedono nella schermata di scelta, oscurati e con il luc
 Si parte con 900 monete. Il mondo 2 parte più facile della fine del Tigros e sale piano piano.
 
 **Il Capo** (ondata 7): 6000 di vita, lento (1,9 m/s), 30 di danno a colpo. Ogni 7 secondi circa si ferma quasi un secondo, diventa rosso e carica dritto a velocità ×4,2: se ti prende fa 45 di danno (per il moltiplicatore della zona) e ti spinge via. Ogni 12 secondi chiama tre Mammutones. Battendolo in Avventura sblocchi Debe.
+
+## Aggiornamento: armi del mondo 2, prezzi più alti, storie
+
+### Armi nuove all'Happy Shopping
+
+| Arma | Dove | Costo | Danno | Note |
+|---|---|---|---|---|
+| Katana | muro in fondo al parcheggio dell'Happy Shopping | 1500 | 150 a colpo (corpo a corpo, 3 m) | colpisce tutti i nemici davanti a te, niente munizioni |
+| Bazooka | muro in fondo al negozio dell'Happy Shopping | 5000 (ricarica 3000) | 600 al centro, metà al bordo | 10 colpi in tutto, esplode con danno ad area (raggio 4,5 m) |
+
+### Prezzi del Tigros (più alti)
+
+| Cosa | Prima | Adesso |
+|---|---|---|
+| Munizioni pistola / pistola | 150 / 300 | 200 / 400 |
+| Fucile | 500 | 750 |
+| Mitra | 1200 | 1600 |
+| Fucile a pompa | 1500 | 2500 |
+| AK-47 | 3000 | 5000 |
+| Desert Eagle (e ogni colpo) | 1500 / 800 | 3000 / 1500 |
+| Gazebo · Negozio · Seminterrato · Magazzino | 750 · 1250 · 2000 · 3000 | 1000 · 1750 · 3000 · 5000 |
+| Generatori (l'uno) | 1000 | 2000 |
+| Pacco munizioni · Zaino 1 · Zaino 2 | 400 · 800 · 2000 | 600 · 1500 · 3500 |
+| Monete iniziali in Sandbox | 25000 | 40000 |
+
+### Personaggi del mondo 2
+
+Tefalin, Diego e Debe vengono dall'Happy Shopping. In Avventura si usano solo dopo aver sconfitto Loris Busato (Debe in più va liberato battendo il Capo). In Sandbox sono sempre disponibili.
+
+### Storie
+
+All'inizio dell'Happy Shopping in Avventura c'è la sua intro. Il finale dice che hai sconfitto il Capo e liberato Debe, e mostra la lettera: gli altri amici sono tenuti in segreto nel garage di Pika, al Tribunale. Dalla mappa del mondo si rivedono intro e finale del Tigros e dell'Happy Shopping.
