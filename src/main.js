@@ -43,7 +43,9 @@ const gzOpen = () => zone >= 1;
 function newWeapon(id) { const W = WEAPONS[id]; return { ...W, id, ammo: W.mag, res: W.res }; }
 /* ---------- prima persona: arma davanti alla camera ---------- */
 let fp = false; try { fp = localStorage.getItem('mt_fp') === '1'; } catch (_) {}
-const vm = new THREE.Group(); camera.add(vm); scene.add(camera); let vmKick = 0;
+/* l'arma in prima persona sta in una scena a parte disegnata sopra a tutto: cosi' non entra mai nei muri */
+const vmScene = new THREE.Scene(), vmRoot = new THREE.Group(), vm = new THREE.Group(); vmScene.add(vmRoot); vmRoot.add(vm); let vmKick = 0;
+vmScene.add(new THREE.HemisphereLight('#fff4e0', '#5a5048', 1.1)); { const dl = new THREE.DirectionalLight('#ffffff', 1.4); dl.position.set(1, 2, 1.5); vmScene.add(dl); }
 const skinM = new THREE.MeshStandardMaterial({ color: '#e0b48e', roughness: 0.7 });
 function buildVM() {
   while (vm.children.length) vm.remove(vm.children[0]);
@@ -121,7 +123,7 @@ function animLimbs(m, phase, amp) { const p = m.userData.P; const s = Math.sin(p
 /* ===================== SPARO ===================== */
 const ray = new THREE.Raycaster(); const tracerM = new THREE.LineBasicMaterial({ color: '#ffe08a' });
 const sparkG = new THREE.SphereGeometry(0.07, 6, 4), sparkM = new THREE.MeshBasicMaterial({ color: '#ffd27a' }), bloodM = new THREE.MeshBasicMaterial({ color: '#c0392b' });
-function muzzle() { const g = fp && vm.userData.gun ? vm.userData.gun : pModel.userData.gun; const v = g.userData.muzzle.clone(); g.localToWorld(v); return v; }
+function muzzle() { if (fp) { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); vmRoot.updateMatrixWorld(true); } const g = fp && vm.userData.gun ? vm.userData.gun : pModel.userData.gun; const v = g.userData.muzzle.clone(); g.localToWorld(v); return v; }
 function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.dead) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
 function shoot() {
   const w = P.weapons[P.cur]; if (P.reloadT > 0) return;
@@ -422,10 +424,11 @@ function hud() {
 let last = performance.now();
 function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000); last = t;
-  pollPad(); if (pad.connected) padMenus();
+  pollPad(); if (pad.connected) padMenus(dt);
   if (state === 'play') { time += dt; update(dt); }
   else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   renderer.render(scene, camera);
+  if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
 }
 function update(dt) {
   /* ondate */
@@ -663,33 +666,38 @@ $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
 /* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
-let lastVis = null, stickX = 0, stickY = 0;
-function padMenus() {
-  const vis = ['story', 'tale', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) { lastVis = null; return; }
+/* navigazione dei menu col controller: frecce o levetta per spostarsi (tenendo premuto scorre), X conferma, Cerchio indietro */
+let lastVis = null, holdDir = '', holdT = 0, padEl = null;
+function padMenus(dt) {
+  const vis = ['story', 'tale', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden);
+  if (!vis) { lastVis = null; if (padEl) { padEl.classList.remove('padfocus'); padEl = null; } return; }
   if (vis === 'inv' && (pad.pressed[BTN.CIRCLE] || pad.pressed[8] || pad.pressed[17])) { closeInv(); return; }
+  if (pad.pressed[BTN.CIRCLE]) { if (vis === 'pause') { resume(); return; } if (vis === 'world') { $('worldBack').click(); return; } }
+  if (vis === 'pause' && pad.pressed[BTN.OPTIONS]) { resume(); return; }
   const btns = [...$(vis).querySelectorAll('button')].filter(b => !b.hidden && b.offsetParent !== null); if (!btns.length) return;
-  /* schermata nuova: si riparte dal primo pulsante */
-  let cur = btns.indexOf(document.activeElement);
-  if (vis !== lastVis) { lastVis = vis; cur = 0; btns[0].focus({ preventScroll: true }); }
-  if (cur < 0) cur = Math.min(menuIdx, btns.length - 1);
-  /* frecce o levetta sinistra: uno scatto per ogni spinta */
-  const sx = pad.lx > 0.55 ? 1 : pad.lx < -0.55 ? -1 : 0, sy = pad.ly > 0.55 ? 1 : pad.ly < -0.55 ? -1 : 0;
-  let dx = pad.pressed[BTN.RIGHT] ? 1 : pad.pressed[BTN.LEFT] ? -1 : 0, dy = pad.pressed[BTN.DOWN] ? 1 : pad.pressed[BTN.UP] ? -1 : 0;
-  if (!dx && !dy) { if (sx && sx !== stickX && Math.abs(pad.lx) >= Math.abs(pad.ly)) dx = sx; else if (sy && sy !== stickY && Math.abs(pad.ly) > Math.abs(pad.lx)) dy = sy; }
-  stickX = Math.abs(pad.lx) < 0.3 ? 0 : sx || stickX; stickY = Math.abs(pad.ly) < 0.3 ? 0 : sy || stickY;
-  if (dx || dy) {
+  let cur = padEl ? btns.indexOf(padEl) : -1;
+  if (vis !== lastVis) { lastVis = vis; cur = 0; }
+  else if (cur < 0) cur = Math.min(menuIdx, btns.length - 1);
+  /* direzione: frecce oppure levetta sinistra (conta l'asse piu' spinto) */
+  let dx = pad.held[BTN.RIGHT] ? 1 : pad.held[BTN.LEFT] ? -1 : 0, dy = pad.held[BTN.DOWN] ? 1 : pad.held[BTN.UP] ? -1 : 0;
+  if (!dx && !dy && Math.hypot(pad.lx, pad.ly) > 0.5) { if (Math.abs(pad.lx) > Math.abs(pad.ly)) dx = Math.sign(pad.lx); else dy = Math.sign(pad.ly); }
+  const dir = dx + ',' + dy; let move = false;
+  if (dir !== holdDir) { holdDir = dir; holdT = 0.38; move = !!(dx || dy); }
+  else if (dx || dy) { holdT -= dt; if (holdT <= 0) { holdT = 0.13; move = true; } }
+  if (move) {
     /* va al pulsante piu' vicino nella direzione scelta (funziona anche con le schede in griglia) */
     const r0 = btns[cur].getBoundingClientRect(), c0x = r0.left + r0.width / 2, c0y = r0.top + r0.height / 2;
     let best = -1, bs = Infinity;
     btns.forEach((b, k) => { if (k === cur) return; const r = b.getBoundingClientRect(), vx = r.left + r.width / 2 - c0x, vy = r.top + r.height / 2 - c0y;
       const along = dx ? vx * dx : vy * dy, across = dx ? Math.abs(vy) : Math.abs(vx); if (along <= 4) return;
       const sc = along + across * 2.2; if (sc < bs) { bs = sc; best = k; } });
-    if (best < 0) best = (cur + (dx || dy) + btns.length) % btns.length;
-    cur = best; btns[cur].focus({ preventScroll: true }); btns[cur].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (best >= 0) cur = best;
   }
+  const el = btns[cur];
+  if (el !== padEl) { if (padEl) padEl.classList.remove('padfocus'); padEl = el; el.classList.add('padfocus'); el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); }
   menuIdx = cur;
-  if (vis === 'pause' && pad.pressed[BTN.OPTIONS]) { resume(); return; }
-  if (pad.pressed[BTN.X]) { const b = btns[cur]; lastVis = null; menuIdx = 0; b.click(); }
+  /* X: preme il pulsante e resta su quello (se la schermata non cambia) */
+  if (pad.pressed[BTN.X]) { el.click(); }
 }
 addEventListener('gamepadconnected', () => { feedSafe('Controller collegato'); });
 function feedSafe(t) { if (state === 'play') feed(t); }

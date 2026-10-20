@@ -119,3 +119,5 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .letter b{color:#7a2a1a}
 .tales .btn{background:#1b222c;color:var(--ink)}
 #taleBody{display:flex;flex-direction:column;gap:14px}
+.btn.padfocus{outline:3px solid #ffd25e;outline-offset:3px;transform:translateY(-2px)}
+.pc.padfocus{border-color:#ffd25e;box-shadow:0 0 0 3px #ffd25e,0 4px 0 var(--o)}
