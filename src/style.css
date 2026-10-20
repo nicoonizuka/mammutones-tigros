@@ -79,3 +79,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .invw{display:flex;flex-direction:column;gap:6px;width:100%}
 .iw{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#1b222c;border:2px solid var(--line);border-radius:10px;padding:8px 12px}
 .iw b{font-family:var(--pix);font-size:18px}.iw span{color:var(--muted);font-size:14px}
+.story p{color:var(--ink);font-size:16px;line-height:1.55;max-width:68ch}
+.story .kicker{color:#ff8a6a;font-family:var(--pix);font-size:18px}
+.plan{margin:0;padding-left:22px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.modes{display:flex;gap:10px;flex-wrap:wrap}
+.modes .btn[aria-pressed="true"]{background:var(--gold);color:var(--o)}
+.modes .btn[aria-pressed="false"]{background:#1b222c;color:var(--ink)}
+.modeinfo{font-size:14px}

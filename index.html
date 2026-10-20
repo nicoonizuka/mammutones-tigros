@@ -29,10 +29,25 @@
   <div class="br"><div class="wname" id="wname"></div><div class="ammo" id="ammo"></div><div class="slots" id="slots"></div></div>
 </div>
 
-<div class="over" id="sel">
+<div class="over" id="story">
+  <div class="box story">
+    <h1>Mammutones <span>al Tigros</span></h1>
+    <p class="kicker">Busto Arsizio, una sera d'estate. L'ultima sera normale.</p>
+    <p>Come ogni sera, il gruppo era seduto ai tavolini sotto il gazebo del Buongusto, davanti al Tigros. Nathan, Dado, Nico, Slime, Leo, Ponta, Jacopo e Corti. Poi dal parcheggio è arrivato un suono che nessuno di loro aveva mai sentito in Lombardia: <b>campanacci</b>. Centinaia di campanacci.</p>
+    <p>Era tornato <b>Loris Busato</b>. Dopo un'estate in Sardegna si era messo addosso la maschera nera e la pelliccia dei Mammutones e non se l'era più tolta. Ma non era tornato da solo: dietro di lui marciava un'armata di Mammutones veri, maschere di legno e sonagli di bronzo. In una notte hanno preso il Tigros e da lì il resto della città. Il mondo, fuori, è finito in apocalisse.</p>
+    <p>Nel seminterrato si è nascosto il suo luogotenente, <b>Fab La Rue</b>, diventato il re dei ratti. Ha staccato la corrente a tutto il supermercato. Loris invece si è chiuso nell'ufficio della zona controllo, in fondo al magazzino, e da lì comanda la sua armata guardando le telecamere.</p>
+    <p class="kicker">Il piano è semplice: riprendersi il Tigros, zona per zona.</p>
+    <ol class="plan"><li>Resistere nel parcheggio e liberare il gazebo</li><li>Entrare nel negozio</li><li>Scendere nel seminterrato, battere Fab e riaccendere la corrente</li><li>Aprire il magazzino e accendere i tre generatori</li><li>Entrare nell'ufficio e sconfiggere Loris Busato</li></ol>
+    <p>La vita è una sola. Le monete si guadagnano abbattendo Mammutones. Buona fortuna.</p>
+    <div class="btns"><button class="btn" id="storyGo" type="button">Scegli chi sei</button></div>
+  </div>
+</div>
+<div class="over" id="sel" hidden>
   <div class="box">
     <h1>Mammutones <span>al Tigros</span></h1>
     <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
+    <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button></div>
+    <p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p>
     <div class="pick" id="pick"></div>
     <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span><span><kbd>Tab</kbd>inventario</span><span><kbd>H</kbd>usa pacco munizioni</span></div>
     <div class="keys"><span><kbd>Controller</kbd>levetta sinistra muovi, destra mira, <kbd>R2</kbd> spara, <kbd>L1</kbd> potere, <kbd>□</kbd> ricarica, <kbd>○</kbd> compra / apri, <kbd>△</kbd> cambia arma, <kbd>X</kbd> salta, <kbd>L3</kbd> corri, <kbd>Options</kbd> pausa</span></div>

@@ -1,7 +1,12 @@
 # Mammutones al Tigros
 
 Sparatutto 3D a blocchi in stile COD Zombies, ambientato al Tigros di Busto Arsizio.
-Loris Busato e la sua armata di Mammutones hanno invaso il supermercato: scegli uno dei sei amici e sopravvivi.
+Loris Busato e la sua armata di Mammutones hanno invaso il supermercato: scegli uno degli otto amici e riprenditi il supermercato.
+
+All'avvio c'è il prologo con la storia, poi la scelta della modalità:
+
+- **Avventura**: apri il Tigros zona per zona fino a Loris Busato.
+- **Sandbox**: tutta la mappa aperta da subito; basta entrare nel seminterrato o nell'ufficio per sfidare Fab La Rue o Loris.
 
 ## Giocare sul tuo PC
 

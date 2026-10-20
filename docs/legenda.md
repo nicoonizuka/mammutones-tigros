@@ -44,7 +44,7 @@ Mammutones normale nel parcheggio:
 
 | Azione | Monete |
 |---|---|
-| Inizio partita | 500 |
+| Inizio partita | 750 (Sandbox: 25000) |
 | Ogni colpo a segno | +10 |
 | Uccisione | ricompensa del nemico × moltiplicatore della zona |
 | Uccisione con colpo in testa | +40 in più |
@@ -54,13 +54,13 @@ Mammutones normale nel parcheggio:
 
 | Nemico | Vita base | Velocità | Danno per colpo | Ricompensa | Da quale zona |
 |---|---|---|---|---|---|
-| Mammutones | 100 | 2,1 m/s | 8 ogni 1,2 s | 50 | Parcheggio |
-| Mammutones Cornuto | 80 | 4,0 m/s | 9 ogni 1,0 s | 70 | Negozio |
-| Mammutones Furia | 45 | 6,3 m/s | 28 ogni 1,1 s | 90 | Magazzino: pochissima vita, velocissimo, colpisce fortissimo |
-| Ratto | 35 | 5,0 m/s | 4 ogni 0,8 s | 25 | Seminterrato (45% dei nemici lì sotto) |
-| Mammutones Grosso | 420 | 1,4 m/s | 18 ogni 1,5 s | 160 | Seminterrato |
+| Mammutones | 100 | 2,0 m/s | 6 ogni 1,2 s | 50 | Parcheggio |
+| Mammutones Cornuto | 80 | 3,8 m/s | 7 ogni 1,0 s | 70 | Negozio |
+| Mammutones Furia | 45 | 6,0 m/s | 22 ogni 1,1 s | 90 | Magazzino: pochissima vita, velocissimo, colpisce fortissimo |
+| Ratto | 30 | 4,8 m/s | 3 ogni 0,8 s | 25 | Seminterrato (45% dei nemici lì sotto) |
+| Mammutones Grosso | 380 | 1,4 m/s | 14 ogni 1,5 s | 160 | Seminterrato |
 
-A ogni ondata la vita sale dell'**8%** e la velocità del **2%**, fino a un massimo di +30%.
+A ogni ondata la vita sale dell'**6%** e la velocità del **2%**, fino a un massimo di +30%.
 
 ## Zone
 
@@ -79,15 +79,15 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 
 | Valore | Formula |
 |---|---|
-| Mammutones per ondata | 4 + 2 × ondata |
-| Quanti insieme al massimo | 6 + ondata, fino a 14 |
+| Mammutones per ondata | 3 + 2 × ondata |
+| Quanti insieme al massimo | 5 + ondata, fino a 12 |
 | Tempo tra un'uscita e l'altra | 1,6 s che scende fino a 0,6 s |
 | Pausa tra le ondate | 7 s |
 
 ## Vita, armatura e oggetti
 
-- La vita è **una sola** (100) e non si ricarica da sola.
-- Quando un Mammutones muore, c'è il **10%** di probabilità che lasci un oggetto:
+- La vita è **una sola** (100). Dopo **5 secondi** senza essere colpito torna su da sola, **6 al secondo**.
+- Quando un Mammutones muore, c'è il **14%** di probabilità che lasci un oggetto:
   - **cura** (35%): +35 di vita
   - **munizioni** (40%): +2 caricatori per ogni arma
   - **armatura** (25%): +25, fino a 50; assorbe il 70% del danno finché dura
@@ -139,3 +139,10 @@ Si apre con **Tab** o **I** (sul controller: tasto Share o touchpad).
 | Pacco di munizioni | 400 | ne porti fino a 3; con **H** (freccia su sul controller) riempie subito l'arma in mano |
 | Zaino livello 1 | 800 | munizioni di riserva massime ×1,5 |
 | Zaino livello 2 | 2000 | munizioni di riserva massime ×2 |
+
+## Modalità
+
+| Modalità | Come funziona |
+|---|---|
+| Avventura | il percorso normale: apri le zone una alla volta, Fab La Rue arriva dall'ondata 8 nel seminterrato, Loris Busato dall'ondata 15; sconfiggere Loris è la vittoria |
+| Sandbox | tutte le zone aperte, corrente e generatori già accesi, 25000 monete. I nemici e la loro forza dipendono da dove ti trovi. Fab esce appena scendi nel seminterrato, Loris appena entri nel suo ufficio; se esci e rientri, il boss torna. Non c'è una fine |

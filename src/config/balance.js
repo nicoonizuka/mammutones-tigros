@@ -29,11 +29,11 @@ export const WALL_BUYS = [
    hp: vita all'ondata 1, spd: metri al secondo, dmg: danno di un colpo, atkCd: secondi tra due colpi
    reward: monete per l'uccisione (prima dei moltiplicatori di zona) */
 export const ENEMIES = {
-  base:    { n: 'Mammutones',         hp: 100, spd: 2.1, dmg: 8,  atkCd: 1.2, reward: 50,  radius: 0.45 },
-  cornuto: { n: 'Mammutones Cornuto', hp: 80,  spd: 4.0, dmg: 9,  atkCd: 1.0, reward: 70,  radius: 0.45 },
-  ratto:   { n: 'Ratto',              hp: 35,  spd: 5.0, dmg: 4,  atkCd: 0.8, reward: 25,  radius: 0.3 },
-  furia:   { n: 'Mammutones Furia',   hp: 45,  spd: 6.3, dmg: 28, atkCd: 1.1, reward: 90,  radius: 0.4 },
-  grosso:  { n: 'Mammutones Grosso',  hp: 420, spd: 1.4, dmg: 18, atkCd: 1.5, reward: 160, radius: 0.62 },
+  base:    { n: 'Mammutones',         hp: 100, spd: 2.0, dmg: 6,  atkCd: 1.2, reward: 50,  radius: 0.45 },
+  cornuto: { n: 'Mammutones Cornuto', hp: 80,  spd: 3.8, dmg: 7,  atkCd: 1.0, reward: 70,  radius: 0.45 },
+  ratto:   { n: 'Ratto',              hp: 30,  spd: 4.8, dmg: 3,  atkCd: 0.8, reward: 25,  radius: 0.3 },
+  furia:   { n: 'Mammutones Furia',   hp: 45,  spd: 6.0, dmg: 22, atkCd: 1.1, reward: 90,  radius: 0.4 },
+  grosso:  { n: 'Mammutones Grosso',  hp: 380, spd: 1.4, dmg: 14, atkCd: 1.5, reward: 160, radius: 0.62 },
 };
 
 /* ---------- ZONE ----------
@@ -50,7 +50,7 @@ export const ZONES = [
 
 /* ---------- MONETE ---------- */
 export const ECONOMY = {
-  start: 500,        // monete all'inizio
+  start: 750,        // monete all'inizio
   hit: 10,           // ogni colpo a segno
   headKill: 40,      // in piu' se lo uccidi con un colpo in testa
   waveClear: 50,     // per ogni ondata superata, moltiplicato per il numero dell'ondata fino a 10
@@ -58,17 +58,17 @@ export const ECONOMY = {
 
 /* ---------- ONDATE ---------- */
 export const WAVES = {
-  count: w => 4 + w * 2,                         // Mammutones totali nell'ondata
-  maxAlive: w => Math.min(6 + w, 14),            // quanti insieme al massimo
+  count: w => 3 + w * 2,                         // Mammutones totali nell'ondata
+  maxAlive: w => Math.min(5 + w, 12),            // quanti insieme al massimo
   spawnEvery: w => Math.max(0.6, 1.6 - w * 0.08),// secondi tra un'uscita e l'altra
-  hpGrowth: 0.08,                                // +8% di vita per ogni ondata
+  hpGrowth: 0.06,                                // +8% di vita per ogni ondata
   speedGrowth: 0.02,                             // +2% di velocita' per ondata (massimo +30%)
   break: 7,                                      // secondi di pausa tra le ondate
 };
 
 /* ---------- OGGETTI LASCIATI DAI NEMICI ---------- */
 export const DROPS = {
-  chance: 0.1,
+  chance: 0.14,
   table: [ { k: 'cura', w: 0.35, heal: 35 }, { k: 'munizioni', w: 0.4 }, { k: 'armatura', w: 0.25, armor: 25 } ],
   maxArmor: 50,
 };
@@ -96,3 +96,9 @@ export const GENERATOR_COST = 1000;
 export const INVENTORY = { packCost: 400, packMax: 3, bags: [{ cost: 800, mult: 1.5 }, { cost: 2000, mult: 2 }] };
 /* nel seminterrato una parte dei nemici sono ratti */
 export const RAT_SHARE = 0.45;
+
+/* ---------- VITA CHE SI RICARICA ---------- */
+export const REGEN = { delay: 5, perSec: 6 };   // dopo 5 s senza colpi la vita torna su di 6 al secondo
+
+/* ---------- MODALITA' SANDBOX ---------- */
+export const SANDBOX = { coins: 25000 };        // tutto aperto, corrente e generatori accesi, boss appena entri
