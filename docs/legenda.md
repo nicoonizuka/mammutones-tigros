@@ -234,3 +234,22 @@ La katana è tolta per ora (troppo forte): il codice resta nel gioco per usarla 
 ### Visuale
 
 Con **V** (o **R3** sul controller) passi dalla terza alla prima persona e viceversa. La scelta resta salvata nel browser.
+
+### Scene degli amici liberati
+
+In Avventura (e anche in Sandbox, per vederle) quando batti **Fab La Rue** esce **Jacopo**, ti viene incontro con il fumetto "Grazie raga! Fab mi teneva chiuso nelle fogne…" e poi sparisce. Quando batti **Loris** arriva **Leo** a ringraziarti, e subito dopo compare il finale del Tigros con la scelta tra Happy Shopping e ondate infinite.
+
+### Mappa del mondo
+
+Dal menu, **Mappa del mondo** apre la mappa di Busto. Scegli un luogo (pulsanti sotto la mappa o clic sull'edificio) e vedi il suo stato, la sua intro e il suo finale, e puoi andarci a giocare.
+
+## Prossimo mondo: il Tribunale (da fare)
+
+Appunti della storia, da sviluppare quando arrivano le foto:
+
+- Dopo l'Happy Shopping il gruppo, al completo, sale in macchina con **Damiano** e **Libe il matto**. Durante il viaggio Libe racconta cosa è successo (schermate con testo e immagini mentre si arriva).
+- **Pika**, il governatore del Tribunale che vendeva sigarette di contrabbando, è stato corrotto dai Mammutones e dall'esercito di **Well** (mostri inventati). Pika è sotto un maleficio: è costretto a obbedire.
+- Nel **garage di Pika** sono imprigionati **Leodessi**, **Castelluccio** e **Bulegato**.
+- **Fabio Regaglia**, alto 2,50 m, è stato corrotto: nemico gigante di metà livello.
+- Percorso: parcheggio di fianco al Tribunale (si sconfigge **Fab La Rue** una volta per tutte, con alcuni soldati di Well, perché blocca la strada) → piazza centrale con i tavolini → interno del Tribunale: i garage con gli amici e la stanza centrale con **Pika** come boss finale.
+- Ci sono Mammutones ma **non Loris**. Nemici e armi nuove da definire.

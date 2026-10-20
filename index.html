@@ -46,7 +46,7 @@
   <div class="box">
     <h1>Mammutones <span>al Tigros</span></h1>
     <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
-    <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button><button class="btn ghost" type="button" id="previewEnd">Finale e mappa<small>anteprima, senza giocare</small></button></div>
+    <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button><button class="btn ghost" type="button" id="previewEnd">Mappa del mondo<small>storie e luoghi</small></button></div>
     <div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button></div>
     <p id="worldinfo" class="modeinfo" hidden></p>
     <p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p>
@@ -114,7 +114,7 @@
           <path d="M0 140 C260 160 520 110 960 170" stroke="#2a2422" stroke-width="10"/><path d="M0 140 C260 160 520 110 960 170" stroke="#8a7a6a" stroke-width="2" stroke-dasharray="4 8"/>
         </g>
         <!-- 1 Tigros: liberato -->
-        <g class="node free" transform="translate(150 360)">
+        <g class="node free" id="tgNode" data-node="1" transform="translate(150 360)">
           <circle cx="60" cy="40" r="110" fill="url(#glow)"/>
           <rect x="0" y="10" width="130" height="62" fill="#8c3a2e"/><rect x="0" y="4" width="130" height="10" fill="#b84a38"/>
           <rect x="30" y="22" width="70" height="16" fill="#f1ede2"/><text x="65" y="35" text-anchor="middle" class="tg">TIGROS</text>
@@ -122,17 +122,17 @@
           <rect x="140" y="30" width="44" height="42" fill="#6a5a4c"/><rect x="144" y="36" width="10" height="10" fill="#ffd25e"/>
         </g>
         <!-- 2 Tribunale: oscurato -->
-        <g class="node locked" transform="translate(560 330)"><g filter="url(#fog)">
+        <g class="node locked" data-node="3" transform="translate(560 330)"><g filter="url(#fog)">
           <rect x="0" y="34" width="150" height="70" fill="#d8d0c0"/><polygon points="-6,36 75,0 156,36" fill="#e8e0d0"/>
           <rect x="14" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="44" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="96" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="126" y="44" width="10" height="60" fill="#bfb6a6"/>
         </g></g>
         <!-- 3 Happy Shopping: oscurato -->
-        <g class="node locked" id="hsNode" transform="translate(640 60)"><g id="hsFog" filter="url(#fog)">
+        <g class="node locked" id="hsNode" data-node="2" transform="translate(640 60)"><g id="hsFog" filter="url(#fog)">
           <rect x="0" y="20" width="200" height="60" fill="#3a6aa8"/><rect x="0" y="12" width="200" height="12" fill="#f0b030"/><rect x="60" y="34" width="80" height="20" fill="#f6f2e8"/><text x="100" y="49" text-anchor="middle" class="tg" style="fill:#f2643a">HAPPY</text>
           <rect x="20" y="88" width="40" height="22" fill="#555"/><rect x="140" y="88" width="40" height="22" fill="#555"/>
         </g></g>
         <!-- 4 Centro di Busto: oscurato, con il fast food -->
-        <g class="node locked" transform="translate(150 40)"><g filter="url(#fog)">
+        <g class="node locked" data-node="4" transform="translate(150 40)"><g filter="url(#fog)">
           <rect x="0" y="30" width="70" height="60" fill="#a8463a"/><rect x="80" y="10" width="40" height="80" fill="#cfc4ae"/><polygon points="80,10 100,-12 120,10" fill="#8a7a64"/>
           <rect x="130" y="40" width="110" height="50" fill="#c8302a"/><rect x="130" y="34" width="110" height="8" fill="#f6c83a"/>
           <rect x="250" y="20" width="6" height="70" fill="#777"/><rect x="236" y="0" width="34" height="26" rx="3" fill="#f6c83a"/>
@@ -148,9 +148,13 @@
       </svg>
     </div>
     <div class="legend"><span><i class="sw on"></i>Disponibile</span><span><i class="sw off"></i>Oscurato: nuovi nemici e nuovi boss in arrivo</span></div>
-    <p class="kicker">Rivedi le storie</p>
-    <div class="modes tales"><button class="btn ghost" type="button" id="mapIntro1">Tigros · intro<small>il prologo</small></button><button class="btn ghost" type="button" id="mapEnd1">Tigros · finale<small>Loris e Fab scappano</small></button><button class="btn ghost" type="button" id="mapIntro2">Happy Shopping · intro<small>recupera gli amici</small></button><button class="btn ghost" type="button" id="mapEnd2">Happy Shopping · finale<small>la lettera</small></button></div>
-    <div class="btns"><button class="btn" id="playHS" type="button" hidden>Vai all'Happy Shopping<small>mondo 2</small></button><button class="btn ghost" id="worldBack" type="button">Torna al menu</button></div>
+    <div class="modes places"><button class="btn" type="button" data-place="1">1 · Tigros</button><button class="btn ghost" type="button" data-place="2">2 · Happy Shopping</button><button class="btn ghost" type="button" data-place="3">3 · Tribunale</button><button class="btn ghost" type="button" data-place="4">4 · Centro di Busto</button></div>
+    <div class="place" id="place">
+      <h2 id="plName">Tigros</h2>
+      <p id="plState" class="plstate"></p>
+      <p id="plText"></p>
+      <div class="btns"><button class="btn" id="plPlay" type="button">Gioca qui</button><button class="btn ghost" id="plIntro" type="button">Intro</button><button class="btn ghost" id="plEnd" type="button">Finale</button><button class="btn ghost" id="worldBack" type="button">Torna al menu</button></div>
+    </div>
   </div>
 </div>
 <div class="over" id="dead" hidden>

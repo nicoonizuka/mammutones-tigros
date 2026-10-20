@@ -191,15 +191,16 @@ function damageEnemy(e, d, head) {
   }
 }
 function bossDown() {
-  const kind = boss && boss.kind; boss = null; $('boss').hidden = true;
+  const kind = boss && boss.kind, bpos = boss && boss.m.position.clone(); boss = null; $('boss').hidden = true;
   if (kind === 'loris' && mode === 'sandbox') { lorisDead = true; banner('Loris Busato è sconfitto!', 'Esci dall\'ufficio e rientra per sfidarlo di nuovo'); return; }
-  if (kind === 'loris') { lorisDead = true; lastUnlock = unlockChar('loris'); setTimeout(victory, 2500); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo'); return; }
+  if (kind === 'loris') { lorisDead = true; lastUnlock = unlockChar('loris'); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo');
+    setTimeout(() => rescue(4, 'Leo', 'Finalmente! Loris mi aveva chiuso in ufficio. Grazie raga, siete dei grandi!', bpos), 1800); setTimeout(victory, 7600); return; }
   if (kind === 'capo') {
     capoDead = true;
     if (mode === 'sandbox') { banner('Il Capo è sconfitto!', 'Esci dal negozio e rientra per sfidarlo di nuovo'); return; }
     lastUnlock = unlockChar('hs'); setTimeout(victory, 2500); banner('Il Capo è sconfitto!', 'L\'Happy Shopping è libero'); return;
   }
-  fabDead = true; const nu = unlockChar('fab');
+  fabDead = true; const nu = unlockChar('fab'); if (kind === 'fab') setTimeout(() => rescue(7, 'Jacopo', 'Grazie raga! Fab mi teneva chiuso nelle fogne. Ci vediamo fuori!', bpos), 1500);
   banner('Fab La Rue è sconfitto!', nu ? 'Hai sbloccato ' + nu.short + '! Ora riaccendi la corrente nel locale tecnico' : 'I ratti scappano: riaccendi la corrente nel locale tecnico');
   for (const e of enemies) if (!e.dead && e.type === 'ratto') { e.dead = 1; e.deadT = 0; alive--; }
 }
@@ -278,6 +279,35 @@ function useInter() {
   if (!nearI || !nearI.label()) return; if (nearI.free && nearI.free()) { nearI.act(); buy(); return; } const c = nearI.cost(); if (!c) return;
   if (coins < c) { feed('Ti servono ' + c + ' monete'); denied(); return; }
   coins -= c; nearI.act(); buy();
+}
+
+/* ===================== SCENE: L'AMICO LIBERATO ESCE, RINGRAZIA E SE NE VA ===================== */
+function bubbleTex(name, txt) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 220; const g = c.getContext('2d');
+  g.fillStyle = '#fffdf4'; g.strokeStyle = '#12161c'; g.lineWidth = 8; g.beginPath(); g.roundRect(8, 8, 496, 168, 28); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(230, 172); g.lineTo(256, 212); g.lineTo(282, 172); g.fill(); g.stroke(); g.fillStyle = '#fffdf4'; g.fillRect(228, 166, 56, 10);
+  g.fillStyle = '#c0302a'; g.font = '700 30px Arial,sans-serif'; g.fillText(name, 32, 52);
+  g.fillStyle = '#12161c'; g.font = '26px Arial,sans-serif'; const words = txt.split(' '); let line = '', y = 92;
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > 440) { g.fillText(line, 32, y); line = w; y += 32; } else line = t; } g.fillText(line, 32, y);
+  const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding; return tx;
+}
+let rescues = [];
+function rescue(model, name, txt, at) {
+  if (state !== 'play' || !P) return;
+  const m = buildHuman(model); let from = P.pos.clone().add(new V3(-Math.sin(yaw) * 4, 0, -Math.cos(yaw) * 4)); if (at) { const v = at.clone().sub(P.pos); v.y = 0; const L = v.length(); if (L > 0.5) from = P.pos.clone().addScaledVector(v.normalize(), Math.min(L, 5)); } from.y = 0; collide(from, 0.4, 1); m.position.copy(from); scene.add(m);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(name, txt), depthTest: false, transparent: true, toneMapped: false })); sp.scale.set(2.6, 1.12, 1); sp.position.y = (m.userData.height || 1.8) + 0.9; sp.renderOrder = 20; m.add(sp);
+  rescues.push({ m, t: 0, life: 5.5 }); banner(name + ' è libero!', 'Ti viene a ringraziare'); bell();
+}
+function updRescues(dt) {
+  for (const r of rescues) {
+    r.t += dt; const m = r.m; const to = P.pos.clone().sub(m.position); to.y = 0; const d = to.length();
+    m.rotation.y = Math.atan2(to.x, to.z);
+    if (r.t < r.life - 1 && d > 2.4) { m.position.addScaledVector(to.normalize(), Math.min(d - 2.4, 4 * dt)); collide(m.position, 0.4, 1); r.walk = (r.walk || 0) + dt * 9; animLimbs(m, r.walk, 0.55); }
+    else if (r.t < r.life - 1) { m.userData.P.armR.rotation.x = -2.6 + Math.sin(r.t * 9) * 0.4; }
+    if (r.t > r.life - 1) { const k = Math.max(0.001, r.life - r.t); m.scale.setScalar(k); m.position.y += dt * 1.5; }
+    if (r.t >= r.life) { scene.remove(m); r.gone = 1; }
+  }
+  rescues = rescues.filter(r => !r.gone);
 }
 
 /* ===================== AMICI ALBANESI DI TEFALIN ===================== */
@@ -423,7 +453,7 @@ function hud() {
 /* ===================== LOOP ===================== */
 let last = performance.now();
 function loop(t) {
-  requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000); last = t;
+  requestAnimationFrame(loop); const dt = Math.min(window.__dtMax || 0.05, (t - last) / 1000); last = t;
   pollPad(); if (pad.connected) padMenus(dt);
   if (state === 'play') { time += dt; update(dt); }
   else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
@@ -495,7 +525,7 @@ function update(dt) {
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
     EP.bells.forEach((b, k) => { b.rotation.x = Math.sin(time * 6 + k + e.walk) * 0.3; });
     let goal = P.pos; const er = region(m.position), pr = region(P.pos);
-    if (world === 2) { if (er !== pr) goal = new V3(Math.max(HS_DOOR.x - 2.2, Math.min(HS_DOOR.x + 2.2, m.position.x)), 0, er === 'hsout' ? 1.6 : -1.6); }
+    if (world === 2) { if (er !== pr) { /* prima davanti alla porta dalla propria parte, poi dall'altra */ const ds = er === 'hsout' ? 1 : -1, gx = Math.max(HS_DOOR.x - 1.6, Math.min(HS_DOOR.x + 1.6, m.position.x)), aligned = Math.abs(m.position.x - HS_DOOR.x) < HS_DOOR.w / 2 - 0.7 && Math.abs(m.position.z) < 2.6; goal = new V3(gx, 0, aligned ? -ds * 2.4 : ds * 2.2); } }
     else if (pr !== 'base' && er !== pr) {
       const viaShop = er === 'out' || (er === 'store' && pr === 'out');
       if (viaShop) goal = new V3(Math.max(DOOR.x - 2.6, Math.min(DOOR.x + 2.6, m.position.x)), 0, er === 'out' ? DOOR.z - 1.4 : DOOR.z + 1.4);
@@ -521,7 +551,7 @@ function update(dt) {
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt); updAlbanesi(dt);
+  updMirko(dt); updAlbanesi(dt); updRescues(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
   if (world === 2) { updateHS(time);
@@ -587,7 +617,7 @@ function startWave() { wave++; toSpawn = WAVES.count(wave); spawnT = 0.5; banner
 function resetWorld() {
   enemies.forEach(e => scene.remove(e.m)); drops.forEach(d => scene.remove(d.m)); enemies = []; drops = [];
   alive = 0; toSpawn = 0; wave = 0; kills = 0; coins = ECONOMY.start; breakT = 3;
-  if (mirko) { scene.remove(mirko.m); mirko = null; } albanesi.forEach(a => scene.remove(a.m)); albanesi = [];
+  if (mirko) { scene.remove(mirko.m); mirko = null; } albanesi.forEach(a => scene.remove(a.m)); albanesi = []; rescues.forEach(r => scene.remove(r.m)); rescues = [];
   if (boss) { scene.remove(boss.m); } boss = null; fabDead = false; lorisDead = false; power = false; packs = 0; bag = 0; panelLed.material.color.set('#ff3030'); $('boss').hidden = true;
   GENERATORS.forEach(g => { g.on = false; g.led.material.color.set('#ff3030'); });
   if (world === 1) { if (zone >= 4) { scene.add(wareDoor); wareDoorSolid.off = 0; } if (zone >= 5) { scene.add(officeDoor); officeDoorSolid.off = 0; }
@@ -653,13 +683,33 @@ function showEnding(real, wf) {
   $('ending').hidden = false; menuIdx = 0;
 }
 function showWorld() {
-  $('ending').hidden = true; $('world').hidden = false; menuIdx = 0;
+  $('ending').hidden = true; $('sel').hidden = true; $('world').hidden = false; menuIdx = 0;
   const open = hsOpen(), done = !!unlocks.hs;
   $('hsNode').setAttribute('class', 'node ' + (open ? 'free' : 'locked')); if (open) $('hsFog').removeAttribute('filter'); else $('hsFog').setAttribute('filter', 'url(#fog)');
   $('hsLbl').setAttribute('class', 'lbl' + (open ? '' : ' dim')); $('hsRect').setAttribute('stroke', open ? '#7ad0ff' : '#3a3f48'); $('hsQ').style.display = open ? 'none' : '';
-  $('hsSub').textContent = done ? 'Liberato · il gruppo è al completo' : open ? 'Disponibile · Tefalin e Diego ti aspettano' : 'Bloccato · finisci prima il Tigros';
-  $('playHS').hidden = !open;
+  $('hsSub').textContent = done ? 'Liberato · Debe è libero' : open ? 'Disponibile · Tefalin e Diego ti aspettano' : 'Bloccato · finisci prima il Tigros';
+  showPlace(place || pickWorld);
 }
+/* mappa: scegli un luogo e vedi le sue cose (intro, finale, gioca) */
+let place = 0;
+const PLACES = {
+  1: { n: 'Tigros', open: () => true, state: () => unlocks.loris ? 'Liberato · Loris e Fab sono scappati' : 'Disponibile · Mondo 1',
+       t: 'Il supermercato di Busto preso da Loris Busato e dai Mammutones. Sei zone: parcheggio, gazebo Buongusto, negozio, seminterrato con Fab La Rue, magazzino e l\'ufficio di Loris.' },
+  2: { n: 'Happy Shopping', open: () => hsOpen() || mode === 'sandbox', state: () => unlocks.hs ? 'Liberato · Debe è libero' : hsOpen() ? 'Disponibile · Mondo 2' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura batti prima Loris' : 'Bloccato · in Avventura batti prima Loris',
+       t: 'Il bazar di Sant\'Edoardo. Parcheggio e negozio, Tefalin e Diego da ritrovare, il Capo da sconfiggere per liberare Debe.' },
+  3: { n: 'Tribunale di Busto', open: () => false, state: () => 'Bloccato · prossimamente',
+       t: 'Gli altri amici sono tenuti in segreto nel garage di Pika. Nuovi nemici, nuove armi e un boss nuovo.' },
+  4: { n: 'Il centro di Busto', open: () => false, state: () => 'Bloccato · prossimamente', t: 'L\'ultima tappa: liberare Busto Arsizio.' },
+};
+function showPlace(k) {
+  place = k; const Q = PLACES[k];
+  document.querySelectorAll('[data-place]').forEach(b => { const on = +b.dataset.place === k; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  document.querySelectorAll('[data-node]').forEach(n => n.classList.toggle('sel', +n.dataset.node === k));
+  $('plName').textContent = Q.n; $('plState').textContent = Q.state(); $('plState').classList.toggle('lock', !Q.open()); $('plText').textContent = Q.t;
+  $('plPlay').hidden = !Q.open(); $('plIntro').hidden = k > 2; $('plEnd').hidden = k > 2;
+}
+document.querySelectorAll('[data-place]').forEach(b => b.addEventListener('click', () => showPlace(+b.dataset.place)));
+document.querySelectorAll('[data-node]').forEach(n => n.addEventListener('click', () => showPlace(+n.dataset.node)));
 const hsOpen = () => !!unlocks.loris || !!unlocks.hs;
 function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyWorldLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
@@ -710,16 +760,14 @@ let taleDone = null;
 function showTale(id, btn, done) { $('taleBody').innerHTML = $(id).innerHTML; $('taleGo').textContent = btn; taleDone = done; ['sel', 'world', 'ending'].forEach(k => ($(k).hidden = true)); $('tale').hidden = false; menuIdx = 0; }
 $('taleGo').onclick = () => { $('tale').hidden = true; const d = taleDone; taleDone = null; if (d) d(); };
 const backToMap = () => { $('world').hidden = false; menuIdx = 0; if (state === 'menu' && world !== pickWorld) { world = pickWorld; applyWorldLook(world); } };
-$('mapIntro1').onclick = () => { $('world').hidden = true; $('story').hidden = false; storyBack = true; };
-$('mapEnd1').onclick = () => { showEnding(false, 1); endBack = true; };
-$('mapIntro2').onclick = () => showTale('hsIntro', 'Torna alla mappa', backToMap);
-$('mapEnd2').onclick = () => { showEnding(false, 2); endBack = true; };
+$('plIntro').onclick = () => { if (place === 2) showTale('hsIntro', 'Torna alla mappa', backToMap); else { $('world').hidden = true; $('story').hidden = false; storyBack = true; } };
+$('plEnd').onclick = () => { showEnding(false, place); endBack = true; };
+$('plPlay').onclick = () => { const k = place; toMenu(); setWorld(k); };
 let storyBack = false, endBack = false;
-$('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = () => { endBack = false; showWorld(); };
+$('previewEnd').onclick = () => { place = pickWorld; showWorld(); }; $('toWorld').onclick = () => { endBack = false; showWorld(); };
 /* dopo il boss finale: continuare con le ondate infinite o passare al mondo dopo */
 $('endCont').onclick = () => { $('ending').hidden = true; state = 'play'; $('hud').hidden = false; last = performance.now(); lock(); banner('Ondate infinite', 'Resisti finché ce la fai'); };
 $('endNext').onclick = () => { const c = charIdx; toMenu(); setWorld(2); startGame(ROSTER[c] && !isLocked(ROSTER[c]) ? c : 0); }; $('worldBack').onclick = toMenu;
-$('playHS').onclick = () => { setWorld(2); toMenu(); };
 function setWorld(w) {
   pickWorld = w; document.querySelectorAll('[data-world]').forEach(x => { const on = +x.dataset.world === w; x.setAttribute('aria-pressed', on ? 'true' : 'false'); x.classList.toggle('ghost', !on); });
   $('w2btn').classList.toggle('locked', !hsOpen()); $('w2sub').textContent = hsOpen() ? 'il Capo del bazar' : 'in Avventura: finisci il Tigros';
@@ -766,5 +814,5 @@ bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor,
 applyWorldLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
+window.__game = { hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
 requestAnimationFrame(loop);
