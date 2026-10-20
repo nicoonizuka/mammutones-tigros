@@ -1,5 +1,5 @@
 /* Mondo 4: il centro di Busto Arsizio (per ora solo la mappa, da esplorare).
-   Piazza Garibaldi con la fontana -> a ovest i portici e la torre grigia col fast food (il "Mac")
+   Piazza Garibaldi con la fontana -> a est (a destra) i portici e la torre grigia col fast food (il "Mac")
    -> a nord via Fratelli d'Italia, il corso coi bar e piazza San Giovanni con la basilica e il campanile.
    Dentro la chiesa c'e' gia' il sigillo delle catacombe (chiuso).
    Tutto il mondo sta lontano dagli altri (x = +1000). Nord = z negativo. */
@@ -9,27 +9,28 @@ import { M, rbox, mesh, sph, ctex, texMat, label, plane, rnd, setSeed, TEX } fro
 import { makeCar } from './parking.js';
 
 export const BX = 1000;
-const G = new THREE.Group(); G.position.x = BX; scene.add(G);
-const S = (x, z, w, d, m, h, top) => solid(BX + x, z, w, d, m, h, top);
+const ROOT = new THREE.Group(); ROOT.position.x = BX; scene.add(ROOT);
+let G = ROOT, OXo = 0, OZo = 0; /* G e lo spostamento cambiano solo per costruire la torre del Mac */
+const S = (x, z, w, d, m, h, top) => solid(BX + OXo + x, OZo + z, w, d, m, h, top);
 
 /* ---------- confini, zone, interni ---------- */
-export const BUB = { x1: BX - 100, x2: BX + 54, z1: -192, z2: 46 };
-export const MACIN = { x1: BX - 95.5, x2: BX - 66.5, z1: -25.5, z2: 5.5, ceil: 4.3 };
+export const BUB = { x1: BX - 54, x2: BX + 100, z1: -192, z2: 46 };
+export const MACIN = { x1: BX + 34.5, x2: BX + 63.5, z1: -3.5, z2: 27.5, ceil: 4.3 };
 export const CHIESA = { x1: BX - 14, x2: BX + 14, z1: -191, z2: -151, ceil: 13.6 };
 export const inBU = p => p.x > 800;
-export const inMac = p => p.x > MACIN.x1 - 0.3 && p.x < MACIN.x2 + 0.2 && p.z > MACIN.z1 && p.z < MACIN.z2;
+export const inMac = p => p.x > MACIN.x1 - 0.2 && p.x < MACIN.x2 + 0.3 && p.z > MACIN.z1 && p.z < MACIN.z2;
 export const inChiesa = p => p.x > CHIESA.x1 && p.x < CHIESA.x2 && p.z < CHIESA.z2 + 0.3 && p.z > CHIESA.z1;
 /* le zone (servono dopo per nemici e boss) */
-export const buRegion = p => (inChiesa(p) ? 'bchiesa' : inMac(p) ? 'bmacin' : p.z < -104 ? 'bpiazza' : p.z < -54 ? 'bbar' : p.x < BX - 24 ? 'bmac' : 'bfontana');
+export const buRegion = p => (inChiesa(p) ? 'bchiesa' : inMac(p) ? 'bmacin' : p.z < -104 ? 'bpiazza' : p.z < -54 ? 'bbar' : p.x > BX + 24 ? 'bmac' : 'bfontana');
 /* sotto i portici la camera resta bassa */
 export const BU_LOW = [
-  { x1: BX - 13.2, x2: BX - 10, z1: -104, z2: -4, ceil: 4 }, { x1: BX + 10, x2: BX + 13.2, z1: -104, z2: -12, ceil: 4 },
-  { x1: BX - 60, x2: BX - 30, z1: -7.4, z2: -4, ceil: 4 }, { x1: BX - 66.4, x2: BX - 62, z1: -26, z2: 6, ceil: 4.2 },
+  { x1: BX - 13.2, x2: BX - 10, z1: -104, z2: -4, ceil: 4 }, { x1: BX + 10, x2: BX + 13.2, z1: -104, z2: -4, ceil: 4 },
+  { x1: BX + 30, x2: BX + 34.4, z1: -4, z2: 28, ceil: 4.2 },
 ];
 export const BU_START = { x: BX + 0, z: 31, yaw: 0 };
 /* posti per la storia (dopo) */
 export const BU_SPOTS = {
-  pierre: { x: BX + 0, z: 12 }, corti: { x: BX - 80, z: -10 }, gt: { x: BX - 48, z: 21 },
+  pierre: { x: BX + 0, z: 12 }, corti: { x: BX + 48, z: 12 }, gt: { x: BX + 20.5, z: 22 },
   napo: { x: BX - 4, z: -80 }, loris: { x: BX, z: -178 }, sigillo: { x: BX, z: -181 },
 };
 
@@ -184,10 +185,10 @@ function curb(x, z, w, d) { mesh(new THREE.BoxGeometry(w, 0.14, d), curbM, G, [x
 function bin(x, z) { mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.85, 12), M('#3a3c40', { roughness: 0.6, metalness: 0.4 }), G, [x, 0.43, z]); S(x, z, 0.5, 0.5, null, 0, 0.85); }
 
 /* ---------- terreno ---------- */
-pave(-23, -73, 154, 238, asphM, 0.002);
+pave(23, -73, 154, 238, asphM, 0.002);
 
 /* ================= PIAZZA GARIBALDI E LA FONTANA ================= */
-pave(-24, 30, 4, 20, porfM(1, 5), 0.006); /* marciapiede ovest */
+
 pave(-14, 40, 80, 8, porfM(20, 2), 0.006); /* marciapiede sud */
 /* strada ad anello intorno all'isola (asfalto gia' sotto), cordoli */
 pave(0, 12, 28, 22, porfM(7, 5.5), 0.008);
@@ -223,85 +224,83 @@ lamp(-13, 26, 0); lamp(13, 26, 0); lamp(-13, -2, 0); lamp(13, -2.5, 0); lamp(-24
 bench(-6, 22, 0); bench(6, 22, 0); bench(-6, 2, Math.PI); bin(9, 23.4); bin(-9, 1);
 zebra(0, 28, 8, true); zebra(-18, 12, 8, false); zebra(18, 12, 8, false); zebra(0, -3.5, 8, true);
 /* palazzi intorno alla piazza */
-bld(41, 2, 26, 28, { style: 'giallo', floors: 3, roof: 'tetto', shops: shops2M });
-bld(41, 31, 26, 30, { style: 'storico', floors: 4, roof: 'tetto' });
+bld(-41, 6, 26, 20, { style: 'giallo', floors: 3, roof: 'tetto', shops: shops2M });
+bld(-41, 31, 26, 30, { style: 'storico', floors: 4, roof: 'tetto' });
+bld(-42, -32, 24, 56, { style: 'giallo', floors: 4, roof: 'tetto' });
 bld(1, 43, 54, 6, { style: 'giallo', floors: 3, roof: 'tetto' });
-pave(25, 10, 4, 52, porfM(1, 13), 0.006);
-/* sud-ovest: palazzone a balconi e palazzo verde */
-bld(-43, 37, 34, 18, { style: 'balconi', floors: 9, balc: 'n', gh: 4.4 });
-bld(-80, 26.5, 40, 39, { style: 'verde', floors: 5 });
+pave(-25, 10, 4, 52, porfM(1, 13), 0.006);
+/* a destra (est): la torre grigia col Mac proprio sulla piazza, e i palazzi intorno */
+bld(45, 37, 38, 18, { style: 'balconi', floors: 9, balc: 'n', gh: 4.4 });
+bld(82, 8, 36, 76, { style: 'verde', floors: 5 });
+bld(47, -17, 34, 26, { style: 'rosa', floors: 6, gh: 4.2, shops: shopsM });
+/* marciapiede davanti al Mac, aiuole coi cespugli e i pioppi come nella foto */
+pave(26, 12, 8, 32, porfM(2, 8), 0.007);
+for (const z0 of [3, 21]) { pave(25.2, z0, 2.6, 7, grassM, 0.012); curb(25.2, z0 - 3.6, 2.8, 0.25); curb(25.2, z0 + 3.6, 2.8, 0.25); curb(23.8, z0, 0.25, 7.2); curb(26.6, z0, 0.25, 7.2);
+  for (const dz of [-2.4, 0, 2.4]) bush(25.2, z0 + dz, 0.9); poplar(25.2, z0); S(25.2, z0, 2.6, 7, null, 0, 0.3); }
+/* macchine: una e' la GT di Corti (dopo) */
+makeCar(BX + 20.5, -1, 0, '#c8ccd0', false); makeCar(BX + 20.5, 30.5, 0, '#4a5a6a', false);
+makeCar(BU_SPOTS.gt.x, BU_SPOTS.gt.z, 0, '#1c2028', false);
 
-/* ================= VERSO IL MAC: PORTICI E TORRE GRIGIA ================= */
-pave(-44, -5.5, 36, 3.4, porfM(9, 1), 0.007); /* sotto i portici */
-bld(-45, -18, 30, 28, { style: 'rosa', floors: 6, por: 's', dep: 3.4, gh: 4.2, shops: shopsM, balc: null });
-/* la torre grigia (13 piani) con il fast food al piano terra */
-const TW = { x: -79, z: -10, w: 34, d: 32 }, TGH = 4.6, TH = TGH + 13 * STY.torre.fl;
+/* ================= LA TORRE GRIGIA (13 piani) CON IL FAST FOOD AL PIANO TERRA ================= */
+const FFG = new THREE.Group(); FFG.position.set(-32, 0, 22); ROOT.add(FFG); G = FFG; OXo = -32; OZo = 22;
+const TW = { x: 79, z: -10, w: 34, d: 32 }, TGH = 4.6, TH = TGH + 13 * STY.torre.fl;
 {
   const up = mesh(fgeo(TW.w, TH - TGH, TW.d, STY.torre.bay, STY.torre.fl), STY.torre.mat, G, [TW.x, TGH + (TH - TGH) / 2, TW.z]); up.castShadow = up.receiveShadow = true;
   mesh(new THREE.BoxGeometry(TW.w + 0.4, 0.4, TW.d + 0.4), stoneCol, G, [TW.x, TH, TW.z]); mesh(new THREE.BoxGeometry(TW.w - 0.6, 0.1, TW.d - 0.6), flatRoof, G, [TW.x, TH + 0.25, TW.z]);
   for (const [x, z] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) mesh(new THREE.CylinderGeometry(0.04, 0.04, 3, 6), pole, G, [TW.x + x * 0.95, TH + 1.6, TW.z + z * 0.9]);
   /* fascia scura sopra le vetrine, come nella foto */
-  mesh(new THREE.BoxGeometry(0.3, 0.9, TW.d), M('#3a2e28', { roughness: 0.6 }), G, [TW.x + TW.w / 2 - 4.6, TGH - 0.6, TW.z]);
+  mesh(new THREE.BoxGeometry(0.3, 0.9, TW.d), M('#3a2e28', { roughness: 0.6 }), G, [TW.x - TW.w / 2 + 4.6, TGH - 0.6, TW.z]);
   /* colonne del porticato davanti al fast food */
-  for (let i = 0; i < 7; i++) { const z = TW.z - TW.d / 2 + 1 + i * (TW.d - 2) / 6; mesh(new THREE.BoxGeometry(0.9, TGH, 0.9), stoneCol, G, [TW.x + TW.w / 2 - 0.45, TGH / 2, z]).castShadow = true; S(TW.x + TW.w / 2 - 0.45, z, 0.9, 0.9); }
-  mesh(new THREE.BoxGeometry(4.4, 0.2, TW.d), portCeil, G, [TW.x + TW.w / 2 - 2.2, TGH - 0.1, TW.z]);
+  for (let i = 0; i < 7; i++) { const z = TW.z - TW.d / 2 + 1 + i * (TW.d - 2) / 6; mesh(new THREE.BoxGeometry(0.9, TGH, 0.9), stoneCol, G, [TW.x - TW.w / 2 + 0.45, TGH / 2, z]).castShadow = true; S(TW.x - TW.w / 2 + 0.45, z, 0.9, 0.9); }
+  mesh(new THREE.BoxGeometry(4.4, 0.2, TW.d), portCeil, G, [TW.x - TW.w / 2 + 2.2, TGH - 0.1, TW.z]);
 }
-pave(-64.2, -10, 4.4, 32, porfM(1, 8), 0.008);
-/* aiuola con i cespugli davanti alla torre e i pioppi */
-pave(-54, 6, 8, 10, grassM, 0.012); curb(-54, 1, 8.2, 0.25); curb(-54, 11, 8.2, 0.25); curb(-58, 6, 0.25, 10); curb(-50, 6, 0.25, 10);
-for (const [x, z] of [[-56, 3], [-52.5, 4], [-55.5, 8], [-52, 9]]) bush(x, z, 1.1);
-poplar(-54, 6); poplar(-60.5, -24); poplar(-60.5, 4.5); S(-54, 6, 8, 10, null, 0, 0.3);
-lamp(-40, 10, Math.PI / 2); lamp(-30, -1.2, 0); lamp(-58, 13, 0);
-/* macchine parcheggiate lungo la strada (una e' la GT di Corti, dopo) */
-setSeed(61);
-[[-36, 21], [-42, 21], [-56, 21], [-62, 21], [-30, 21]].forEach(([x, z], i) => makeCar(BX + x, z, Math.PI / 2, ['#c8ccd0', '#2a2e34', '#7a8088', '#e8e8e6', '#4a5a6a'][i], false));
-makeCar(BX + BU_SPOTS.gt.x - BX, BU_SPOTS.gt.z, Math.PI / 2, '#1c2028', false);
-zebra(-27, 12, 10, false);
-
+pave(64.2, -10, 4.4, 32, porfM(1, 8), 0.008);
 /* ---------- dentro il fast food ---------- */
 const ffTile = texMat(wrap(ctex(128, 128, (g, w, h) => { g.fillStyle = '#c8bfb2'; g.fillRect(0, 0, w, h); g.fillStyle = '#b4aa9c'; g.fillRect(0, 0, 64, 64); g.fillRect(64, 64, 64, 64); g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(0, 63, w, 2); g.fillRect(63, 0, 2, h); }), 15, 16), { roughness: 0.4 });
-pave(-81, -10, 29, 31, ffTile, 0.015);
+pave(81, -10, 29, 31, ffTile, 0.015);
 const ffWall = M('#4a3a32', { roughness: 0.7 }), ffWall2 = M('#d8c8a8', { roughness: 0.8 }), ffGlass = new THREE.MeshStandardMaterial({ color: '#7a9aaa', roughness: 0.05, metalness: 0.5, transparent: true, opacity: 0.35 });
 function ffw(x, z, w, d, mat = ffWall2, h = TGH) { const m = mesh(new THREE.BoxGeometry(w, h, d), mat, G, [x, h / 2, z]); m.receiveShadow = true; S(x, z, w, d, m, h); return m; }
-/* muri: ovest, nord, sud pieni; est vetrata con la porta in mezzo (z -12..-8) */
-ffw(-96, -10, 0.6, 32); ffw(-79, -26, 34, 0.6); ffw(-79, 6, 34, 0.6);
-ffw(-66.3, -19.5, 0.4, 13, ffGlass); ffw(-66.3, -1.5, 0.4, 15, ffGlass);
-mesh(new THREE.BoxGeometry(0.5, 0.9, 4.2), ffWall, G, [-66.3, TGH - 0.45, -11]);
-flat(mesh(new THREE.PlaneGeometry(30, 32), M('#e8e2d6', { roughness: 0.9, side: THREE.DoubleSide }), G, [-81, 4.35, -10], [Math.PI / 2, 0, 0]));
+/* muri: est, nord, sud pieni; ovest vetrata (verso la strada) con la porta in mezzo */
+ffw(96, -10, 0.6, 32); ffw(79, -26, 34, 0.6); ffw(79, 6, 34, 0.6);
+ffw(66.3, -19.5, 0.4, 13, ffGlass); ffw(66.3, -1.5, 0.4, 15, ffGlass);
+mesh(new THREE.BoxGeometry(0.5, 0.9, 4.2), ffWall, G, [66.3, TGH - 0.45, -11]);
+flat(mesh(new THREE.PlaneGeometry(30, 32), M('#e8e2d6', { roughness: 0.9, side: THREE.DoubleSide }), G, [81, 4.35, -10], [Math.PI / 2, 0, 0]));
 /* insegna generica sopra l'ingresso */
-plane(7, 1, new THREE.MeshStandardMaterial({ map: label('FAST FOOD', { font: '900 82px Arial Black,Arial,sans-serif', bg: '#2a1e18', color: '#f4d48a', w: 512, h: 80, shadow: null }), emissive: '#ffffff', emissiveIntensity: 0.25 }), G, [-61.4, 3.6, -10], [0, Math.PI / 2, 0]);
-plane(5, 0.9, new THREE.MeshStandardMaterial({ map: label('BURGER', { font: '900 80px Arial Black,Arial,sans-serif', bg: '#2a1e18', color: '#f4d48a', w: 512, h: 90, shadow: null }), emissive: '#ffffff', emissiveIntensity: 0.2 }), G, [-61.4, 3.6, 2], [0, Math.PI / 2, 0]);
+plane(7, 1, new THREE.MeshStandardMaterial({ map: label('FAST FOOD', { font: '900 82px Arial Black,Arial,sans-serif', bg: '#2a1e18', color: '#f4d48a', w: 512, h: 80, shadow: null }), emissive: '#ffffff', emissiveIntensity: 0.25 }), G, [61.4, 3.6, -10], [0, -Math.PI / 2, 0]);
+plane(5, 0.9, new THREE.MeshStandardMaterial({ map: label('BURGER', { font: '900 80px Arial Black,Arial,sans-serif', bg: '#2a1e18', color: '#f4d48a', w: 512, h: 90, shadow: null }), emissive: '#ffffff', emissiveIntensity: 0.2 }), G, [61.4, 3.6, -22], [0, -Math.PI / 2, 0]);
 /* bancone in fondo, cucina, menu luminosi */
 const counterM = M('#3a2a22', { roughness: 0.5 }), counterTop = M('#b8b4ac', { roughness: 0.25, metalness: 0.4 });
-mesh(new THREE.BoxGeometry(1.2, 1.05, 18), counterM, G, [-90, 0.52, -10]); mesh(new THREE.BoxGeometry(1.4, 0.06, 18.2), counterTop, G, [-90, 1.08, -10]); S(-90, -10, 1.2, 18, null, 0, 1.1);
-for (const z of [-16, -12, -8, -4]) { mesh(new THREE.BoxGeometry(0.4, 0.3, 0.5), M('#202428'), G, [-90.2, 1.26, z]); mesh(new THREE.BoxGeometry(0.05, 0.3, 0.4), M('#6ad0ff', { emissive: '#3a90c0', emissiveIntensity: 0.6 }), G, [-89.98, 1.32, z]); }
-mesh(new THREE.BoxGeometry(5, 4.3, 18), M('#9aa0a6', { roughness: 0.3, metalness: 0.6 }), G, [-93.4, 2.15, -10]); /* cucina d'acciaio dietro */
+mesh(new THREE.BoxGeometry(1.2, 1.05, 18), counterM, G, [90, 0.52, -10]); mesh(new THREE.BoxGeometry(1.4, 0.06, 18.2), counterTop, G, [90, 1.08, -10]); S(90, -10, 1.2, 18, null, 0, 1.1);
+for (const z of [-16, -12, -8, -4]) { mesh(new THREE.BoxGeometry(0.4, 0.3, 0.5), M('#202428'), G, [90.2, 1.26, z]); mesh(new THREE.BoxGeometry(0.05, 0.3, 0.4), M('#6ad0ff', { emissive: '#3a90c0', emissiveIntensity: 0.6 }), G, [89.98, 1.32, z]); }
+mesh(new THREE.BoxGeometry(5, 4.3, 18), M('#9aa0a6', { roughness: 0.3, metalness: 0.6 }), G, [93.4, 2.15, -10]); /* cucina d'acciaio dietro */
 const menuTex = ctex(1024, 256, (g) => { g.fillStyle = '#1e1a18'; g.fillRect(0, 0, 1024, 256); const items = [['BURGER', '#e8a03a'], ['PATATINE', '#e8c84a'], ['BIBITE', '#5ab0e8'], ['GELATI', '#e87ab0']];
   items.forEach(([n, c], i) => { const x = i * 256; g.fillStyle = c; g.beginPath(); g.arc(x + 128, 100, 56, 0, 6.28); g.fill(); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x + 84, 96, 88, 10);
     g.fillStyle = '#f6f0e4'; g.font = '700 34px Arial,sans-serif'; g.textAlign = 'center'; g.fillText(n, x + 128, 200); g.font = '600 26px Arial'; g.fillStyle = '#c8c0b0'; g.fillText((4 + i * 1.5).toFixed(2) + ' €', x + 128, 236); }); });
-plane(14, 3.5, new THREE.MeshStandardMaterial({ map: menuTex, emissive: '#ffffff', emissiveMap: menuTex, emissiveIntensity: 0.55 }), G, [-90.85, 2.7, -10], [0, Math.PI / 2, 0]);
+plane(14, 3.5, new THREE.MeshStandardMaterial({ map: menuTex, emissive: '#ffffff', emissiveMap: menuTex, emissiveIntensity: 0.55 }), G, [90.85, 2.7, -10], [0, -Math.PI / 2, 0]);
 /* totem per ordinare vicino all'ingresso */
-for (const z of [-17, -15, -5, -3]) { mesh(new THREE.BoxGeometry(0.45, 1.9, 0.7), M('#e8e6e2', { roughness: 0.4 }), G, [-68.5, 0.95, z]); mesh(new THREE.BoxGeometry(0.05, 0.9, 0.55), M('#3a8ad0', { emissive: '#2a6aa0', emissiveIntensity: 0.7 }), G, [-68.25, 1.3, z]); S(-68.5, z, 0.5, 0.75); }
+for (const z of [-17, -15, -5, -3]) { mesh(new THREE.BoxGeometry(0.45, 1.9, 0.7), M('#e8e6e2', { roughness: 0.4 }), G, [68.5, 0.95, z]); mesh(new THREE.BoxGeometry(0.05, 0.9, 0.55), M('#3a8ad0', { emissive: '#2a6aa0', emissiveIntensity: 0.7 }), G, [68.75, 1.3, z]); S(68.5, z, 0.5, 0.75); }
 /* tavoli e sedute */
 const tblM = M('#d8d0c0', { roughness: 0.4 }), seatM = M('#6a3a2a', { roughness: 0.6 }), legM = M('#2a2a2c', { metalness: 0.5, roughness: 0.4 });
-for (const x of [-84, -79, -74]) for (const z of [-22, -16.5, -3.5, 2]) {
+for (const x of [84, 79, 74]) for (const z of [-22, -16.5, -3.5, 2]) {
   mesh(new THREE.BoxGeometry(1.4, 0.06, 0.9), tblM, G, [x, 0.75, z]); mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.72, 8), legM, G, [x, 0.38, z]);
   for (const s of [-1, 1]) { mesh(new THREE.BoxGeometry(1.4, 0.45, 0.5), seatM, G, [x, 0.23, z + s * 0.85]); mesh(new THREE.BoxGeometry(1.4, 0.6, 0.12), seatM, G, [x, 0.75, z + s * 1.1]); }
   S(x, z, 1.4, 2.4, null, 0, 0.78);
 }
-for (const z of [-24.5, 4.5]) { mesh(new THREE.BoxGeometry(1, 1.2, 0.6), M('#5a4a3a'), G, [-70, 0.6, z]); S(-70, z, 1, 0.6, null, 0, 1.2); }
+for (const z of [-24.5, 4.5]) { mesh(new THREE.BoxGeometry(1, 1.2, 0.6), M('#5a4a3a'), G, [70, 0.6, z]); S(70, z, 1, 0.6, null, 0, 1.2); }
 const ffLights = [];
-for (const [x, z] of [[-75, -10], [-86, -10]]) { const l = new THREE.PointLight('#fff2dc', 0.9, 22, 1.4); l.position.set(x, 3.9, z); l.userData.bu = 1; G.add(l); ffLights.push(l); mesh(new THREE.BoxGeometry(1.4, 0.06, 1.4), lampM, G, [x, 4.3, z]); }
+for (const [x, z] of [[75, -10], [86, -10]]) { const l = new THREE.PointLight('#fff2dc', 0.9, 22, 1.4); l.position.set(x, 3.9, z); l.userData.bu = 1; G.add(l); ffLights.push(l); mesh(new THREE.BoxGeometry(1.4, 0.06, 1.4), lampM, G, [x, 4.3, z]); }
+
+G = ROOT; OXo = 0; OZo = 0;
 
 /* ================= VIA FRATELLI D'ITALIA (verso il corso) ================= */
 bld(-20, -29, 20, 50, { style: 'balconi', floors: 10, por: 'e', dep: 3.2, balc: 'e', gh: 4.4, shops: shopsM });
-bld(32, -33, 44, 42, { style: 'rosa', floors: 6, por: 'w', dep: 3.2, gh: 4.2, shops: shops2M });
-pave(-11.6, -29, 3.2, 50, porfM(1, 12), 0.007); pave(11.6, -33, 3.2, 42, porfM(1, 10), 0.007);
+bld(20, -29, 20, 50, { style: 'rosa', floors: 7, por: 'w', dep: 3.2, gh: 4.2, shops: shops2M });
+pave(-11.6, -29, 3.2, 50, porfM(1, 12), 0.007); pave(11.6, -29, 3.2, 50, porfM(1, 12), 0.007);
 for (const z of [-14, -28, -42]) { lamp(-9.4, z, 0); lamp(9.4, z - 7, 0); }
 for (const [x, z] of [[-9, -20], [9, -38], [-9, -48]]) tree(x, z, 0.9);
 zebra(0, -52, 8, true);
 /* riempimento dietro (case vecchie) */
-bld(-66, -45, 72, 30, { style: 'giallo', floors: 4, roof: 'tetto' });
+bld(66, -45, 72, 30, { style: 'giallo', floors: 4, roof: 'tetto' });
 
 /* ================= CORSO XX SETTEMBRE: LA ZONA DEI BAR ================= */
 /* pavimento con i rombi a scacchi bianchi e neri */
@@ -320,7 +319,8 @@ for (let z = -59; z > -104; z -= 12.5) pave(0, z, 20, 12.5, corsoM, 0.008);
 bld(-25, -79, 30, 50, { style: 'balconi', floors: 7, por: 'e', dep: 3.2, balc: 'e', shops: barsM });
 bld(32, -79, 44, 50, { style: 'storico', floors: 4, por: 'w', dep: 3.2, roof: 'tetto', shops: barsM });
 pave(-11.6, -79, 3.2, 50, porfM(1, 12), 0.009); pave(11.6, -79, 3.2, 50, porfM(1, 12), 0.009);
-bld(-71, -82, 62, 44, { style: 'salmone', floors: 4, roof: 'tetto' });
+bld(-47, -82, 14, 44, { style: 'salmone', floors: 4, roof: 'tetto' });
+bld(77, -82, 46, 44, { style: 'salmone', floors: 4, roof: 'tetto' });
 /* tavolini dei bar con gli ombrelloni */
 const umbM = M('#f0ece4', { roughness: 0.8, side: THREE.DoubleSide }), chairM = M('#1e2024', { roughness: 0.5, metalness: 0.3 }), tTop = M('#d8d4cc', { roughness: 0.4 });
 function barTable(x, z, umb) {
@@ -357,7 +357,7 @@ bld(47, -145, 14, 26, { style: 'salmone', floors: 5, shops: shops2M });
 bld(-34.5, -177, 39, 34, { style: 'giallo', floors: 4, roof: 'tetto' });
 bld(34.5, -175, 39, 38, { style: 'storico', floors: 4, roof: 'tetto' });
 bld(32, -153.5, 16, 7, { style: 'giallo', floors: 3, roof: 'tetto' });
-bld(-77, -149, 46, 86, { style: 'giallo', floors: 4, roof: 'tetto' });
+bld(77, -149, 46, 86, { style: 'giallo', floors: 4, roof: 'tetto' });
 /* dehors con gli ombrelloni bianchi */
 setSeed(88);
 for (let z = -110; z > -146; z -= 3.6) { barTable(-34, z, z > -128); barTable(-30.5, z - 1.5, false); barTable(34, z, z < -122); barTable(30.5, z - 1.5, false); }
