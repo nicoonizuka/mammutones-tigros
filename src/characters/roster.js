@@ -18,6 +18,9 @@ export const POWERS = {
   pipistrelli: { k: 'pipistrelli', n: 'Pipistrelli',     d: 'Il re dei vampiri evoca tre pipistrelli che mordono i nemici più vicini', dur: 11, cd: 26 },
   esplosivi:   { k: 'esplosivi',   n: 'Colpi esplosivi', d: 'Ogni colpo fa una piccola esplosione e fa ×1,5 di danno, con qualsiasi arma', dur: 9, cd: 24 },
   sigarette:   { k: 'sigarette',   n: 'Sigarette',       d: 'Mentre spara, Pika lancia pacchetti di sigarette di contrabbando che fanno molto male', dur: 9, cd: 24 },
+  collare:  { k: 'collare',  n: 'Collare',          d: 'I Mammutones vicini a Napo diventano suoi alleati e combattono al posto suo (non i boss)', dur: 10, cd: 30 },
+  algerino: { k: 'algerino', n: "L'Algerino",       d: 'Per qualche secondo tutti i nemici hanno la vita dimezzata: ogni colpo vale doppio', dur: 7, cd: 26 },
+  gratis:   { k: 'gratis',   n: 'Arma gratis',      d: 'La prossima arma che compri al muro non la paghi', dur: 0, cd: 45 },
   freeze: { k: 'freeze', n: 'Rallentatore',        d: 'Tutti i nemici rallentano quasi fino a fermarsi',     dur: 7,  cd: 26 },
 };
 export const ROSTER = [
@@ -39,6 +42,10 @@ export const ROSTER = [
   { name: 'Bulegato',        short: 'Bulegato', c: '#c0303a', sprite: 14, model: 16, power: 'pipistrelli', world: 3 },
   { name: 'Castelluccio',    short: 'Castelluccio', c: '#8ad0a0', sprite: 15, model: 17, power: 'esplosivi', world: 3 },
   { name: 'Pika',            short: 'Pika', c: '#e8c060', sprite: 16, model: 18, power: 'sigarette', world: 3 },
+  /* arrivano dal mondo 4, il centro di Busto: Napo e Ali si liberano ai bar, DJ Gianfra in Sardegna */
+  { name: 'Napo',            short: 'Napo', c: '#6ac0a0', sprite: 17, model: 20, power: 'collare', world: 4, unlock: 'bar' },
+  { name: 'Ali Debbah',      short: 'Ali', c: '#c0a0ff', sprite: 18, model: 21, power: 'algerino', world: 4, unlock: 'bar' },
+  { name: 'DJ Gianfra',      short: 'Gianfra', c: '#5ad0ff', sprite: 19, model: 22, power: 'gratis', world: 4, unlock: 'busto' },
 ];
 export const DAMIANO_MODEL = 12;
 export const LIBE_MODEL = 15;

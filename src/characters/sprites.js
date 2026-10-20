@@ -178,6 +178,24 @@ const CH=[
      [[-6,1],[-4,-1],[-2,-2],[0,-2],[2,-2],[4,-1],[6,1],[-7,3],[7,3],[-7,6],[7,6],[-3,-3],[1,-3],[-5,-2],[5,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.2,2,C[k%4]));
      [[-5,4],[-3,4],[-1,5],[1,4],[3,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy-1,2,1,C[k%4]));
      s.rect(cx-2,t+9,5,1,"#ffffff");s.rect(cx-3,t+12,6,1,"#e8b48e");}})},
+ {name:"Napo",role:"Ricci scuri voluminosi, baffi e pizzetto, giacca scura",h:"1,85 m",c:"#6ac0a0",tag:"DAL CENTRO DI BUSTO",pw:"Collare",pd:"I Mammutones vicini diventano suoi alleati e combattono per lui.",ic:"aim",
+  fn:()=>human({seed:67,H:53,bw:6,skin:"#eac2a4",top:"#3a4250",topFn:(x,y)=>Math.abs(x-22)<2?"#141416":"#3a4250",pants:"#22252c",shoe:"#f0f0f0",nose:"#d8a888",brow:"#1a120e",
+   extra:(s,cx,t)=>{const C=["#1a120e","#2a1c14","#120c09"];
+     [[-6,1],[-4,-1],[-2,-2],[0,-3],[2,-2],[4,-1],[6,1],[-7,3],[7,3],[-5,-3],[5,-3],[-1,-4],[1,-4],[-3,-4],[3,-4]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.3,2.1,C[k%3]));
+     [[-5,4],[-3,4],[-1,4],[1,4],[3,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy-1,2,1,C[k%3]));s.rect(cx-6,t+3,1,4,C[0]);s.rect(cx+5,t+3,1,4,C[0]);
+     s.rect(cx-2,t+8,5,1,"#2a1a10");s.rect(cx-1,t+10,3,2,"#2a1a10");s.px(cx-6,t+8,"#eef2f8");s.px(cx+5,t+8,"#eef2f8");}})},
+ {name:"Ali Debbah",role:"Ricci con la frangia, camicia a quadri con le borchie",h:"1,69 m",c:"#c0a0ff",tag:"DAL CENTRO DI BUSTO",pw:"L'Algerino",pd:"Per qualche secondo tutti i nemici hanno la vita dimezzata.",ic:"aim",
+  fn:()=>human({seed:71,H:46,bw:6,skin:"#ecc6aa",top:"#3a4a30",topFn:(x,y)=>Math.abs(x-22)<2?"#141416":((x>>1)+(y>>1))%2?"#e8e4d6":"#2a3424",pants:"#1e2026",shoe:"#1c1c20",nose:"#d8aa8a",brow:"#1a120d",
+   extra:(s,cx,t)=>{const C=["#1a120d","#26190f"];
+     [[-5,1],[-3,0],[-1,-1],[1,-1],[3,0],[5,1],[-6,3],[6,3],[-2,-2],[2,-2],[0,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.9,C[k%2]));
+     [[-5,5],[-3,6],[-1,6],[1,6],[3,5]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%2]));s.rect(cx-6,t+3,1,4,C[0]);s.rect(cx+5,t+3,1,4,C[0]);
+     s.px(cx-6,t+8,"#eef2f8");s.px(cx+5,t+8,"#eef2f8");s.px(cx+1,t+12,"#2a3036");s.px(cx+2,t+11,"#2a3036");}})},
+ {name:"DJ Gianfra",role:"Occhiali da sole, felpa bianca, sempre in consolle",h:"1,88 m",c:"#5ad0ff",tag:"DAL CENTRO DI BUSTO",pw:"Arma gratis",pd:"La prossima arma che compri non la paghi.",ic:"aim",
+  fn:()=>human({seed:73,H:54,bw:6,skin:"#eec8aa",top:"#f2f2ee",topFn:(x,y)=>(y>23&&y<27&&x>18&&x<26)?"#3a6ad0":"#f2f2ee",hem:"#e2e2dc",pants:"#2a2f3a",shoe:"#f0f0f0",nose:"#d8aa8a",brow:"#4a3020",
+   extra:(s,cx,t)=>{const C=["#4a3020","#5a3c28","#3a2416"];
+     [[-5,1],[-3,-1],[0,-1],[3,-1],[5,1],[-6,3],[6,3],[-1,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.6,C[k%3]));
+     [[-4,4],[-1,5],[2,4]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%3]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
+     s.rect(cx-4,t+5,4,2,"#0d0e10");s.rect(cx,t+5,4,2,"#0d0e10");s.rect(cx-4,t+12,8,2,"#18181c");}})},
 ];
 
 export {Sprite,human,CH,OUT};

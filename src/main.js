@@ -6,18 +6,18 @@ import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 import { isTouch, touch, initTouch, takeLook } from './input/touch.js';
 const SPR = SPRITES.map(c => c.fn());
-import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss } from './characters/styled.js';
+import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss, buildCortiBoss, buildProgno, buildLorisRe } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
 import { makeSky, setSky, updateSky } from './render/sky.js';
 import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic, sun } from './render/engine.js';
-import { BX, BUB, MACIN, CHIESA, inMac, inChiesa, buRegion, BU_LOW, BU_START, updateBU, buAnim } from './world/busto.js';
+import { BX, BUB, MACIN, CHIESA, inMac, inChiesa, buRegion, BU_LOW, BU_START, updateBU, buAnim, BU_BUYS, BU_SPAWNS, BU_DOORS, buGT, buMacDoor, buMacSolid, buBarGate, buPiazzaGate, buChurchDoor, buChurchSolid, buHole, buSeal, CATA, inCata, CATA_START, PORTAL, BELLS, setTablet, setPortal, SARD, inSard, SARD_START, RE_SPOT, updateSheep } from './world/busto.js';
 import { gzBar, gzSolids } from './world/parking.js';
 import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
-import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, BOX_COST, BOX_POOL, BOTTLE, BOTTLE_FX, STAMINA, TR_GARAGE_COST, TR_POWER_COST, BOSS_WELL, BOSS_FABIO, BOSS_PIKA } from './config/balance.js';
+import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, BOX_COST, BOX_POOL, BOTTLE, BOTTLE_FX, STAMINA, TR_GARAGE_COST, TR_POWER_COST, BOSS_WELL, BOSS_FABIO, BOSS_PIKA, BU_ZONE0, BU_START_COINS, BU_SGHERRONI_WAVE, BU_COSTS, BU_CATA_KILLS, BOSS_PIERRE4, BOSS_CORTI, BOSS_PROGNI, BOSS_LORIS4, BOSS_RE } from './config/balance.js';
 import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoorSolid, OFFICE_DOOR, LORIS_SPOT, updateWare } from './world/warehouse.js';
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
@@ -34,6 +34,9 @@ let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead =
 let world = 1, pickWorld = 1, capoDead = false, rings = [];
 /* mondo 3 = Tribunale */
 let wellDead = false, fabioDead = false, pikaFled = false, pikaDead = false, lorisScene = false, casaT = 0, hostile = [], hasKey = false, trPower = false, trKey = null;
+/* mondo 4 = centro di Busto: chi e' battuto, cosa e' aperto, il talismano, il rituale */
+let bu = {}; let seenBU = false;
+const BU_ORDER = { bfontana: 0, bmacin: 1, bbar: 2, bpiazza: 3, bchiesa: 3, bcata: 4, bsard: 5 };
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
 const region = p => (world === 4 ? buRegion(p) : world === 3 ? trRegion(p) : world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
@@ -79,16 +82,17 @@ function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; 
 
 /* ===================== NEMICI ===================== */
 /* in sandbox la difficolta' dipende da dove sei, in avventura dalla zona piu' avanzata aperta */
-function diffZone() { if (world === 4) return TR_ZONE0 + 3; if (world === 3) return TR_ZONE0 + (P ? TR_ORDER[trRegion(P.pos)] : zone); if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
+function diffZone() { if (world === 4) return BU_ZONE0 + (P ? BU_ORDER[buRegion(P.pos)] : 0); if (world === 3) return TR_ZONE0 + (P ? TR_ORDER[trRegion(P.pos)] : zone); if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
 function spawnPoints() {
-  if (world === 4) return [[BX, 0]];
+  if (world === 4) return BU_SPAWNS[P ? buRegion(P.pos) : 'bfontana'];
   if (world === 3) return TR_SPAWNS[P ? trRegion(P.pos) : 'trpark'];
   if (world === 2) { if (mode === 'sandbox' && P) return inHSStore(P.pos) ? HS_SPAWNS_IN : HS_SPAWNS_OUT; return zone >= 1 ? HS_SPAWNS_OUT.concat(HS_SPAWNS_IN) : HS_SPAWNS_OUT; }
   if (mode === 'sandbox' && P && !inBasement(P.pos)) { const r = region(P.pos); return r === 'ware' ? WARE_SPAWNS : r === 'store' ? STORE_SPAWNS : SPAWN.parcheggio.concat(SPAWN.gazebo); } if (P && inBasement(P.pos)) return BASE_SPAWNS; let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); if (zone >= 4) pts = pts.concat(WARE_SPAWNS, WARE_SPAWNS, WARE_SPAWNS); return pts; }
 function spawnEnemy(forceType, at) {
   const pts = spawnPoints(); const p = at || pts[Math.floor(Math.random() * pts.length)];
-  const down = P && inBasement(P.pos);
-  const type = forceType || (down && Math.random() < RAT_SHARE ? 'ratto' : pickType(diffZone())); const st = enemyStats(type, wave, diffZone());
+  const down = world !== 4 && P && inBasement(P.pos);
+  let type = forceType || (down && Math.random() < RAT_SHARE ? 'ratto' : pickType(diffZone()));
+  if (world === 4 && !forceType && type === 'sgherrone' && wave < BU_SGHERRONI_WAVE) type = 'orco'; const st = enemyStats(type, wave, diffZone());
   const m = buildEnemy(type); m.position.set(p[0] + (Math.random() - 0.5) * 2, 0, p[1] + (Math.random() - 0.5) * 2); scene.add(m);
   const e = { m, type, hp: st.hp, max: st.hp, dmg: st.dmg, reward: st.reward, atkCd: ENEMIES[type].atkCd, spd: st.spd * (0.9 + Math.random() * 0.2), atk: 0.6, dead: 0, stuck: 0, side: 0, walk: Math.random() * 6, r: 0.45 * m.scale.x, kick: 0 };
   m.userData.hit.body.userData.enemy = e; m.userData.hit.head.userData.enemy = e; m.userData.hit.head.userData.head = true;
@@ -102,6 +106,11 @@ const BOSSK = {
   capo: { B: BOSS_CAPO, build: buildCapo, at: () => CAPO_SPOT, r: 0.85, name: 'Il Capo · Padrone dell\'Happy Shopping', minions: ['cornuto', 'base', 'base'], call: 'Il Capo chiama i Mammutones dal magazzino!', title: 'Il Capo!', sub: () => 'Esce dal magazzino: occhio quando abbassa la testa e carica' },
   well: { B: BOSS_WELL, build: buildWell, at: () => WELL_SPOT, r: 0.6, name: 'Pierre · Capo degli sgherri', minions: ['orco', 'orco', 'orcone'], call: 'Pierre chiama i suoi sgherri!', title: 'Pierre!', sub: () => 'Arriva ai tavolini con i suoi sgherri' },
   fabio: { B: BOSS_FABIO, build: buildFabio, at: () => FABIO_SPOT, r: 0.75, name: 'Fabio Regaglia · Il gigante maledetto', minions: ['impossessato', 'orco'], call: 'Fabio Regaglia chiama rinforzi!', title: 'Fabio Regaglia!', sub: () => 'Il gigante di 2 metri e mezzo, maledetto e corazzato' },
+  pierre4: { B: BOSS_PIERRE4, build: buildWell, at: () => ({ x: BX, z: -1 }), r: 0.6, name: 'Pierre · Per l\'ultima volta', minions: ['orco', 'orcone', 'sgherrone'], call: 'Pierre chiama i suoi sgherri!', title: 'Pierre!', sub: () => 'È tornato alla fontana con gli sgherri: stavolta è l\'ultima' },
+  corti: { B: BOSS_CORTI, build: buildCortiBoss, at: () => ({ x: BX + 44, z: 12 }), r: 0.9, name: 'Corti · Sotto la maledizione', minions: ['base', 'furia', 'cornuto'], call: 'Corti chiama i Mammutones dalla cucina!', title: 'Corti!', sub: () => (bu.gt ? '«Hai rigato la mia GT?! Adesso sono cavoli tuoi!»' : '«Oh, mi raccomando… la mia GT non l\'hai toccata, vero? Non l\'hai graffiata?»') },
+  progni: { B: BOSS_PROGNI, build: () => buildProgno(0), at: () => ({ x: BX - 3, z: -96 }), r: 0.6, name: 'I cugini Progni', minions: ['sgherrone', 'sgherrone', 'orco'], call: 'I Progni chiamano gli sgherri potenziati!', title: 'I cugini Progni!', sub: () => 'Due soldati biondi con la cresta: escono insieme dal bar' },
+  loris4: { B: BOSS_LORIS4, build: buildLoris, at: () => ({ x: BX, z: -178 }), r: 0.65, name: 'Loris Busato · In chiesa', minions: ['capra', 'capra', 'furia'], call: 'Loris chiama le capre Mammutones!', title: 'Loris Busato!', sub: () => 'Ti aspettava davanti all\'altare' },
+  re: { B: BOSS_RE, build: buildLorisRe, at: () => RE_SPOT, r: 1.4, name: 'Loris · Il Re dei Mammutones', minions: ['capra', 'capra', 'furia', 'impossessato'], call: 'Il Re chiama il suo esercito!', title: 'Il Re dei Mammutones!', sub: () => 'Loris nella forma finale. È il momento di finirla' },
   pika: { B: BOSS_PIKA, build: buildPikaBoss, at: () => (P && inCasa(P.pos) ? PIKA_SPOT_C : PIKA_SPOT_G), r: 0.5, name: 'Pika · Governatore del Tribunale (sotto maleficio)', minions: ['fachiro', 'impossessato'], call: 'Pika chiama i suoi!', title: 'Pika!', sub: () => (P && inCasa(P.pos) ? 'Il maleficio di Loris lo controlla: liberalo!' : 'Il governatore del Tribunale, impossessato. Ti lancia le sigarette da lontano') },
 };
 function spawnBoss(kind = 'fab') {
@@ -113,6 +122,9 @@ function spawnBoss(kind = 'fab') {
   boss = { m, kind, capo: kind === 'capo', phase, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg * (tough > 1 ? 1.5 : 1), reward: B.reward * tough, atkCd: B.atkCd, spd: B.spd * (tough > 1 ? 1.15 : 1), atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0, summon: B.summonEvery, ch: null, chCd: 4, throwT: 2 };
   m.userData.hit.body.userData.enemy = boss; m.userData.hit.head.userData.enemy = boss; m.userData.hit.head.userData.head = true;
   enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = K.name;
+  if (kind === 'progni') { const m2 = buildProgno(1); m2.position.set(at.x + 6, 0, at.z); scene.add(m2);
+    const tw = { m: m2, kind: 'progni', type: 'boss', twin: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd * 1.05, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0 };
+    m2.userData.hit.body.userData.enemy = tw; m2.userData.hit.head.userData.enemy = tw; m2.userData.hit.head.userData.head = true; enemies.push(tw); alive++; boss.twinRef = tw; }
   banner(K.title, K.sub()); tone(110, 0.8, 'sawtooth', 0.08, 60);
 }
 function goDown() {
@@ -128,7 +140,7 @@ function despawnOther(down) {
 function groundY(pos) { let g = 0; for (const s of solids) { if (s.off || !s.top) continue; if (pos.x > s.x1 - 0.15 && pos.x < s.x2 + 0.15 && pos.z > s.z1 - 0.15 && pos.z < s.z2 + 0.15 && pos.y >= s.top - 0.35 && s.top > g) g = s.top; } return g; }
 const onGround = () => P.vy === 0 && P.pos.y <= groundY(P.pos) + 0.02;
 function collide(pos, r, extra, y) {
-  const Bd = world === 4 ? BUB : world === 3 ? (inCasa(pos) ? CASA : TRB) : world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
+  const Bd = world === 4 ? (inSard(pos) ? SARD : inCata(pos) ? CATA : BUB) : world === 3 ? (inCasa(pos) ? CASA : TRB) : world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
   pos.x = Math.max(Bd.x1 + r, Math.min(Bd.x2 - r, pos.x)); pos.z = Math.max(Bd.z1 + r, Math.min(Bd.z2 - r, pos.z));
   for (const s of solids) {
     if (s.off) continue; if (y !== undefined && s.top && y >= s.top - 0.1) continue;
@@ -145,13 +157,14 @@ function animLimbs(m, phase, amp) { const p = m.userData.P; const s = Math.sin(p
 const ray = new THREE.Raycaster(); const tracerM = new THREE.LineBasicMaterial({ color: '#ffe08a' });
 const sparkG = new THREE.SphereGeometry(0.07, 6, 4), sparkM = new THREE.MeshBasicMaterial({ color: '#ffd27a' }), bloodM = new THREE.MeshBasicMaterial({ color: '#c0392b' });
 function muzzle() { if (fp) { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); vmRoot.updateMatrixWorld(true); } const g = fp && vm.userData.gun ? vm.userData.gun : pModel.userData.gun; const v = g.userData.muzzle.clone(); g.localToWorld(v); return v; }
-function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.dead) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
+function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.dead && !(e.ally > 0)) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
 function shoot() {
   const w = P.weapons[P.cur]; if (P.reloadT > 0) return;
   if (w.melee) { slash(w); return; }
   const inf = infAmmo();
   if (w.ammo <= 0 && !inf) { if (w.res > 0) startReload(); else click(); return; }
   if (!inf) w.ammo--;
+  if (w.thrown) { throwGrenade(w); return; }
   const aimPow = P.pwT > 0 && P.pw.k === 'aim';
   fireT = w.rate * (aimPow ? 0.6 : 1); shotSound(w.sound); muzzleFlash(muzzle()); shake(w.pel > 1 ? 0.18 : w.dmg > 50 ? 0.12 : 0.04);
   const camDir = new V3(); camera.getWorldDirection(camDir); let assist = null;
@@ -200,18 +213,21 @@ function explode(p, R, dmg, small, skip) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), boomM.clone()); m.position.copy(p); scene.add(m); let t = 0;
   const step = () => { t += 0.016; m.scale.setScalar(0.5 + t * R * 6); m.material.opacity = Math.max(0, 0.85 - t * 2.6); if (t < 0.33) requestAnimationFrame(step); else { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } }; step();
   if (small) tone(140, 0.12, 'square', 0.03, 60); else { tone(70, 0.6, 'sawtooth', 0.12, 30); shake(0.4); }
-  if (dmg > 0) for (const e of enemies) { if (e.dead || e === skip) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
+  if (dmg > 0) for (const e of enemies) { if (e.dead || e === skip || e.ally > 0) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
 }
 function tracer(a, b) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const l = new THREE.Line(g, tracerM); scene.add(l); tracers.push({ l, t: 0.06 }); }
 function spark(p, blood) { const m = new THREE.Mesh(sparkG, blood ? bloodM : sparkM); m.position.copy(p); scene.add(m); sparks.push({ m, t: 0.18 }); }
 function earn(n) { coins += n * (P && P.pwT > 0 && P.pw.k === 'coins' ? 2 : 1) * (buffK('coins') ? 2 : 1); }
 function damageEnemy(e, d, head) {
   if (e.flee) return;
-  if (buffK('insta') && !e.boss) d = Math.max(d, e.hp + 1);
+  if (buffK('insta') && !e.boss && !e.twin) d = Math.max(d, e.hp + 1);
+  if (P && P.pwT > 0 && P.pw.k === 'algerino') d *= 2;
   if (e.boss && e.kind === 'pika' && e.phase === 1 && e.hp - d <= e.max * 0.5) { e.hp = e.max * 0.5; pikaFlee(e); return; }
   e.hp -= d; earn(ECONOMY.hit); e.kick = 0.18;
   if (e.hp <= 0 && !e.dead) {
     e.dead = 1; e.deadT = 0; earn(e.reward + (head ? ECONOMY.headKill : 0)); kills++; alive--;
+    if (world === 4 && inCata(e.m.position)) bu.cataKills = (bu.cataKills || 0) + 1;
+    if (e.twin) banner('Un cugino Progni è a terra!', 'Manca l\'altro');
     if (head && !e.boss) feed('Colpo in testa +' + (e.reward + ECONOMY.headKill));
     if (e.boss) bossDown();
     if (Math.random() < DROPS.chance) dropItem(e.m.position.clone());
@@ -220,6 +236,7 @@ function damageEnemy(e, d, head) {
 function bossDown() {
   const kind = boss && boss.kind, bpos = boss && boss.m.position.clone(); boss = null; $('boss').hidden = true;
   if (world === 3) { trBossDown(kind, bpos); return; }
+  if (world === 4) { buBossDown(kind, bpos); return; }
   if (kind === 'loris' && mode === 'sandbox') { lorisDead = true; banner('Loris Busato è sconfitto!', 'Esci dall\'ufficio e rientra per sfidarlo di nuovo'); return; }
   if (kind === 'loris') { lorisDead = true; lastUnlock = unlockChar('loris'); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo');
     setTimeout(() => rescue(4, 'Leo', 'Finalmente! Loris mi aveva chiuso in ufficio. Grazie raga, siete dei grandi!', bpos), 1800); setTimeout(victory, 7600); return; }
@@ -262,7 +279,7 @@ function pickup(d) {
 }
 
 /* ---------- armi al muro ---------- */
-const ALL_BUYS = WALL_BUYS.concat(HS_BUYS, TR_BUYS);
+const ALL_BUYS = WALL_BUYS.concat(HS_BUYS, TR_BUYS, BU_BUYS);
 const wallMeshes = ALL_BUYS.map(wb => {
   const G = new THREE.Group();
   const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.9), new THREE.MeshBasicMaterial({ map: sign(WEAPONS[wb.id].n.toUpperCase(), '700 30px Arial,sans-serif', '#f4f0e0', 190, 90), transparent: true, opacity: 0.9 }));
@@ -276,7 +293,8 @@ const wallMeshes = ALL_BUYS.map(wb => {
 const INTER = [
   ...ALL_BUYS.map(wb => ({
     x: wb.x + Math.sin(wb.rot || 0) * 1.2, z: wb.z + Math.cos(wb.rot || 0) * 1.2, r: 2.4,
-    label: () => P && WEAPONS[wb.id].melee && P.weapons.some(w => w.id === wb.id) ? null : P && P.weapons.some(w => w.id === wb.id) ? `<b>E</b> Munizioni ${WEAPONS[wb.id].n} · <b>${wb.ammoCost}</b>` : `<b>E</b> Compra ${WEAPONS[wb.id].n} · <b>${wb.cost}</b>`,
+    gun: wb.id,
+    label: () => P && WEAPONS[wb.id].melee && P.weapons.some(w => w.id === wb.id) ? null : P && P.weapons.some(w => w.id === wb.id) ? `<b>E</b> Munizioni ${WEAPONS[wb.id].n} · <b>${wb.ammoCost}</b>` : P && P.freeGun ? `<b>E</b> Prendi ${WEAPONS[wb.id].n} · <b style="color:#7aff8a">GRATIS</b>` : `<b>E</b> Compra ${WEAPONS[wb.id].n} · <b>${wb.cost}</b>`,
     cost: () => P.weapons.some(w => w.id === wb.id) ? wb.ammoCost : wb.cost,
     act: () => {
       const have = P.weapons.findIndex(w => w.id === wb.id);
@@ -306,7 +324,18 @@ const INTER = [
   { x: TR_GDOOR.x, z: TR_GDOOR.z + 1.8, r: 3, label: () => world === 3 && zone < 2 && P.pos.z > TR_GDOOR.z ? (hasKey ? `<b>E</b> Apri il garage di Pika · <b>${TR_GARAGE_COST}</b>` : 'Il garage è chiuso a chiave: la chiave ce l\'ha Fabio Regaglia') : null, cost: () => (hasKey ? TR_GARAGE_COST : 0), act: () => { zone = 2; openGarage(); banner('Garage di Pika', 'Gli amici sono nelle gabbie in fondo… e Pika ti aspetta'); } },
   { x: TX + 97.5, z: -1.4, r: 2.4, label: () => world === 3 && inCasa(P.pos) ? '<b>E</b> Torna giù nel garage' : null, cost: () => 0, free: () => true, act: goGarage },
   { x: PAUL.x - 1.4, z: PAUL.z, r: 2.6, label: () => world === 3 ? '<b>E</b> Parla con Paul' : null, cost: () => 0, free: () => true, act: () => { const L = PAUL_LINES; let k; do { k = Math.floor(Math.random() * L.length); } while (k === paulLast); paulLast = k; banner('Paul', '«' + L[k] + '»'); tone(600, 0.08, 'triangle', 0.04, 760); } },
-  ...[1, 2, 3].map(w => ({ get x() { return BOX_SPOTS[w].x; }, get z() { return BOX_SPOTS[w].z + 1.2; }, r: 2.2, label: () => world === w && !(boxes3d[w] && boxes3d[w].busy > 0) ? `<b>E</b> Cassa delle armi · arma a caso · <b>${BOX_COST}</b>` : null, cost: () => BOX_COST, act: openBox })),
+  /* mondo 4: porte, barricate, sigillo, campanacci, portale, la GT di Corti */
+  { x: BX + 32.6, z: 11, r: 2.8, label: () => world === 4 && !bu.mac && !inMac(P.pos) ? (bu.pierre || mode === 'sandbox' ? `<b>E</b> Apri il Mac · <b>${BU_COSTS.mac}</b>` : 'Il Mac è chiuso: prima sconfiggi Pierre alla fontana (round ' + BOSS_PIERRE4.wave + ')') : null, cost: () => (bu.pierre ? BU_COSTS.mac : 0), act: openMac },
+  { x: BX, z: -50.4, r: 3.6, label: () => world === 4 && !bu.bar && P.pos.z > -52 ? (bu.corti || mode === 'sandbox' ? `<b>E</b> Apri la strada per i bar · <b>${BU_COSTS.bar}</b>` : 'Strada chiusa: prima libera Corti al Mac') : null, cost: () => (bu.corti ? BU_COSTS.bar : 0), act: openBar },
+  { x: BX, z: -102.4, r: 3.6, label: () => world === 4 && !bu.piazza && P.pos.z > -104 ? 'Zona rossa: i cugini Progni la tengono chiusa (round ' + BOSS_PROGNI.wave + ')' : null, cost: () => 0 },
+  { x: BX, z: -148.6, r: 3, label: () => world === 4 && !bu.chiesa && P.pos.z > -150.5 ? `<b>E</b> Apri la chiesa · <b>${BU_COSTS.chiesa}</b>` : null, cost: () => BU_COSTS.chiesa, act: openChiesa },
+  { x: BX, z: -180.6, r: 2.6, label: () => world === 4 && inChiesa(P.pos) ? (bu.seal ? '<b>E</b> Scendi nelle catacombe' : bu.tal >= 2 || mode === 'sandbox' ? '<b>E</b> Unisci il talismano e apri il sigillo' : 'Il sigillo dei Mammutones: serve il talismano intero (' + (bu.tal || 0) + '/2)') : null, cost: () => 0, free: () => !!bu.seal || bu.tal >= 2 || mode === 'sandbox', act: () => { if (!bu.seal) openSeal(); else goCata(); } },
+  { x: BX + 300, z: 2.2, r: 2.4, label: () => world === 4 && inCata(P.pos) ? '<b>E</b> Risali in chiesa' : null, cost: () => 0, free: () => true, act: () => { buTeleport({ x: BX, z: -179.5 }, Math.PI); } },
+  ...BELLS.map((b, i) => ({ x: b.x, z: b.z + (b.z > -15 ? 1.2 : 1.2), r: 2.2, label: () => world === 4 && inCata(P.pos) && !bu.ritual ? ((bu.cataKills || 0) < BU_CATA_KILLS && mode !== 'sandbox' ? `Il campanaccio ${b.n} non suona: prima elimina i Mammutones (${bu.cataKills || 0}/${BU_CATA_KILLS})` : `<b>E</b> Suona il campanaccio ${b.n}`) : null, cost: () => 0, free: () => (bu.cataKills || 0) >= BU_CATA_KILLS || mode === 'sandbox', act: () => ringBell(i) })),
+  { x: PORTAL.x, z: PORTAL.z + 2.4, r: 2.8, label: () => world === 4 && inCata(P.pos) ? (!bu.ritual ? 'Il portale è spento: serve il rituale dei campanacci' : bu.portal ? '<b>E</b> Entra nel portale' : `<b>E</b> Attiva il portale · <b>${BU_COSTS.portale}</b>`) : null, cost: () => (bu.ritual && !bu.portal ? BU_COSTS.portale : 0), free: () => !!bu.portal || (bu.ritual && mode === 'sandbox'), act: () => { if (!bu.portal) { bu.portal = 1; setPortal(2); banner('Il portale si apre!', 'Dall\'altra parte c\'è il regno dei Mammutones'); tone(200, 1, 'sine', 0.08, 900); } else goSard(); } },
+  { x: BX + 600, z: 53.6, r: 2.4, label: () => world === 4 && inSard(P.pos) && !boss ? '<b>E</b> Torna nelle catacombe' : null, cost: () => 0, free: () => true, act: () => buTeleport({ x: PORTAL.x, z: PORTAL.z + 3 }, 0) },
+  { get x() { return buGT.position.x + 1.6; }, get z() { return buGT.position.z; }, r: 2.4, label: () => world === 4 && !bu.gt ? '<b>E</b> Riga la GT di Corti' : null, cost: () => 0, free: () => true, act: () => { bu.gt = 1; buGT.userData.scratch.visible = true; tone(2200, 0.5, 'sawtooth', 0.03, 500); banner('Hai rigato la GT di Corti…', bu.corti ? 'Meglio che non lo scopra mai' : 'Speriamo che non se ne accorga'); } },
+  ...[1, 2, 3, 4].map(w => ({ get x() { return BOX_SPOTS[w].x; }, get z() { return BOX_SPOTS[w].z + 1.2; }, r: 2.2, label: () => world === w && !(boxes3d[w] && boxes3d[w].busy > 0) ? `<b>E</b> Cassa delle armi · arma a caso · <b>${BOX_COST}</b>` : null, cost: () => BOX_COST, act: openBox })),
   { get x() { return bottle ? bottle.x : 1e5; }, get z() { return bottle ? bottle.z : 1e5; }, r: 1.8, label: () => bottle ? '<b>E</b> Bevi la bottiglia misteriosa <small>(-' + BOTTLE.hpCost + ' vita)</small>' : null, cost: () => 0, free: () => true, act: drinkBottle },
   { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => { const L = DAMIANO_LINES; let k; do { k = Math.floor(Math.random() * L.length); } while (L.length > 1 && k === damLast); damLast = k; banner('Damiano Ducaj', '«' + L[k] + '»'); tone(520, 0.08, 'triangle', 0.04, 700); } },
 ];
@@ -324,7 +353,8 @@ function openZone(i) {
 }
 let nearI = null;
 function useInter() {
-  if (!nearI || !nearI.label()) return; if (nearI.free && nearI.free()) { nearI.act(); buy(); return; } let c = nearI.cost(); if (!c) return; if (buffK('saldi')) c = Math.ceil(c / 2);
+  if (!nearI || !nearI.label()) return; if (nearI.free && nearI.free()) { nearI.act(); buy(); return; }
+  if (nearI.gun && P.freeGun && !P.weapons.some(w => w.id === nearI.gun)) { P.freeGun = false; nearI.act(); buy(); banner('DJ Gianfra offre!', WEAPONS[nearI.gun].n + ' gratis'); return; } let c = nearI.cost(); if (!c) return; if (buffK('saldi')) c = Math.ceil(c / 2);
   if (coins < c) { feed('Ti servono ' + c + ' monete'); denied(); return; }
   coins -= c; nearI.act(); buy();
 }
@@ -427,12 +457,17 @@ function lorisThrow(e) {
   hostile.push({ m: g, from, to, t: 0, T: 0.5 + from.distanceTo(to) * 0.025, bell: 1, arc: 1.2 }); bell(); const A = e.m.userData.P.armR; A.rotation.x = -2.8; setTimeout(() => { A.rotation.x = 0; }, 180);
 }
 function updHostile(dt) {
-  if (boss && boss.kind === 'loris' && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 4 && d < 26) { boss.throwT = 2.4 + Math.random() * 1.2; lorisThrow(boss); } }
+  if (boss && boss.kind === 'corti' && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 3.5 && d < 24) { boss.throwT = BOSS_CORTI.throwEvery * (0.8 + Math.random() * 0.4); cortiThrow(boss); } }
+  if (boss && boss.kind === 're' && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 5 && d < 34) { boss.throwT = BOSS_RE.throwEvery * (0.8 + Math.random() * 0.4); reThrow(boss); }
+    boss.stompT = (boss.stompT === undefined ? 3 : boss.stompT) - dt; if (boss.stompT <= 0 && d < 6) { boss.stompT = BOSS_RE.stompEvery; const c = boss.m.position.clone(); c.y = 0.4; explode(c, 5.5, 0, false); if (d < 5.5) hit(BOSS_RE.stompDmg * ZONES[diffZone()].dmg); banner('Il Re batte i piedi!', ''); } }
+  if (boss && (boss.kind === 'loris' || boss.kind === 'loris4') && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 4 && d < 26) { boss.throwT = 2.4 + Math.random() * 1.2; lorisThrow(boss); } }
   for (const h of hostile) {
     h.t += dt; const k = Math.min(1, h.t / h.T); h.m.position.lerpVectors(h.from, h.to, k); h.m.position.y += Math.sin(k * Math.PI) * (h.arc || 1.6); h.m.rotation.x += dt * 12; h.m.rotation.z += dt * 8;
     if (k >= 1) {
       const dd = Math.hypot(P.pos.x - h.to.x, P.pos.z - h.to.z);
       if (h.bell) { if (dd < 1.0) { hit(18 * ZONES[diffZone()].dmg); spark(h.to, false); } tone(900, 0.15, 'triangle', 0.05, 400); }
+      else if (h.burger) { if (dd < 1.15) { hit(BOSS_CORTI.throwDmg * ZONES[diffZone()].dmg); feed('Ti ha preso un panino!'); } spark(h.to, false); tone(300, 0.1, 'triangle', 0.04, 160); }
+      else if (h.big) { explode(h.to, 2.4, 0, true); if (dd < 2.4) hit(BOSS_RE.throwDmg * ZONES[diffZone()].dmg); }
       else { explode(h.to, 1.3, 0, true); if (dd < 1.4) hit(BOSS_PIKA.throwDmg * ZONES[diffZone()].dmg); }
       scene.remove(h.m); h.gone = 1;
     }
@@ -472,6 +507,7 @@ const BOTTLE_SPOTS = {
   1: [[-20, 15], [10, 18], [25, 2], [-4, -26], [22, -36], [80, -15], [96, -4], [0, -52], [20, -62]],
   2: [[-20, 20], [10, 15], [22, 28], [-14, -16], [16, -22], [-4, -27]].map(([x, z]) => [OX + x, z]),
   3: [[-20, 20], [16, 28], [-10, -10], [18, -16], [-20, -26], [22, -44], [110, -6]].map(([x, z]) => [TX + x, z]),
+  4: [[-20, 15], [18, 30], [0, -25], [-5, -75], [5, -92], [-25, -125], [25, -135], [24, 10], [42, 12], [0, -170], [290, -20], [580, 20], [620, -30]].map(([x, z]) => [BX + x, z]),
 };
 const bottleGlass = new THREE.MeshStandardMaterial({ color: '#9ae0c0', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.55 });
 const bottleLiq = new THREE.MeshStandardMaterial({ color: '#b04aff', emissive: '#7a20d0', emissiveIntensity: 0.9, roughness: 0.2 });
@@ -501,7 +537,7 @@ function giveWeapon(id) {
   if (P.weapons.length < 2) { P.weapons.push(newWeapon(id)); switchWeapon(1); } else { P.weapons[P.cur] = newWeapon(id); equip(); }
 }
 /* ===================== CASSA DELLE ARMI (una per mappa) ===================== */
-const BOX_SPOTS = { 1: { x: 33, z: -51.5 }, 2: { x: OX + 14, z: -24 }, 3: { x: TX + 28, z: -46 } };
+const BOX_SPOTS = { 1: { x: 33, z: -51.5 }, 2: { x: OX + 14, z: -24 }, 3: { x: TX + 28, z: -46 }, 4: { x: BX - 24, z: -147 } };
 const boxes3d = {};
 function makeBoxModel(w) {
   const at = BOX_SPOTS[w], g = new THREE.Group(); g.position.set(at.x, 0, at.z);
@@ -517,7 +553,7 @@ function makeBoxModel(w) {
   scene.add(g); solid(at.x, at.z, 1.9, 1.0, null, 0, 0.92);
   return { g, lid, show, glow, busy: 0, cycle: 0, pick: null };
 }
-for (const w of [1, 2, 3]) boxes3d[w] = makeBoxModel(w);
+for (const w of [1, 2, 3, 4]) boxes3d[w] = makeBoxModel(w);
 function openBox() {
   const B = boxes3d[world]; if (!B || B.busy > 0) return;
   let r = Math.random() * BOX_POOL.reduce((a, x) => a + x.w, 0), pick = BOX_POOL[0].id; for (const x of BOX_POOL) { r -= x.w; if (r <= 0) { pick = x.id; break; } }
@@ -531,6 +567,127 @@ function updBox(dt) {
     if (B.busy <= 0.5 && B.pick) { while (B.show.children.length) B.show.remove(B.show.children[0]); const gm = buildWeapon(B.pick); gm.scale.setScalar(2.4); B.show.add(gm); giveWeapon(B.pick); banner('Cassa delle armi', 'Ti è uscito: ' + WEAPONS[B.pick].n + (B.pick === 'minigun' ? ' · l\'arma più forte del gioco!' : '')); buy(); B.pick = null; }
     if (B.busy <= 0) { while (B.show.children.length) B.show.remove(B.show.children[0]); }
   } else B.lid.rotation.x = Math.min(0, B.lid.rotation.x + dt * 3);
+}
+
+/* ===================== MONDO 4: IL CENTRO DI BUSTO ===================== */
+function buSeq() { const a = [0, 1, 2, 3]; for (let i = 3; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function resetBU() {
+  bu = { tal: 0, cataKills: 0, seq: buSeq(), step: 0, look: 4, reT: 0 };
+  buMacDoor.visible = true; buMacSolid.off = 0; buBarGate.g.visible = true; buBarGate.solid.off = 0; buPiazzaGate.g.visible = true; buPiazzaGate.solid.off = 0;
+  buChurchDoor.visible = true; buChurchSolid.off = 0; buSeal.visible = true; buHole.visible = false; setPortal(0); buGT.userData.scratch.visible = false;
+  BELLS.forEach(b => { b.glow.material.opacity = 0; }); setTablet(bu.seq, 0); nades.forEach(n => scene.remove(n.m)); nades = [];
+}
+function openMac() { bu.mac = 1; buMacDoor.visible = false; buMacSolid.off = 1; if (!quiet) banner('Il Mac è aperto', 'Dentro ci sono le granate e il mitragliatore · Corti arriva al round ' + BOSS_CORTI.wave); }
+function openBar() { bu.bar = 1; buBarGate.g.visible = false; buBarGate.solid.off = 1; if (!quiet) banner('La zona dei bar', 'Napo è prigioniero dei cugini Progni · escono al round ' + BOSS_PROGNI.wave); }
+function openPiazza() { bu.piazza = 1; buPiazzaGate.g.visible = false; buPiazzaGate.solid.off = 1; }
+function openChiesa() { bu.chiesa = 1; buChurchDoor.visible = false; buChurchSolid.off = 1; if (!quiet) banner('La basilica di San Giovanni', 'Dentro c\'è la minigun · Loris ti aspetta al round ' + BOSS_LORIS4.wave); }
+function openSeal() { bu.seal = 1; buSeal.visible = false; buHole.visible = true; shake(0.4); tone(60, 1.2, 'sawtooth', 0.1, 30); banner('Il sigillo si apre!', 'Sotto la chiesa ci sono le catacombe: scendi'); }
+function openAllBU() { quiet = true; openMac(); openBar(); openPiazza(); openChiesa(); quiet = false; bu.tal = 2; }
+/* cambio di zona (catacombe, Sardegna): i nemici rimasti indietro spariscono */
+function buTeleport(to, yawTo) {
+  for (const e of enemies) { if (e.dead || (e.boss && !e.flee)) continue; scene.remove(e.m); e.gone = 1; alive--; toSpawn++; } enemies = enemies.filter(e => !e.gone);
+  if (boss && mode === 'sandbox') { scene.remove(boss.m); enemies = enemies.filter(e => e !== boss); alive--; boss = null; $('boss').hidden = true; }
+  P.pos.set(to.x, 0, to.z); P.vy = 0; yaw = yawTo !== undefined ? yawTo : (to.yaw || 0);
+}
+function goCata() { buTeleport(CATA_START); banner('Le catacombe', bu.ritual ? 'Il portale ti aspetta in fondo' : 'Elimina i Mammutones, poi suona i campanacci nell\'ordine scritto sulla tavola'); }
+function goSard() { buTeleport(SARD_START); if (!bu.sard) { bu.sard = 1; bu.reT = 6; } tone(180, 1.4, 'sine', 0.08, 1200); banner('La Sardegna', 'Il regno dei Mammutones. Loris ti aspetta tra i nuraghi…'); }
+function ringBell(i) {
+  const b = BELLS[i]; b.ring = 1.2; bell(); tone(520 + i * 120, 0.5, 'triangle', 0.07, 300 + i * 80);
+  if (bu.seq[bu.step] === i) { bu.step++; b.glow.material.opacity = 0.35; setTablet(bu.seq, bu.step);
+    if (bu.step === 4) { bu.ritual = 1; setPortal(1); banner('Il rituale è compiuto!', 'Ora attiva il portale in fondo · ' + BU_COSTS.portale + ' monete'); } else feed('Giusto! ' + bu.step + '/4'); }
+  else { bu.step = 0; bu.seq = buSeq(); setTablet(bu.seq, 0); BELLS.forEach(x => (x.glow.material.opacity = 0)); banner('Ordine sbagliato!', 'I campanacci svegliano i Mammutones… la tavola cambia');
+    for (let k = 0; k < 4; k++) spawnEnemy(k % 2 ? 'capra' : 'furia', [b.x + (Math.random() - 0.5) * 4, b.z + 2]); }
+}
+function buBossDown(kind, at) {
+  if (kind === 'progni') { const tw = enemies.find(e => e.twin && !e.dead); if (tw) { tw.twin = 0; tw.boss = 1; boss = tw; boss.summon = BOSS_PROGNI.summonEvery; $('boss').hidden = false; $('bossn').textContent = 'Progni · l\'ultimo cugino'; banner('Un cugino Progni è a terra!', 'Manca l\'altro: è furioso'); return; } }
+  if (mode === 'sandbox') { bu[kind === 'pierre4' ? 'pierre' : kind === 'loris4' ? 'loris' : kind] = 1; if (kind === 'loris4') bu.tal = 2; if (kind === 'progni') openPiazza(); banner(BOSSK[kind].title.replace('!', '') + ' è sconfitto!', 'Esci dalla zona e rientra per sfidarlo di nuovo'); return; }
+  if (kind === 'pierre4') { bu.pierre = 1; banner('Pierre è sconfitto per sempre!', 'Adesso puoi aprire il Mac · ' + BU_COSTS.mac + ' monete'); return; }
+  if (kind === 'corti') {
+    bu.corti = 1; bu.tal = Math.max(bu.tal, 1); const c = unlockChar('corti');
+    setTimeout(() => rescue(8, 'Corti', 'Raga… avevo una fame da maledizione. Grazie! Tenete, era nel mio panino: metà del talismano.', at), 1200);
+    banner('Corti è libero dalla maledizione!', (c ? 'Hai sbloccato Corti · ' : '') + 'Ti dà la prima metà del talismano');
+    setTimeout(() => { if (state !== 'play' || world !== 4) return; rescue(null, 'Loris Busato', 'Bravi… ma non basta. Vi aspetto alla chiesa: lì finisce tutto.', new V3(BX + 27, 0, 11), { build: buildLoris, to: new V3(BX + 8, 0, -40), life: 5.2, title: 'Loris Busato!', sub: 'Vi aspetta alla chiesa · apri la strada per i bar (' + BU_COSTS.bar + ')' }); }, 7200);
+    return;
+  }
+  if (kind === 'progni') {
+    bu.progni = 1; openPiazza(); const c = unlockChar('bar'); if (c) lastUnlock = { name: 'Napo e Ali Debbah' };
+    setTimeout(() => rescue(20, 'Napo', 'Grazie raga! I Progni ci tenevano legati dietro al bancone del bar.', at), 1400);
+    setTimeout(() => rescue(21, 'Ali Debbah', 'Fratelli, siete arrivati! Andiamo a prendere Loris in chiesa.', at), 4200);
+    banner('I cugini Progni sono a terra!', (c ? 'Hai sbloccato Napo e Ali Debbah · ' : '') + 'La strada per piazza San Giovanni è libera'); return;
+  }
+  if (kind === 'loris4') {
+    bu.loris = 1; bu.tal = 2;
+    rescue(null, 'Loris Busato', 'Non è finita! Il mio regno vi aspetta sotto la chiesa…', at, { build: buildLoris, to: new V3(BX, 0, -182.5), life: 3.6, title: 'Loris scappa nelle catacombe!', sub: 'Ti lascia l\'altra metà del talismano: uniscile sul sigillo' }); return;
+  }
+  if (kind === 're') {
+    bu.re = 1; for (const e of enemies) if (!e.dead) { e.dead = 1; e.deadT = 0; alive--; }
+    const c = unlockChar('busto'); lastUnlock = { name: c ? 'DJ Gianfra' + (unlocks.bar ? '' : '') : 'tutto il centro di Busto' };
+    setTimeout(() => rescue(22, 'DJ Gianfra', 'Raga, finalmente! Loris mi aveva portato qui a fare la musica per il suo regno. Adesso si festeggia a Busto!', at), 1600);
+    banner('Il Re dei Mammutones è sconfitto!', 'Busto è salva'); setTimeout(victory, 8200);
+  }
+}
+function updBU4(dt) {
+  const reg = buRegion(P.pos);
+  sun.position.set(P.pos.x - 35, 62, P.pos.z + 40); sun.target.position.set(P.pos.x, 0, P.pos.z); sun.target.updateMatrixWorld();
+  const look = inSard(P.pos) ? 5 : inCata(P.pos) ? 6 : 4; if (look !== bu.look) { bu.look = look; applyLook(look); }
+  const hk = reg === 'bcata' ? 0.9 : reg === 'bmacin' || reg === 'bchiesa' ? 0.75 : look === 5 ? 1.05 : 0.95; hemi.intensity += (hk - hemi.intensity) * Math.min(1, dt * 3);
+  if (reg === 'bsard') updateSheep(dt, P.pos.x, P.pos.z);
+  if (bu.reT > 0) bu.reT -= dt;
+  if (boss) return;
+  if (mode === 'sandbox') {
+    if (reg !== 'bfontana') bu.pierre = 0; if (reg !== 'bmacin') bu.corti = 0; if (reg !== 'bbar') bu.progni = 0; if (reg !== 'bchiesa') bu.loris = 0; if (reg !== 'bsard') bu.re = 0;
+    if (reg === 'bfontana' && !bu.pierre) spawnBoss('pierre4'); else if (reg === 'bmacin' && !bu.corti) spawnBoss('corti'); else if (reg === 'bbar' && !bu.progni) spawnBoss('progni');
+    else if (reg === 'bchiesa' && !bu.loris) spawnBoss('loris4'); else if (reg === 'bsard' && !bu.re && bu.reT <= 0) spawnBoss('re');
+    return;
+  }
+  if (!bu.pierre && reg === 'bfontana' && wave >= BOSS_PIERRE4.wave) spawnBoss('pierre4');
+  else if (bu.mac && !bu.corti && reg === 'bmacin' && wave >= BOSS_CORTI.wave) spawnBoss('corti');
+  else if (bu.bar && !bu.progni && reg === 'bbar' && wave >= BOSS_PROGNI.wave) spawnBoss('progni');
+  else if (bu.chiesa && !bu.loris && reg === 'bchiesa' && wave >= BOSS_LORIS4.wave) spawnBoss('loris4');
+  else if (bu.sard && !bu.re && reg === 'bsard' && bu.reT <= 0) spawnBoss('re');
+}
+/* panini di Corti e campanacci giganti del Re */
+const bunM = new THREE.MeshStandardMaterial({ color: '#d8963a', roughness: 0.6 }), meatM = new THREE.MeshStandardMaterial({ color: '#5a2e1a', roughness: 0.8 });
+function cortiThrow(e) {
+  const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bunM); t.scale.set(1, 0.6, 1); t.position.y = 0.06; g.add(t); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 12), meatM)); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 12), bunM); b.position.y = -0.06; g.add(b);
+  const from = e.m.position.clone(); from.y += 2.6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.8;
+  hostile.push({ m: g, from, to, t: 0, T: 0.45 + from.distanceTo(to) * 0.028, burger: 1, arc: 1.4 }); tone(400, 0.08, 'triangle', 0.04, 220);
+  const A = e.m.userData.P.armL; A.rotation.x = -2.6; setTimeout(() => { A.rotation.x = 0; }, 200);
+}
+function reThrow(e) {
+  const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.5, 0.7, 14, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), bellM); top.position.y = 0.35; g.add(top);
+  const from = e.m.position.clone(); from.y += 6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.5;
+  hostile.push({ m: g, from, to, t: 0, T: 0.7 + from.distanceTo(to) * 0.025, big: 1, arc: 3 }); bell(); tone(120, 0.4, 'sawtooth', 0.06, 70);
+}
+/* granate: si lanciano dove guardi, esplodono quando cadono */
+let nades = [];
+function throwGrenade(w) {
+  fireT = w.rate; tone(500, 0.08, 'triangle', 0.04, 260);
+  const camDir = new V3(); camera.getWorldDirection(camDir); ray.set(camera.position, camDir); ray.far = 34;
+  const hits = ray.intersectObjects(hitTargets(), false); let to = hits.length ? hits[0].point.clone() : camera.position.clone().add(camDir.clone().multiplyScalar(24));
+  to.y = Math.max(0.2, Math.min(to.y, 2)); const from = muzzle();
+  const m = buildWeapon('granate'); m.scale.setScalar(2); m.position.copy(from); scene.add(m);
+  nades.push({ m, from, to, t: 0, T: 0.35 + from.distanceTo(to) * 0.03, dmg: w.dmg * (P.pwT > 0 && (P.pw.k === 'rage' || P.pw.k === 'speed') ? (P.pw.k === 'rage' ? 2 : 1.8) : 1), R: w.explode });
+  pModel.userData.P.armR.rotation.x -= 1.0;
+}
+function updNades(dt) {
+  for (const n of nades) { n.t += dt; const k = Math.min(1, n.t / n.T); n.m.position.lerpVectors(n.from, n.to, k); n.m.position.y += Math.sin(k * Math.PI) * 2.2; n.m.rotation.x += dt * 10;
+    if (k >= 1) { scene.remove(n.m); n.gone = 1; explode(n.to, n.R, n.dmg); } }
+  nades = nades.filter(n => !n.gone);
+}
+/* il collare di Napo: i Mammutones vicini diventano alleati */
+const collarM = new THREE.MeshBasicMaterial({ color: '#4aff9a' });
+function collare() {
+  const list = enemies.filter(e => !e.dead && !e.boss && !e.twin && e.m.position.distanceTo(P.pos) < 11).sort((a, b) => a.m.position.distanceTo(P.pos) - b.m.position.distanceTo(P.pos)).slice(0, 6);
+  for (const e of list) { e.ally = P.pw.dur; const c = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.06, 6, 16), collarM); c.rotation.x = Math.PI / 2; c.position.y = (e.m.userData.height || 1.8) / e.m.scale.x * 0.78; e.m.add(c); e.collar = c; }
+  banner('Il collare di Napo!', list.length ? list.length + ' nemici combattono per te' : 'Nessuno abbastanza vicino'); tone(800, 0.4, 'square', 0.04, 1600);
+}
+function updAlly(e, dt) {
+  const m = e.m; e.ally -= dt; if (e.ally <= 0) { e.dead = 1; e.deadT = 0; alive--; if (e.collar) e.collar.visible = false; return; }
+  let tgt = null, bd = 30; for (const o of enemies) { if (o === e || o.dead || o.ally > 0) continue; const d = o.m.position.distanceTo(m.position); if (d < bd) { bd = d; tgt = o; } }
+  const goal = tgt ? tgt.m.position : P.pos.clone().add(new V3(2, 0, 2)); const to = goal.clone().sub(m.position); to.y = 0; const dist = to.length(); m.rotation.y = Math.atan2(to.x, to.z);
+  if (dist > 1.3 + (tgt ? tgt.r || 0.4 : 1)) { m.position.addScaledVector(to.normalize(), e.spd * 1.15 * dt); collide(m.position, e.r, 1); e.walk += dt * e.spd * 2.2; animLimbs(m, e.walk, 0.55); }
+  else if (tgt) { e.atk -= dt; m.userData.P.armR.rotation.x = -1.4 + Math.sin(time * 12) * 0.4; if (e.atk <= 0) { e.atk = e.atkCd * 0.7; damageEnemy(tgt, e.dmg * 3 + 30, false); spark(tgt.m.userData.hit.body.getWorldPosition(new V3()), true); } }
 }
 
 /* ===================== PIPISTRELLI DI BULEGATO ===================== */
@@ -683,6 +840,8 @@ function usePower() {
   else if (pw.k === 'fischio') fischio();
   else if (pw.k === 'pipistrelli') callBats();
   else if (pw.k === 'matto') { libeMatto(); return; }
+  else if (pw.k === 'collare') { collare(); P.pwT = pw.dur; }
+  else if (pw.k === 'gratis') { P.freeGun = true; banner('DJ Gianfra', 'La prossima arma che compri al muro è gratis'); tone(900, 0.3, 'triangle', 0.05, 1400); }
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
 }
@@ -721,7 +880,7 @@ function invBuy(kind) {
 function feed(t) { const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); setTimeout(() => d.remove(), 2600); while ($('feed').children.length > 5) $('feed').lastChild.remove(); }
 let bannerT = 0; const bannerFn = (t, s) => banner(t, s); const feedFn = t => feed(t); function banner(t, s) { $('banner').innerHTML = t + (s ? `<small>${s}</small>` : ''); $('banner').hidden = false; bannerT = 2.6; }
 function hud() {
-  $('wave').innerHTML = world === 4 ? '–<small>Centro di Busto · anteprima della mappa</small>' : wave + '<small>Ondata · ' + ZONES[world === 3 ? diffZone() : zoneIdx()].n + '</small>'; $('coins').textContent = coins;
+  $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[world >= 3 ? diffZone() : zoneIdx()].n + (world === 4 && bu.tal ? ' · talismano ' + bu.tal + '/2' : '') + '</small>'; $('coins').textContent = coins;
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
   const w = P.weapons[P.cur]; const inf = infAmmo(); $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
   $('ammo').innerHTML = w.melee ? '⚔' : inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
@@ -745,9 +904,8 @@ function loop(t) {
   if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
 }
 function update(dt) {
-  /* ondate (il centro di Busto per ora e' solo da esplorare) */
-  if (world === 4) { sun.position.set(P.pos.x - 35, 62, P.pos.z + 40); sun.target.position.set(P.pos.x, 0, P.pos.z); sun.target.updateMatrixWorld(); }
-  else if (toSpawn > 0) { spawnT -= dt; if (spawnT <= 0 && alive < WAVES.maxAlive(wave)) { spawnEnemy(); toSpawn--; spawnT = WAVES.spawnEvery(wave); } }
+  /* ondate */
+  if (toSpawn > 0) { spawnT -= dt; if (spawnT <= 0 && alive < WAVES.maxAlive(wave) + (world === 4 && inSard(P.pos) ? 4 : 0)) { spawnEnemy(); toSpawn--; spawnT = WAVES.spawnEvery(wave); } }
   else if (alive <= 0) {
     if (breakT <= 0) { breakT = WAVES.break; if (wave > 0) { const b = ECONOMY.waveClear * Math.min(wave, 10); coins += b; banner('Ondata ' + wave + ' superata', '+' + b + ' monete · prossima ondata tra poco'); } }
     breakT -= dt; if (breakT <= 0) startWave();
@@ -791,9 +949,9 @@ function update(dt) {
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
-  if (world === 4) { const A = inMac(P.pos) ? MACIN : inChiesa(P.pos) ? CHIESA : null;
+  if (world === 4) { const A = inMac(P.pos) ? MACIN : inChiesa(P.pos) ? CHIESA : inCata(P.pos) ? CATA : null;
     if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
-    else { cam.x = Math.max(BUB.x1 + 0.6, Math.min(BUB.x2 - 0.6, cam.x)); cam.z = Math.max(BUB.z1 + 0.6, Math.min(BUB.z2 - 0.6, cam.z));
+    else { const Bb = inSard(P.pos) ? SARD : BUB; cam.x = Math.max(Bb.x1 + 0.6, Math.min(Bb.x2 - 0.6, cam.x)); cam.z = Math.max(Bb.z1 + 0.6, Math.min(Bb.z2 - 0.6, cam.z));
       for (const L of BU_LOW) if (P.pos.x > L.x1 && P.pos.x < L.x2 && P.pos.z > L.z1 && P.pos.z < L.z2) cam.y = Math.min(L.ceil - 0.3, cam.y); } }
   else if (world === 3) { const A = inCasa(P.pos) ? CASA : inGarage(P.pos) ? GARAGE : null;
     if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
@@ -807,7 +965,7 @@ function update(dt) {
   if (fp) { cam.copy(P.pos); cam.y += pModel.userData.height * 0.9; }
   pModel.visible = !fp; vm.visible = fp;
   if (fp) { vmKick = Math.max(0, vmKick - dt * 6); const bob = moving ? Math.sin(P.walk * 2) * 0.012 : 0; vm.position.set(0.16, -0.15 + bob, -0.36 + vmKick * 0.08); vm.scale.setScalar(0.62); vm.rotation.set(vmKick * 0.25 + (P.reloadT > 0 ? -0.6 : 0), 0, 0); }
-  camera.position.copy(cam); camera.lookAt(cam.clone().add(d)); updateFx(dt, camera, P.pos, inBasement(P.pos));
+  camera.position.copy(cam); camera.lookAt(cam.clone().add(d)); updateFx(dt, camera, P.pos, world === 4 ? inCata(P.pos) : inBasement(P.pos));
   /* sparo */
   fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire || touch.fire) && w.auto && fireT <= 0) shoot();
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
@@ -821,6 +979,7 @@ function update(dt) {
     if (e.ice) e.ice.visible = e.frozen > 0;
     if (!e.dead && e.capo && updCapo(e, dt * slow)) continue;
     if (e.dead) { e.deadT += dt; m.rotation.x = Math.min(1.5, e.deadT * 4); m.position.y = -Math.max(0, e.deadT - 1.2) * 0.8; if (e.deadT > 2.6) { scene.remove(m); e.gone = 1; } continue; }
+    if (e.ally > 0) { updAlly(e, dt); continue; }
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
     EP.bells.forEach((b, k) => { b.rotation.x = Math.sin(time * 6 + k + e.walk) * 0.3; });
     let goal = P.pos; const er = region(m.position), pr = region(P.pos);
@@ -828,6 +987,9 @@ function update(dt) {
     else if (world === 3) { if (er !== pr && er !== 'trcasa' && pr !== 'trcasa') { const a = TR_ORDER[er], b = TR_ORDER[pr], D = (a < b ? a : a - 1) === 0 ? TR_GATE : TR_GDOOR;
       const ds = Math.sign(m.position.z - D.z) || 1, gx = Math.max(D.x - D.w / 2 + 1, Math.min(D.x + D.w / 2 - 1, m.position.x)), aligned = Math.abs(m.position.x - D.x) < D.w / 2 - 0.7 && Math.abs(m.position.z - D.z) < 2.6;
       goal = new V3(gx, 0, aligned ? D.z - ds * 2.4 : D.z + ds * 2.2); } }
+    else if (world === 4) { const iM = er === 'bmacin', pM = pr === 'bmacin', iC = er === 'bchiesa', pC = pr === 'bchiesa';
+      if (iM !== pM) { const D = BU_DOORS.mac, ds = iM ? 1 : -1, gz = Math.max(D.z - 1.2, Math.min(D.z + 1.2, m.position.z)), al = Math.abs(m.position.z - D.z) < 1.4 && Math.abs(m.position.x - D.x) < 2.6; goal = new V3(al ? D.x - ds * 2.4 : D.x + ds * 2.2, 0, gz); }
+      else if (iC !== pC) { const D = BU_DOORS.chiesa, ds = iC ? -1 : 1, gx = Math.max(D.x - 2, Math.min(D.x + 2, m.position.x)), al = Math.abs(m.position.x - D.x) < 2.3 && Math.abs(m.position.z - D.z) < 2.6; goal = new V3(gx, 0, al ? D.z - ds * 2.4 : D.z + ds * 2.2); } }
     else if (world === 2) { if (er !== pr) { /* prima davanti alla porta dalla propria parte, poi dall'altra */ const ds = er === 'hsout' ? 1 : -1, gx = Math.max(HS_DOOR.x - 1.6, Math.min(HS_DOOR.x + 1.6, m.position.x)), aligned = Math.abs(m.position.x - HS_DOOR.x) < HS_DOOR.w / 2 - 0.7 && Math.abs(m.position.z) < 2.6; goal = new V3(gx, 0, aligned ? -ds * 2.4 : ds * 2.2); } }
     else if (pr !== 'base' && er !== pr) {
       const viaShop = er === 'out' || (er === 'store' && pr === 'out');
@@ -854,10 +1016,10 @@ function update(dt) {
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt); updHostile(dt); updBox(dt); updBottle(dt);
+  updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt); updHostile(dt); updBox(dt); updBottle(dt); updNades(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
-  if (world === 4) updateBU(time, dt);
+  if (world === 4) { updateBU(time, dt); updBU4(dt); }
   else if (world === 3) { updateTR(time); updTR(dt); }
   else if (world === 2) { updateHS(time);
     if (mode === 'sandbox') { if (!inHSStore(P.pos)) capoDead = false; if (!boss && !capoDead && inHSStore(P.pos)) spawnBoss('capo'); }
@@ -875,7 +1037,7 @@ function update(dt) {
   sinceHit += dt; if (sinceHit > REGEN.delay && P.hp < 100) P.hp = Math.min(100, P.hp + REGEN.perSec * dt);
   if (boss && !boss.dead && !boss.flee) { boss.summon -= dt; if (boss.summon <= 0) { const K = BOSSK[boss.kind]; boss.summon = K.B.summonEvery;
       const list = boss.kind === 'pika' && boss.phase === 2 ? ['impossessato', 'orcone'] : boss.kind === 'fab' && world === 3 ? ['ratto', 'ratto', 'fachiro', 'impossessato'] : K.minions; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(K.call); }
-    $('bossb').style.width = Math.max(0, boss.hp / boss.max * 100) + '%'; }
+    const tw = boss.twinRef && !boss.twinRef.dead ? boss.twinRef : null; $('bossb').style.width = Math.max(0, (boss.hp + (tw ? tw.hp : 0)) / (boss.max + (tw ? tw.max : 0)) * 100) + '%'; }
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
   P.hurtT = Math.max(0, P.hurtT - dt); $('dmg').style.boxShadow = `inset 0 0 120px 30px rgba(220,30,30,${Math.min(0.65, P.hurtT * 1.4)})`;
@@ -932,24 +1094,28 @@ function resetWorld() {
   if (trGateSolid.off) { G3add(trGate); trGateSolid.off = 0; } if (trGDoorSolid.off) { G3add(trGDoor); trGDoorSolid.off = 0; } liftLed.material.color.set('#ff3030');
   CAGES.forEach(c => { c.freed = false; c.bars.visible = true; c.who.visible = true; c.solid.off = 0; });
   wellDead = fabioDead = pikaFled = pikaDead = lorisScene = hasKey = trPower = false; if (trKey) { scene.remove(trKey); trKey = null; } trPanelLed.material.color.set('#ff3030'); casaT = 0; hostile.forEach(h => scene.remove(h.m)); hostile = []; buff = null; if (bottle) { scene.remove(bottle.m); bottle = null; } bottleT = 35;
-  zone = 0; shieldMesh.visible = false;
+  zone = 0; shieldMesh.visible = false; resetBU();
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
 addEventListener('keydown', e => { if (e.code === 'KeyF') { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else fullscreen(); } });
 let seenHS = false, seenTR = false;
 function startGame(i) {
   if (pickWorld === 3 && mode === 'adv' && !seenTR) { seenTR = true; $('sel').hidden = true; showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Scendi dalla macchina', () => startGame(i))); return; }
+  if (pickWorld === 4 && mode === 'adv' && !seenBU) { seenBU = true; $('sel').hidden = true; showTale('buIntro', 'Scendi in piazza Garibaldi', () => startGame(i)); return; }
   if (pickWorld === 2 && mode === 'adv' && !seenHS) { seenHS = true; $('sel').hidden = true; showTale('hsIntro', 'Entra nel parcheggio', () => startGame(i)); return; }
   fullscreen();
   charIdx = i; resetWorld(); world = pickWorld; applyLook(world); newPlayer(i);
   if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; }
   if (world === 3) { P.pos.set(TR_START.x, 0, TR_START.z); yaw = TR_START.yaw; coins = TR_START_COINS; }
-  if (world === 4) { P.pos.set(BU_START.x, 0, BU_START.z); yaw = BU_START.yaw; coins = SANDBOX.coins; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
+  if (world === 4) { P.pos.set(BU_START.x, 0, BU_START.z); yaw = BU_START.yaw; coins = BU_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
   const wc = $('who'); const sp = SPR[ROSTER[i].sprite]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
   for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = sp.g[sp.top - 3 + y] && sp.g[sp.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
   sinceHit = 99;
-  if (world === 4) { lock(); banner('Il centro di Busto', 'Anteprima della mappa: la fontana, i portici col Mac, il corso dei bar e la chiesa'); audio(); return; }
+  if (world === 4) {
+    if (mode === 'sandbox') { openAllBU(); coins = SANDBOX.coins; lock(); banner('Sandbox · Centro di Busto', 'Tutto aperto: ogni zona ha il suo boss, il sigillo della chiesa porta alle catacombe'); audio(); return; }
+    lock(); banner('Il centro di Busto', 'Pierre ti aspetta alla fontana al round ' + BOSS_PIERRE4.wave); audio(); return;
+  }
   if (world === 3) {
     if (mode === 'sandbox') { openTR(); coins = SANDBOX.coins; lock(); banner('Sandbox · Tribunale', 'Ogni zona ha il suo boss: entra e sfidalo'); audio(); return; }
     lock(); banner('Il Tribunale di Busto', 'Fab La Rue blocca la strada: arriva al round ' + TR_FAB_WAVE); audio(); return;
@@ -970,7 +1136,7 @@ function resume() { state = 'play'; $('pause').hidden = true; last = performance
 function gameOver(title, msg) {
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
   $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = title || 'Ti hanno <span>preso</span>';
-  $('deadmsg').textContent = msg ? msg : world === 3 ? `${ROSTER[charIdx].name} è caduto al Tribunale (${ZONES[diffZone()].n}). Pika ride dal balcone.` : world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
+  $('deadmsg').textContent = msg ? msg : world === 4 ? `${ROSTER[charIdx].name} è caduto nel centro di Busto (${ZONES[diffZone()].n}). Loris ride dal campanile.` : world === 3 ? `${ROSTER[charIdx].name} è caduto al Tribunale (${ZONES[diffZone()].n}). Pika ride dal balcone.` : world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
   $('deadstats').innerHTML = `<div>${wave}<small>Ondata raggiunta</small></div><div>${kills}<small>Mammutones abbattuti</small></div>`;
 }
 function victory() {
@@ -981,14 +1147,18 @@ function victory() {
 function showEnding(real, wf) {
   if (!real) { const ww = wf || pickWorld; if (state !== 'play' && world !== ww) { world = ww; applyLook(ww); } }
   $('endNext').hidden = !(real && world < 3 && mode === 'adv'); $('endNext').firstChild.textContent = world === 2 ? 'Vai al Tribunale' : 'Vai all\'Happy Shopping'; $('endNext').lastChild.textContent = world === 2 ? 'in macchina con Libe il matto' : 'ricomincia dal mondo 2';
-  $('endCont').hidden = !real; $('endCont').firstChild.textContent = world === 3 ? 'Resta al Tribunale' : world === 2 ? 'Resta all\'Happy Shopping' : 'Resta al Tigros';
+  $('endCont').hidden = !real; $('endCont').firstChild.textContent = world === 4 ? 'Resta in Sardegna' : world === 3 ? 'Resta al Tribunale' : world === 2 ? 'Resta all\'Happy Shopping' : 'Resta al Tigros';
   ['sel', 'dead', 'pause', 'world', 'tale'].forEach(id => ($(id).hidden = true));
   $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
   const who = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
   const ww = real ? world : wf || pickWorld, w2 = ww === 2;
   $('endkick').textContent = 'Mappa ' + ww + ' completata';
-  $('endtitle').innerHTML = ww === 3 ? 'Pika è <span>libero</span>!' : w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
-  $('endtext').innerHTML = ww === 3
+  $('endtitle').innerHTML = ww === 4 ? 'Busto è <span>salva</span>!' : ww === 3 ? 'Pika è <span>libero</span>!' : w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
+  $('endtext').innerHTML = ww === 4
+    ? `<p><b>${who}</b> ha liberato il centro di Busto. Pierre è sconfitto per sempre, i cugini Progni sono a terra e Corti è tornato quello di sempre (anche se continua a chiedere della sua GT).</p>
+       <p>Ai bar avete liberato <b>Napo</b> e <b>Ali Debbah</b>. Con le due metà del talismano avete aperto le catacombe sotto San Giovanni e il portale vi ha portati in <b>Sardegna</b>, il regno dei Mammutones.</p>
+       <p>Lì, tra i nuraghi e le pecore, <b>Loris Busato</b> si è trasformato nel Re dei Mammutones. L'avete battuto. Dalla consolle è saltato fuori <b>DJ Gianfra</b>: stasera si festeggia in piazza Garibaldi. Busto Arsizio è di nuovo vostra. Fine del primo capitolo.</p>`
+    : ww === 3
     ? `<p><b>${who}</b> ha liberato il Tribunale. Fab La Rue è sconfitto per sempre, Pierre è scappato con quello che resta dei suoi sgherri e Fabio Regaglia è tornato in sé.</p>
        <p>Nel garage avete liberato <b>Leodessi</b>, <b>Castelluccio</b> e <b>Bulegato</b>. E sopra, a casa sua, il maleficio di Loris si è spezzato: <b>Pika</b> è di nuovo lui, e chiede scusa a tutti con un pacchetto di sigarette in mano.</p>
        <p>Ma Loris Busato è scappato dalla finestra. Il gruppo adesso è al completo, e c'è un'ultima tappa: il <b>centro di Busto</b>.</p>`
@@ -1021,14 +1191,15 @@ const PLACES = {
        t: 'Il bazar di Sant\'Edoardo. Parcheggio e negozio, Tefalin e Diego da ritrovare, il Capo da sconfiggere per liberare Debe.' },
   3: { n: 'Tribunale di Busto', open: () => !!unlocks.hs || mode === 'sandbox', state: () => unlocks.tr ? 'Liberato · Pika è libero dal maleficio' : unlocks.hs ? 'Disponibile · Mondo 3' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima l\'Happy Shopping' : 'Bloccato · finisci prima l\'Happy Shopping',
        t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Pierre e Fabio Regaglia, i garage e la casa di Pika.' },
-  4: { n: 'Il centro di Busto', open: () => true, state: () => 'Anteprima della mappa · nemici e storia in arrivo', t: 'L\'ultima tappa: liberare Busto Arsizio. Dalla fontana di piazza Garibaldi si va al Mac sotto i portici, oppure lungo il corso dei bar fino a piazza San Giovanni e alla chiesa, dove si nascondono le catacombe.' },
+  4: { n: 'Il centro di Busto', open: () => !!unlocks.tr || mode === 'sandbox', state: () => unlocks.busto ? 'Liberato · Busto è salva' : unlocks.tr ? 'Disponibile · Mondo 4' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima il Tribunale' : 'Bloccato · finisci prima il Tribunale',
+       t: 'L\'ultima tappa del primo capitolo. Pierre alla fontana, Corti maledetto al Mac, i cugini Progni ai bar con Napo e Ali prigionieri, Loris in chiesa. Sotto la chiesa le catacombe, e il portale per la Sardegna, il regno dei Mammutones.' },
 };
 function showPlace(k) {
   place = k; const Q = PLACES[k];
   document.querySelectorAll('[data-place]').forEach(b => { const on = +b.dataset.place === k; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   document.querySelectorAll('[data-node]').forEach(n => n.classList.toggle('sel', +n.dataset.node === k));
   $('plName').textContent = Q.n; $('plState').textContent = Q.state(); $('plState').classList.toggle('lock', !Q.open()); $('plText').textContent = Q.t;
-  $('plPlay').hidden = !Q.open(); $('plIntro').hidden = k > 3; $('plEnd').hidden = k > 3;
+  $('plPlay').hidden = !Q.open(); $('plIntro').hidden = k > 4; $('plEnd').hidden = k > 4;
 }
 document.querySelectorAll('[data-place]').forEach(b => b.addEventListener('click', () => showPlace(+b.dataset.place)));
 document.querySelectorAll('[data-node]').forEach(n => n.addEventListener('click', () => showPlace(+n.dataset.node)));
@@ -1082,7 +1253,7 @@ let taleDone = null;
 function showTale(id, btn, done) { $('taleBody').innerHTML = $(id).innerHTML; $('taleGo').textContent = btn; taleDone = done; ['sel', 'world', 'ending'].forEach(k => ($(k).hidden = true)); $('tale').hidden = false; menuIdx = 0; }
 $('taleGo').onclick = () => { $('tale').hidden = true; const d = taleDone; taleDone = null; if (d) d(); };
 const backToMap = () => { $('world').hidden = false; menuIdx = 0; if (state === 'menu' && world !== pickWorld) { world = pickWorld; applyLook(world); } };
-$('plIntro').onclick = () => { if (place === 3) showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Torna alla mappa', backToMap)); else if (place === 2) showTale('hsIntro', 'Torna alla mappa', backToMap); else { $('world').hidden = true; $('story').hidden = false; storyBack = true; } };
+$('plIntro').onclick = () => { if (place === 4) showTale('buIntro', 'Torna alla mappa', backToMap); else if (place === 3) showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Torna alla mappa', backToMap)); else if (place === 2) showTale('hsIntro', 'Torna alla mappa', backToMap); else { $('world').hidden = true; $('story').hidden = false; storyBack = true; } };
 $('plEnd').onclick = () => { showEnding(false, place); endBack = true; };
 $('plPlay').onclick = () => { const k = place; toMenu(); setWorld(k); };
 let storyBack = false, endBack = false;
@@ -1096,7 +1267,8 @@ function setWorld(w) {
   const wi = $('worldinfo'); wi.hidden = w === 1;
   if ($('w3btn')) { $('w3btn').classList.toggle('locked', !unlocks.hs); $('w3sub').textContent = unlocks.hs ? 'Pika e il maleficio' : 'in Avventura: finisci l\'Happy Shopping'; }
   if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Pierre (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
-  if (w === 4) wi.textContent = 'Centro di Busto: per ora è solo la mappa da esplorare (piazza Garibaldi con la fontana, i portici e il Mac, il corso dei bar, piazza San Giovanni e la chiesa). Nemici, boss e storia arrivano presto.';
+  if ($('w4btn')) { $('w4btn').classList.toggle('locked', !unlocks.tr); $('w4sub').textContent = unlocks.tr ? 'il Re dei Mammutones' : 'in Avventura: finisci il Tribunale'; }
+  if (w === 4) wi.textContent = unlocks.tr || mode === 'sandbox' ? 'Centro di Busto: Pierre alla fontana (round ' + BOSS_PIERRE4.wave + '), Corti al Mac (round ' + BOSS_CORTI.wave + '), i cugini Progni ai bar (round ' + BOSS_PROGNI.wave + '), Loris in chiesa (round ' + BOSS_LORIS4.wave + '), poi catacombe e Sardegna.' : 'In Avventura il centro di Busto si apre dopo aver finito il Tribunale. In Sandbox puoi provarlo subito.';
   if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
   if (state === 'menu') { world = w; applyLook(w); }
 }
@@ -1114,11 +1286,11 @@ $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = fa
 
 /* schermata di scelta: ritratti in pixel art */
 /* personaggi da sbloccare: Jacopo battendo Fab La Rue, Leo finendo la storia (solo in Avventura) */
-const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo', corti: 'È sotto una maledizione: liberalo al centro di Busto (prossimo mondo)' };
+const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo', corti: 'È sotto una maledizione: liberalo al Mac del centro di Busto (mondo 4)', bar: 'Prigioniero dei cugini Progni: liberalo ai bar del centro di Busto (mondo 4)', busto: 'Finisci il centro di Busto: sconfiggi il Re dei Mammutones in Sardegna' };
 let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
 /* Tefalin, Diego e Debe vengono dall'Happy Shopping: in Avventura servono Loris battuto (e Debe il Capo), in Sandbox sempre disponibili */
-const isLocked = c => { if (c.world >= 2 && mode === 'sandbox') return false; if (c.world === 3) return !unlocks.tr; if (c.world === 2 && !unlocks.loris) return true; return !!c.unlock && !unlocks[c.unlock]; };
-const lockTxt = c => c.world === 3 ? 'Si sblocca finendo il Tribunale (mondo 3). In Sandbox puoi già provarlo' : c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
+const isLocked = c => { if (c.world >= 2 && mode === 'sandbox') return false; if (c.world === 4) return !unlocks[c.unlock]; if (c.world === 3) return !unlocks.tr; if (c.world === 2 && !unlocks.loris) return true; return !!c.unlock && !unlocks[c.unlock]; };
+const lockTxt = c => c.world === 4 ? UNLOCK_TXT[c.unlock] : c.world === 3 ? 'Si sblocca finendo il Tribunale (mondo 3). In Sandbox puoi già provarlo' : c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
 function unlockChar(k) {
   if (mode !== 'adv' || unlocks[k]) return null; unlocks[k] = 1; try { localStorage.setItem('mt_unlocks', JSON.stringify(unlocks)); } catch (_) {}
   renderPick(); const c = ROSTER.find(r => r.unlock === k); return c;
@@ -1133,7 +1305,7 @@ function renderPick() {
     b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>` + (lock ? LOCK_SVG + `<em>${lockTxt(c)}</em>` : ''));
     b.title = lock ? 'Bloccato: ' + lockTxt(c) : POWERS[c.power].d;
     b.onclick = () => {
-      const w2lock = (pickWorld === 2 && mode === 'adv' && !hsOpen()) || (pickWorld === 3 && mode === 'adv' && !unlocks.hs);
+      const w2lock = (pickWorld === 2 && mode === 'adv' && !hsOpen()) || (pickWorld === 3 && mode === 'adv' && !unlocks.hs) || (pickWorld === 4 && mode === 'adv' && !unlocks.tr);
       if (isLocked(c) || w2lock) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); tone(160, 0.12, 'square', 0.04); if (w2lock) $('worldinfo').hidden = false; return; } startGame(i); };
     $('pick').append(b);
   });
@@ -1156,9 +1328,9 @@ if (isTouch) {
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
 const sky = makeSky(scene); setSky(sky, 1); skyRef = sky;
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim, buSeal]);
 applyLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { cam: camera, scene, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; } };
+window.__game = { cam: camera, scene, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; }, get bu() { return bu; }, buTeleport, openSeal, ringBell, goSard, goCata, get unlocks() { return unlocks; } };
 requestAnimationFrame(loop);

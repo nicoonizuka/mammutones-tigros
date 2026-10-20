@@ -332,9 +332,41 @@ Ogni 45-75 secondi può comparire una bottiglia viola luminosa nella zona in cui
 - **Oggetti dei nemici**: la vita è un cuore rosso, le munizioni sono proiettili veri, l'armatura è uno scudo blu.
 - **Cielo** nuovo in tutti e tre i mondi: tramonto sul Tigros, giorno con nuvole all'Happy Shopping, cielo coperto al Tribunale.
 
-## Mondo 4: il centro di Busto (anteprima della mappa)
-Per ora si può solo esplorare: niente nemici, boss o storia. Si sceglie dal menu (Mondo 4) o dalla mappa del mondo.
-- **Piazza Garibaldi**: si parte qui, davanti alla fontana con i gradoni di pietra e i tre zampilli, tra i palazzi gialli con le persiane verdi.
-- **Il Mac**: a destra della fontana (guardando la chiesa), la torre grigia di 13 piani con il porticato e il fast food al piano terra (bancone, menu luminosi, totem e tavoli), le aiuole coi pioppi davanti. Fuori è parcheggiata la macchina scura che sarà la GT di Corti. A sinistra della fontana, per ora, solo palazzi.
-- **Via Fratelli d'Italia e il corso**: a nord, i palazzoni a balconi sulle colonne, poi il corso pedonale coi rombi a scacchi e i tavolini dei bar sotto gli ombrelloni (qui verrà liberato Napo).
-- **Piazza San Giovanni**: il pavimento a fasce, i dehors, la basilica con il campanile di mattoni. Dentro: navata con le colonne, panche, altare e, nel pavimento, il sigillo dei Mammutones che un giorno aprirà le catacombe.
+## Mondo 4: il centro di Busto (fine del capitolo 1)
+In Avventura si apre dopo aver finito il Tribunale. Si parte con 2500 monete. Il centro è infestato: Mammutones di ogni tipo e sgherri già dalla prima ondata.
+
+### Il percorso
+| Zona | Cosa succede | Per andare avanti |
+|---|---|---|
+| Piazza Garibaldi (la fontana) | Round 5: **Pierre**, per l'ultima volta | — |
+| Il Mac (torre grigia, a destra della fontana) | Round 10: **Corti** maledetto, enorme. Lancia panini da lontano e mena da vicino. Battuto, si sblocca e ti dà la prima metà del talismano. Poi compare Loris per un attimo | Aprire il Mac: **8000** (dopo Pierre) |
+| La zona dei bar (corso XX Settembre) | Round 15: i **cugini Progni**, due soldati biondi con la cresta, insieme. Evocano gli sgherri potenziati. Battuti tutti e due liberi **Napo** e **Ali Debbah** | Strada per i bar: **10000** (dopo Corti) |
+| Piazza San Giovanni e la basilica | Round 18: **Loris Busato** in chiesa. Battuto scappa nelle catacombe e ti lascia l'altra metà del talismano | Si sblocca battendo i Progni; aprire la chiesa: **12000** |
+| Le catacombe | Elimina 12 Mammutones, poi suona i 4 campanacci nell'ordine scritto sulla tavola di pietra (se sbagli, l'ordine cambia e arrivano nemici). Poi attiva il portale | Sigillo in chiesa: col talismano intero. Portale: **20000** |
+| La Sardegna | Colline, nuraghi, ulivi, pecore e tantissimi Mammutones e capre. Dopo pochi secondi arriva **Loris, il Re dei Mammutones**: gigante, lancia campanacci enormi (danno ad area) e batte i piedi se gli sei vicino. Battuto, esce **DJ Gianfra** e Busto è salva | — |
+
+### Nemici nuovi
+| Nemico | Vita | Velocità | Danno | Dove |
+|---|---|---|---|---|
+| Sgherro potenziato | 480 | 2,6 | 26 | in tutta la città, dall'ondata 4 |
+| Capra Mammutones | 170 | 6,4 | 20 | chiesa, catacombe, Sardegna |
+
+### Armi del centro di Busto
+| Arma | Dove | Prezzo | Note |
+|---|---|---|---|
+| AR | fontana | 7000 | AK potenziato, 30 colpi, 55 di danno |
+| Granate | dentro il Mac | 9000 | 10 granate, si lanciano dove guardi, esplosione grande (420) |
+| Cecchino dorato | zona dei bar | 14000 | 12 colpi, 700 di danno, passa attraverso |
+| Minigun | dentro la chiesa | 25000 | l'arma più forte, resta anche nella cassa |
+Alla fontana ci sono anche pistola, mitra, fucile a pompa, AK-47 e pompa automatico; al Mac il mitragliatore; ai bar bazooka e Desert Eagle. Niente katana al muro. La cassa delle armi del mondo 4 è in piazza San Giovanni, accanto alla facciata.
+
+### Personaggi nuovi
+| Personaggio | Altezza | Potere | Come si sblocca |
+|---|---|---|---|
+| Napo | 1,85 m | **Collare**: fino a 6 nemici vicini diventano suoi alleati per 10 secondi e combattono per lui | battendo i Progni |
+| Ali Debbah | 1,69 m | **L'Algerino**: per 7 secondi tutti i nemici hanno la vita dimezzata (ogni colpo vale doppio) | battendo i Progni |
+| DJ Gianfra | 1,88 m | **Arma gratis**: la prossima arma che compri al muro non la paghi (ricarica 45 s) | finendo la Sardegna |
+| Corti | 1,88 m | Monete doppie | battendolo al Mac |
+
+### Easter egg
+La Golf GT di Corti è parcheggiata davanti al Mac: premendo E la righi. Se lo fai prima dello scontro, Corti se ne accorge e invece di «la mia GT non l'hai toccata, vero?» ti dice «Hai rigato la mia GT?! Adesso sono cavoli tuoi!».

@@ -69,6 +69,30 @@ export function buildWeapon(id) {
     mesh(rbox(0.14, 0.16, 0.34, 0.03), st, g, [0, 0.03, 0.0]); mesh(rbox(0.16, 0.18, 0.16, 0.03), M('#5a4a2a', { roughness: 0.7 }), g, [0.12, -0.06, 0.02]);
     mesh(rbox(0.04, 0.14, 0.05, 0.01), dark, g, [0, -0.1, -0.08], [0.3, 0, 0]); mesh(new THREE.TorusGeometry(0.06, 0.012, 6, 12, Math.PI), dark, g, [0, 0.14, -0.02], [0, Math.PI / 2, 0]);
     g.userData.muzzle = new V3(0, 0.04, 0.82);
+  } else if (id === 'ar') {
+    const tan = M('#8a7a5a', { roughness: 0.6 }), blk = M('#1c1e22', { roughness: 0.45, metalness: 0.5 });
+    mesh(rbox(0.06, 0.09, 0.44, 0.015), blk, g, [0, 0.02, 0.1]); mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.36, 10), blk, g, [0, 0.04, 0.5], [Math.PI / 2, 0, 0]);
+    mesh(rbox(0.065, 0.075, 0.24, 0.02), tan, g, [0, 0.03, 0.36]); mesh(rbox(0.04, 0.17, 0.07, 0.015), tan, g, [0, -0.11, 0.14], [0.2, 0, 0]);
+    mesh(rbox(0.04, 0.1, 0.05, 0.012), blk, g, [0, -0.06, -0.02]); mesh(rbox(0.05, 0.1, 0.24, 0.02), tan, g, [0, -0.01, -0.24], [0.05, 0, 0]);
+    mesh(rbox(0.03, 0.012, 0.36, 0.004), blk, g, [0, 0.075, 0.14]); mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.12, 10), blk, g, [0, 0.11, 0.08], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.006, 10), M('#e83a3a', { emissive: '#ff2020', emissiveIntensity: 0.6 }), g, [0, 0.11, 0.142], [Math.PI / 2, 0, 0]);
+    g.userData.muzzle = new V3(0, 0.04, 0.7);
+  } else if (id === 'granate') {
+    const gr = M('#4a5a34', { roughness: 0.55 }), mt = M('#8a8e94', { roughness: 0.3, metalness: 0.8 });
+    mesh(sph(0.055, 12, 10), gr, g, [0, 0.02, 0.06], null, [1, 1.2, 1]);
+    for (let k = 0; k < 3; k++) mesh(new THREE.TorusGeometry(0.056, 0.005, 5, 16), M('#3a4828'), g, [0, -0.02 + k * 0.03, 0.06], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.03, 10), mt, g, [0, 0.09, 0.06]); mesh(rbox(0.012, 0.07, 0.02, 0.004), mt, g, [0.025, 0.05, 0.06], [0, 0, -0.3]);
+    mesh(new THREE.TorusGeometry(0.018, 0.004, 5, 12), mt, g, [-0.02, 0.11, 0.06]);
+    g.userData.muzzle = new V3(0, 0.05, 0.12);
+  } else if (id === 'cecchino') {
+    const gold = M('#e0b040', { roughness: 0.2, metalness: 0.95 }), blk = M('#1a1a1e', { roughness: 0.4, metalness: 0.5 });
+    mesh(rbox(0.055, 0.08, 0.7, 0.015), gold, g, [0, 0.02, 0.2]); mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.6, 10), gold, g, [0, 0.04, 0.82], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.03, 0.026, 0.1, 10), blk, g, [0, 0.04, 1.14], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3, 12), blk, g, [0, 0.12, 0.16], [Math.PI / 2, 0, 0]);
+    for (const z of [0.0, 0.32]) mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.04, 12), gold, g, [0, 0.12, z], [Math.PI / 2, 0, 0]);
+    mesh(rbox(0.04, 0.12, 0.05, 0.012), blk, g, [0, -0.07, 0.02], [0.25, 0, 0]); mesh(rbox(0.06, 0.12, 0.3, 0.025), gold, g, [0, -0.02, -0.3], [0.1, 0, 0]);
+    for (const sd of [-1, 1]) mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.24, 6), blk, g, [sd * 0.05, -0.08, 0.86], [0.4, 0, sd * 0.35]);
+    g.userData.muzzle = new V3(0, 0.04, 1.2);
   } else if (id === 'pompauto') {
     mesh(rbox(0.07, 0.1, 0.5, 0.02), dark, g, [0, 0.02, 0.12]); mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.36, 12), dark, g, [0, 0.05, 0.52], [Math.PI / 2, 0, 0]);
     mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.07, 18), M('#3a3d44', { roughness: 0.4, metalness: 0.6 }), g, [0, -0.08, 0.16], [0, 0, Math.PI / 2]);
@@ -545,6 +569,62 @@ const CONFIGS = [
     extra: (G, T, H) => { const hood = M('#141518', { roughness: 0.95 }); mesh(new THREE.TorusGeometry(0.11, 0.045, 8, 20, Math.PI * 1.3), hood, T, [0, 0.58, -0.04], [Math.PI / 2 + 0.3, 0, Math.PI * 0.85]);
       for (const sd of [-1, 1]) limb([sd * 0.03, 0.55, 0.12], [sd * 0.035, 0.4, 0.13], 0.005, M('#e8e8e8'), T); mesh(rbox(0.06, 0.012, 0.012, 0.005), M('#7a3a30'), H, [0, -0.085, 0.113], [0, 0, 0.12]); },
   }),
+  /* 20 Napo: 1,85 m, ricci scuri voluminosi, baffi e pizzetto, orecchini, giacca scura aperta sulla maglietta nera */
+  () => human({
+    h: 1.85, w: 1.02, skin: '#eac2a4', top: '#3a4250', pants: '#22252c', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'long', cuff: '#2e3540', hair: '#1a120e', eye: '#6a7a4a', brow: 1,
+    hairFn: (H) => {
+      const c = [M('#1a120e', { roughness: 0.55 }), M('#2a1c14', { roughness: 0.6 }), M('#120c09', { roughness: 0.55 })];
+      hairCap(H, c[0], 0.145, 0.46); backHair(H, c[0]); seed = 201;
+      for (let i = 0; i < 130; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.17, f = Math.sin(a) * rr; mesh(sph(0.036 + rnd() * 0.016, 8, 6), c[i % 3], H, [Math.cos(a) * rr * 1.05, 0.13 + Math.sqrt(Math.max(0, 0.03 - rr * rr)) * 0.6 + rnd() * 0.04, f]); }
+      for (let i = 0; i < 9; i++) mesh(sph(0.036, 8, 6), c[i % 3], H, [-0.1 + i * 0.025, 0.1 + Math.sin(i * 2.1) * 0.012, 0.11], [0.4, 0, 0], [0.9, 1.2, 0.7]);
+    },
+    extra: (G, T, H) => {
+      const bd = M('#2a1a10', { roughness: 0.9 });
+      mesh(rbox(0.075, 0.014, 0.014, 0.006), bd, H, [0, -0.066, 0.121]);
+      for (const sd of [-1, 1]) mesh(rbox(0.012, 0.03, 0.012, 0.004), bd, H, [sd * 0.037, -0.08, 0.117]);
+      mesh(new THREE.ConeGeometry(0.032, 0.085, 8), bd, H, [0, -0.13, 0.1], [Math.PI + 0.35, 0, 0]);
+      const st = M('#eef2f8', { roughness: 0.1, metalness: 0.9 }); for (const sd of [-1, 1]) mesh(sph(0.01, 6, 4), st, H, [sd * 0.132, -0.035, 0.0]);
+      mesh(rbox(0.13, 0.42, 0.02, 0.01), M('#141416', { roughness: 0.9 }), T, [0, 0.33, 0.106]);
+      for (const sd of [-1, 1]) mesh(rbox(0.07, 0.13, 0.02, 0.01), M('#2e3540', { roughness: 0.85 }), T, [sd * 0.085, 0.53, 0.1], [0.3, 0, sd * 0.5]);
+    },
+  }),
+  /* 21 Ali Debbah: 1,69 m, ricci scuri con la frangia sulla fronte, orecchini, tatuaggio a foglia sul collo, camicia a quadri verde e nera con le borchie */
+  () => human({
+    h: 1.69, w: 0.95, skin: '#ecc6aa', topMat: new THREE.MeshStandardMaterial({ map: canvasTex(64, 64, (g, w, h) => {
+      g.fillStyle = '#e8e4d6'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(30,40,24,.85)'; for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 8, h); g.fillStyle = 'rgba(40,60,34,.75)'; for (let y = 0; y < h; y += 16) g.fillRect(0, y, w, 8);
+      g.fillStyle = '#d8dce0'; for (let y = 4; y < h; y += 16) for (let x = 4; x < w; x += 16) g.fillRect(x, y, 2, 2); }, 6), roughness: 0.8 }),
+    top: '#3a4a30', pants: '#1e2026', shoe: '#1c1c20', sole: '#e0e0e0', sleeve: 'long', cuff: '#2a3424', hair: '#1a120d', eye: '#2e1e14', brow: 1,
+    hairFn: (H) => {
+      const c = [M('#1a120d', { roughness: 0.55 }), M('#26190f', { roughness: 0.6 })];
+      hairCap(H, c[0], 0.143, 0.45); backHair(H, c[0]); seed = 211;
+      for (let i = 0; i < 90; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.15, f = Math.sin(a) * rr; mesh(sph(0.035 + rnd() * 0.012, 8, 6), c[i % 2], H, [Math.cos(a) * rr, 0.12 + Math.sqrt(Math.max(0, 0.024 - rr * rr)) * 0.55 + rnd() * 0.03, f]); }
+      for (let i = 0; i < 11; i++) mesh(sph(0.036, 8, 6), c[i % 2], H, [-0.105 + i * 0.021, 0.05 + Math.sin(i * 1.7) * 0.014, 0.118], [0.6, 0, (i - 5) * 0.08], [0.8, 1.45, 0.6]);
+    },
+    extra: (G, T, H) => {
+      const st = M('#eef2f8', { roughness: 0.1, metalness: 0.9 }); for (const sd of [-1, 1]) mesh(sph(0.011, 6, 4), st, H, [sd * 0.132, -0.035, 0.0]);
+      mesh(rbox(0.11, 0.3, 0.02, 0.01), M('#141416', { roughness: 0.9 }), T, [0, 0.4, 0.105]);
+      const ink = M('#2a3036', { roughness: 0.8 }); for (let k = 0; k < 5; k++) mesh(rbox(0.012, 0.03, 0.004, 0.003), ink, T, [0.025 + (k % 2) * 0.012, 0.6 + k * 0.022, 0.045], [0, 0, (k % 2 ? -0.6 : 0.6)]);
+      for (const sd of [-1, 1]) mesh(rbox(0.07, 0.1, 0.02, 0.01), M('#2a3424', { roughness: 0.85 }), T, [sd * 0.07, 0.55, 0.1], [0.3, 0, sd * 0.5]);
+    },
+  }),
+  /* 22 DJ Gianfra: 1,88 m, capelli castani mossi, occhiali da sole neri, felpa bianca larga con la scritta blu, cuffie al collo */
+  () => human({
+    h: 1.88, w: 1.0, chest: 1.04, skin: '#eec8aa', top: '#f2f2ee', pants: '#2a2f3a', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'long', cuff: '#e2e2dc', hem: '#e2e2dc', hair: '#4a3020', brow: 1,
+    hairFn: (H) => {
+      const c = [M('#4a3020', { roughness: 0.65 }), M('#5a3c28', { roughness: 0.65 }), M('#3a2416', { roughness: 0.65 })];
+      hairCap(H, c[2], 0.142, 0.42); backHair(H, c[2]); seed = 221;
+      for (let i = 0; i < 50; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.13, f = Math.sin(a) * rr; mesh(sph(0.04, 8, 6), c[i % 3], H, [Math.cos(a) * rr, 0.13 + rnd() * 0.035, f], [(rnd() - 0.5), a, (rnd() - 0.5)], [1, 0.6, 1.5]); }
+      fringe(H, c[0], 8, 222, 0.7);
+    },
+    extra: (G, T, H) => {
+      const black = M('#0d0e10', { roughness: 0.15, metalness: 0.4 });
+      for (const sd of [-1, 1]) { mesh(rbox(0.075, 0.048, 0.02, 0.012), black, H, [sd * 0.047, 0.012, 0.13]); mesh(rbox(0.012, 0.012, 0.13, 0.005), black, H, [sd * 0.124, 0.02, 0.07]); }
+      mesh(rbox(0.035, 0.012, 0.012, 0.005), black, H, [0, 0.025, 0.136]);
+      mesh(rbox(0.13, 0.08, 0.01, 0.005), M('#3a6ad0', { roughness: 0.6 }), T, [0.02, 0.4, 0.118]); mesh(rbox(0.09, 0.02, 0.01, 0.004), M('#3a6ad0'), T, [0.02, 0.34, 0.116]);
+      const hp = M('#18181c', { roughness: 0.4 }); mesh(new THREE.TorusGeometry(0.1, 0.012, 6, 20, Math.PI * 1.2), hp, T, [0, 0.62, 0.02], [Math.PI / 2 + 0.4, 0, Math.PI * 0.9]);
+      for (const sd of [-1, 1]) mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 14), hp, T, [sd * 0.09, 0.6, 0.07], [0, 0, Math.PI / 2]);
+    },
+  }),
 ];
 export function buildHuman(i) { return CONFIGS[i](); }
 
@@ -700,6 +780,8 @@ function makeRat() {
 }
 export function buildEnemy(type) {
   if (type === 'orco' || type === 'orcone') return buildOrc(type);
+  if (type === 'sgherrone') return buildSgherrone();
+  if (type === 'capra') return buildCapra();
   if (type === 'fachiro') return buildFachiro();
   if (type !== 'ratto') return buildMammutones(type);
   if (!ratTemplate) ratTemplate = makeRat();
@@ -876,4 +958,143 @@ export function buildPikaBoss() {
   const aura = mesh(new THREE.SphereGeometry(0.6, 14, 10), new THREE.MeshBasicMaterial({ color: '#9a40ff', transparent: true, opacity: 0.12, depthWrite: false }), G, [0, 1.0, 0], null, [1, 1.7, 1]);
   G.scale.setScalar(1.12); addHits(G, 0.65, 1.75, 0.5, 0.18); G.userData.height = 1.75 * 1.12; G.userData.aura = aura;
   return G;
+}
+
+/* ===================== MONDO 4: IL CENTRO DI BUSTO ===================== */
+/* sgherri potenziati: piu' grossi, armatura pesante, cresta, mascella di ferro e occhio rosso */
+function makeSgherrone(v) {
+  const skin = THUG_SKIN[v];
+  const G = human({
+    h: 2.05, w: 1.6, chest: 1.25, arm: 1.5, skin, top: '#24242a', pants: '#2a2a30', shoe: '#1a1a1e', sole: '#101012', sleeve: 'short', hair: '#c0302a', eye: '#2a1a12', brow: 1, browTilt: 0.4, mouth: '#5a2a24',
+    hairFn: (H, mat) => { hairCap(H, M('#3a3634', { roughness: 1 }), 0.14, 0.2); for (let i = 0; i < 9; i++) mesh(new THREE.ConeGeometry(0.03, 0.12 - Math.abs(i - 4) * 0.012, 6), M(['#c0302a', '#e04a2a', '#1a1a1e', '#3a8a3a'][v], { roughness: 0.6 }), H, [0, 0.14 + Math.cos((i - 4) * 0.32) * 0.01, -0.1 + i * 0.026], [-0.2 + i * 0.05, 0, 0]); },
+    extra: (G, T, H, P) => {
+      const steel = M('#5a6068', { roughness: 0.35, metalness: 0.8 }), dark = M('#2e3238', { roughness: 0.4, metalness: 0.7 }), spike = M('#c8ccd0', { roughness: 0.25, metalness: 0.9 });
+      mesh(rbox(0.34, 0.36, 0.26, 0.05), steel, T, [0, 0.36, 0.04]);
+      for (let k = 0; k < 3; k++) mesh(rbox(0.3, 0.025, 0.02, 0.01), dark, T, [0, 0.24 + k * 0.1, 0.18]);
+      for (const sd of [-1, 1]) { const A = P[sd < 0 ? 'armL' : 'armR']; mesh(sph(0.12, 12, 8), steel, A, [0, 0.03, 0], null, [1.3, 0.85, 1.2]);
+        for (let k = 0; k < 3; k++) mesh(new THREE.ConeGeometry(0.022, 0.1, 6), spike, A, [sd * 0.06, 0.1, -0.06 + k * 0.06], [0, 0, -sd * 0.5]);
+        mesh(rbox(0.11, 0.2, 0.11, 0.02), dark, A, [sd * 0.03, -0.38, 0.04]); mesh(rbox(0.13, 0.14, 0.15, 0.03), steel, P[sd < 0 ? 'legL' : 'legR'], [0, -0.42, 0.04]); }
+      mesh(new THREE.TorusGeometry(0.15, 0.03, 6, 20), M('#3a2a1c', { roughness: 0.6 }), T, [0, 0.02, 0], [Math.PI / 2, 0, 0], [1.15, 0.85, 1]);
+      /* faccia: mascella di ferro, cicatrici, piercing, occhio rosso */
+      mesh(new THREE.SphereGeometry(0.105, 14, 8, 0, Math.PI * 2, Math.PI * 0.6, Math.PI * 0.25), steel, H, [0, -0.05, 0.03]);
+      for (let k = 0; k < 4; k++) mesh(rbox(0.006, 0.04, 0.004, 0.002), M('#a84040'), H, [-0.07 + k * 0.012, 0.02 - k * 0.004, 0.126], [0, 0, 0.4]);
+      mesh(sph(0.016, 8, 6), new THREE.MeshBasicMaterial({ color: '#ff2a2a' }), H, [0.048, 0.011, 0.126]);
+      for (let k = 0; k < 3; k++) mesh(new THREE.TorusGeometry(0.01, 0.003, 4, 8), spike, H, [-0.135, 0.0 - k * 0.025, 0.01], [0, Math.PI / 2, 0]);
+      const A = P.armR, hd = A.userData.hand.position, wood = M('#4a3020', { roughness: 0.7 });
+      mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.1, 8), wood, A, [hd.x, hd.y - 0.05, hd.z + 0.1], [Math.PI / 2 - 0.4, 0, 0]);
+      mesh(sph(0.1, 10, 8), dark, A, [hd.x, hd.y - 0.26, hd.z + 0.58]); for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; mesh(new THREE.ConeGeometry(0.02, 0.09, 5), spike, A, [hd.x + Math.cos(a) * 0.1, hd.y - 0.26 + Math.sin(a) * 0.1, hd.z + 0.58], [0, 0, a - Math.PI / 2]); }
+    },
+  });
+  G.scale.setScalar(1.08); addHits(G, 0.95, 2.1, 0.7, 0.21); G.userData.height = 2.05 * 1.08;
+  return G;
+}
+const sgTemplates = {};
+export function buildSgherrone() {
+  const v = Math.floor(Math.random() * THUG_SKIN.length);
+  if (!sgTemplates[v]) { const T0 = makeSgherrone(v); const P = T0.userData.P; for (const k of ['legL', 'legR', 'armL', 'armR', 'head', 'torso']) P[k].name = k; T0.traverse(o => { o.userData = {}; }); sgTemplates[v] = T0; }
+  const G = sgTemplates[v].clone(true); const P = { bells: [] };
+  G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; });
+  G.userData.P = P; G.userData.height = 2.2; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  return G;
+}
+/* capra Mammutones: a quattro zampe come un cane, maschera di legno, corna da capra, campanacci al collo */
+let capraTemplate = null;
+function makeCapra() {
+  const G = new THREE.Group(); const fur = [M('#2a2220', { roughness: 1 }), M('#3e302a', { roughness: 1 }), M('#1a1412', { roughness: 1 })];
+  const T = new THREE.Group(); T.name = 'torso'; T.position.y = 0.62; G.add(T);
+  mesh(sph(0.3, 14, 10), fur[0], T, [0, 0, -0.05], null, [0.85, 0.8, 1.55]);
+  seed = 401; for (let i = 0; i < 40; i++) { const a = rnd() * Math.PI * 2, z = (rnd() - 0.5) * 0.8; mesh(new THREE.ConeGeometry(0.05, 0.2, 5), fur[i % 3], T, [Math.cos(a) * 0.24, Math.sin(a) * 0.2 - 0.02, z], [Math.sin(a) * 0.6 + Math.PI, 0, -Math.cos(a) * 0.6]); }
+  const Hd = new THREE.Group(); Hd.name = 'head'; Hd.position.set(0, 0.24, 0.52); T.add(Hd);
+  mesh(sph(0.15, 12, 10), fur[1], Hd, [0, 0, -0.05], null, [1, 1, 1.1]);
+  const wood = M('#16100e', { roughness: 0.38 }), woodHi = M('#2c201a', { roughness: 0.45 });
+  mesh(sph(0.13, 14, 10), wood, Hd, [0, -0.02, 0.1], null, [0.85, 1.05, 0.7]); mesh(new THREE.ConeGeometry(0.035, 0.12, 8), woodHi, Hd, [0, -0.02, 0.2], [Math.PI * 0.45, 0, 0]);
+  const eye = new THREE.MeshBasicMaterial({ color: '#ff3a1a' }); for (const sd of [-1, 1]) mesh(sph(0.026, 8, 6), eye, Hd, [sd * 0.05, 0.03, 0.17]);
+  mesh(rbox(0.08, 0.02, 0.03, 0.008), M('#000'), Hd, [0, -0.09, 0.17]);
+  const hn = M('#d8ccb0', { roughness: 0.5 });
+  for (const sd of [-1, 1]) { const c = new THREE.CatmullRomCurve3([new V3(sd * 0.06, 0.1, 0), new V3(sd * 0.12, 0.24, -0.08), new V3(sd * 0.2, 0.26, -0.22), new V3(sd * 0.22, 0.14, -0.28), new V3(sd * 0.18, 0.06, -0.22)]); mesh(new THREE.TubeGeometry(c, 14, 0.026, 6, false), hn, Hd); }
+  mesh(new THREE.ConeGeometry(0.04, 0.14, 6), fur[2], Hd, [0, -0.15, 0.08], [Math.PI, 0, 0]);
+  const bronze = M('#b88634', { roughness: 0.32, metalness: 0.85 }); for (const x of [-0.08, 0, 0.08]) mesh(bellGeo(0.9), bronze, T, [x, 0.0, 0.44]);
+  const hoof = M('#121010', { roughness: 0.6 });
+  for (const [n, x, z] of [['legL', -0.15, 0.32], ['legR', 0.15, 0.32], ['armL', -0.15, -0.36], ['armR', 0.15, -0.36]]) {
+    const L = new THREE.Group(); L.name = n; L.position.set(x, 0.5, z); G.add(L); mesh(new THREE.CapsuleGeometry(0.06, 0.34, 3, 6), fur[1], L, [0, -0.22, 0]); mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.08, 8), hoof, L, [0, -0.47, 0]);
+  }
+  const inv = new THREE.MeshBasicMaterial({ visible: false });
+  const body = mesh(new THREE.BoxGeometry(0.7, 0.9, 1.4), inv, G, [0, 0.6, 0.05]); body.name = 'hitBody';
+  const head = mesh(new THREE.SphereGeometry(0.22, 8, 6), inv, Hd, [0, 0, 0.05]); head.name = 'hitHead';
+  finish(G); body.castShadow = head.castShadow = false; return G;
+}
+export function buildCapra() {
+  if (!capraTemplate) capraTemplate = makeCapra();
+  const G = capraTemplate.clone(true); const P = { bells: [] };
+  G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; });
+  G.userData.P = P; G.userData.height = 1.0; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  return G;
+}
+/* i cugini Progni: due soldati biondi con la cresta, mimetica, giubbotto tattico. Il secondo porta gli occhiali da sole */
+export function buildProgno(v = 0) {
+  const camo = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#5a6040'; g.fillRect(0, 0, w, h); seed = 411 + v;
+    for (let i = 0; i < 26; i++) { g.fillStyle = ['#3a3e28', '#7a7050', '#2a2a1c', '#6a6a44'][i % 4]; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 4 + rnd() * 8, 3 + rnd() * 5, rnd() * 3, 0, Math.PI * 2); g.fill(); } }, 3);
+  const cm = new THREE.MeshStandardMaterial({ map: camo, roughness: 0.9 });
+  const G = human({
+    h: 1.92, w: 1.4, chest: 1.15, arm: 1.35, skin: v ? '#eec4a4' : '#f2caa8', topMat: cm, pantsMat: cm, top: '#5a6040', pants: '#5a6040', shoe: '#18181a', sole: '#0e0e10', sleeve: 'long', cuff: '#3a3e28', hair: '#e8c860', eye: '#4a6a8a', brow: 1, browTilt: 0.3,
+    hairFn: (H) => {
+      const bl = [M('#e8c860', { roughness: 0.5 }), M('#f4dc80', { roughness: 0.5 }), M('#c8a040', { roughness: 0.55 })];
+      hairCap(H, M('#b89a5a', { roughness: 1 }), 0.139, 0.22);
+      for (let i = 0; i < 12; i++) { const z = -0.1 + i * 0.02, hgt = 0.07 + Math.sin(i / 11 * Math.PI) * 0.06 + (i > 8 ? 0.03 : 0); mesh(rbox(0.05, hgt, 0.03, 0.012), bl[i % 3], H, [0, 0.13 + hgt / 2 - 0.01, z], [0.2 + i * 0.04, 0, 0]); }
+      for (let k = 0; k < 4; k++) mesh(sph(0.03, 8, 6), bl[k % 3], H, [-0.03 + k * 0.02, 0.18 + k * 0.005, 0.12], [0.8, 0, 0], [0.8, 1.3, 0.6]);
+    },
+    extra: (G, T, H, P) => {
+      const vest = M('#2e3222', { roughness: 0.8 }), pouch = M('#3a3e2a', { roughness: 0.85 });
+      mesh(rbox(0.32, 0.34, 0.24, 0.04), vest, T, [0, 0.36, 0.03]); for (const x of [-0.09, 0, 0.09]) mesh(rbox(0.07, 0.08, 0.04, 0.01), pouch, T, [x, 0.27, 0.16]);
+      necklace(T, '#c8ccd2', 0.08, 0.6); mesh(rbox(0.025, 0.035, 0.004, 0.003), M('#c8ccd2', { metalness: 0.9, roughness: 0.2 }), T, [0, 0.5, 0.16]);
+      for (let k = 0; k < 3; k++) mesh(rbox(0.006, 0.035, 0.004, 0.002), M('#b05050'), H, [0.07, 0.03 - k * 0.012, 0.125], [0, 0, 0.5]);
+      if (v) { const black = M('#0d0e10', { roughness: 0.15, metalness: 0.4 }); for (const sd of [-1, 1]) { mesh(rbox(0.075, 0.045, 0.02, 0.012), black, H, [sd * 0.047, 0.012, 0.13]); mesh(rbox(0.012, 0.012, 0.13, 0.005), black, H, [sd * 0.124, 0.02, 0.07]); } }
+      const A = P.armR, hd = A.userData.hand.position; const steel = M('#c8ccd2', { roughness: 0.2, metalness: 0.9 });
+      mesh(rbox(0.03, 0.04, 0.12, 0.01), M('#1a1a1e'), A, [hd.x, hd.y - 0.04, hd.z + 0.04]); mesh(rbox(0.012, 0.035, 0.3, 0.006), steel, A, [hd.x, hd.y - 0.04, hd.z + 0.24]);
+    },
+  });
+  G.scale.setScalar(1.3); addHits(G, 0.8, 1.95, 0.6, 0.2); G.userData.height = 1.92 * 1.3;
+  return G;
+}
+/* Corti maledetto: enorme e ciccione, felpa grigia tirata sulla pancia, occhi viola del maleficio, un panino in mano */
+export function buildCortiBoss() {
+  const G = human({
+    h: 1.88, w: 2.3, chest: 1.6, arm: 1.75, skin: '#dca07c', top: '#b9bcc2', pants: '#4a4d55', shoe: '#2a2a2e', sole: '#f0f0f0', sleeve: 'long', cuff: '#a9acb2', hem: '#a9acb2', hair: '#3a2618',
+    hairFn: (H, mat) => { hairCap(H, M('#2a1c12', { roughness: 0.9 }), 0.139, 0.36); fringe(H, mat, 8, 41, 0.45); clumps(H, mat, 10, 42, 0.07); },
+    extra: (G, T, H, P, skin) => {
+      const grey = M('#b9bcc2', { roughness: 0.85 });
+      mesh(sph(0.36, 18, 14), grey, T, [0, 0.18, 0.12], null, [1.15, 1.05, 1.05]);
+      mesh(sph(0.12, 12, 10), skin, H, [0, -0.11, 0.03], null, [1.35, 0.85, 1.1]);
+      for (const sd of [-1, 1]) mesh(sph(0.06, 10, 8), skin, H, [sd * 0.095, -0.06, 0.07]);
+      mesh(new THREE.TorusGeometry(0.14, 0.05, 8, 20, Math.PI * 1.3), M('#a9acb2', { roughness: 0.95 }), T, [0, 0.58, -0.05], [Math.PI / 2 + 0.3, 0, Math.PI * 0.85]);
+      const glow = new THREE.MeshBasicMaterial({ color: '#c060ff' }); for (const sd of [-1, 1]) mesh(sph(0.017, 8, 6), glow, H, [sd * 0.048, 0.012, 0.128]);
+      const bun = M('#d8963a', { roughness: 0.6 }), meat = M('#5a2e1a', { roughness: 0.8 }), let_ = M('#5ab040', { roughness: 0.8 });
+      const A = P.armL, hd = A.userData.hand.position; const b = new THREE.Group(); b.position.set(hd.x, hd.y - 0.1, hd.z + 0.06); A.add(b);
+      mesh(sph(0.09, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), bun, b, [0, 0.03, 0], null, [1, 0.7, 1]); mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.03, 14), meat, b); mesh(new THREE.CylinderGeometry(0.095, 0.095, 0.01, 14), let_, b, [0, 0.018, 0]); mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.03, 14), bun, b, [0, -0.03, 0]);
+    },
+  });
+  mesh(new THREE.SphereGeometry(0.7, 14, 10), new THREE.MeshBasicMaterial({ color: '#9a40ff', transparent: true, opacity: 0.1, depthWrite: false }), G, [0, 1.0, 0], null, [1.2, 1.6, 1.2]);
+  G.scale.setScalar(1.45); addHits(G, 1.25, 1.9, 1.0, 0.21); G.userData.height = 1.88 * 1.45;
+  return G;
+}
+/* Loris, il Re dei Mammutones: gigante, corna enormi, occhi rossi e un'aura di fuoco */
+export function buildLorisRe() {
+  const G = buildLoris(); const P = G.userData.P, H = P.head;
+  const hn = M('#1d1a1a', { roughness: 0.45 });
+  for (const sd of [-1, 1]) { const c = new THREE.CatmullRomCurve3([new V3(sd * 0.1, 0.12, -0.02), new V3(sd * 0.3, 0.22, -0.06), new V3(sd * 0.42, 0.42, -0.02), new V3(sd * 0.36, 0.62, 0.08), new V3(sd * 0.24, 0.7, 0.12)]); mesh(new THREE.TubeGeometry(c, 18, 0.035, 8, false), hn, H); }
+  const glow = new THREE.MeshBasicMaterial({ color: '#ff3010' }); for (const sd of [-1, 1]) mesh(sph(0.02, 8, 6), glow, H, [sd * 0.047, 0.012, 0.145]);
+  mesh(new THREE.SphereGeometry(0.8, 14, 10), new THREE.MeshBasicMaterial({ color: '#ff5020', transparent: true, opacity: 0.1, depthWrite: false }), G, [0, 1.0, 0], null, [0.9, 1.4, 0.9]);
+  const bronze = M('#b88634', { roughness: 0.32, metalness: 0.85 }); for (let k = 0; k < 7; k++) mesh(bellGeo(1.6), bronze, P.torso, [-0.24 + k * 0.08, 0.12, 0.2]);
+  G.scale.setScalar(3.3); G.userData.height = 1.85 * 3.3;
+  return G;
+}
+/* pecore della Sardegna (solo decorazione) */
+export function buildSheep() {
+  const G = new THREE.Group(); const wool = M('#f2eee4', { roughness: 1 }), wool2 = M('#e4ded0', { roughness: 1 }), blk = M('#1e1a18', { roughness: 0.8 });
+  seed = 431 + Math.floor(Math.random() * 50); for (let i = 0; i < 14; i++) mesh(sph(0.2 + rnd() * 0.06, 10, 8), i % 2 ? wool : wool2, G, [(rnd() - 0.5) * 0.4, 0.62 + rnd() * 0.15, (rnd() - 0.5) * 0.7]);
+  const Hd = new THREE.Group(); Hd.position.set(0, 0.72, 0.48); G.add(Hd); mesh(sph(0.13, 10, 8), blk, Hd, [0, 0, 0.04], null, [0.8, 0.9, 1.3]);
+  for (const sd of [-1, 1]) mesh(sph(0.05, 6, 4), blk, Hd, [sd * 0.12, 0.04, -0.02], null, [1.4, 0.5, 0.8]);
+  mesh(sph(0.12, 10, 8), wool, Hd, [0, 0.1, -0.04], null, [1, 0.6, 1]);
+  for (const [x, z] of [[-0.14, 0.24], [0.14, 0.24], [-0.14, -0.24], [0.14, -0.24]]) mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.46, 6), blk, G, [x, 0.23, z]);
+  G.userData.head = Hd; finish(G); return G;
 }

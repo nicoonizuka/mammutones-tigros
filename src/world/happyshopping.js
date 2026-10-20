@@ -296,8 +296,15 @@ cart(G, 15, -6, 0.6, true, true); S(15, -6, 1.15, 1.15, null, 0, 0.75); cart(G, 
 let pointLights = null;
 export function applyWorldLook(w) {
   if (!pointLights) { pointLights = []; scene.traverse(o => { if (o.isPointLight && !o.userData.fx) pointLights.push(o); }); }
-  for (const l of pointLights) l.visible = w === 4 ? !!l.userData.bu : w === 2 ? !!l.userData.hs : w === 3 ? !!l.userData.tr : !l.userData.hs && !l.userData.tr && !l.userData.bu;
-  if (w === 4) {
+  for (const l of pointLights) l.visible = w >= 4 ? !!l.userData.bu : w === 2 ? !!l.userData.hs : w === 3 ? !!l.userData.tr : !l.userData.hs && !l.userData.tr && !l.userData.bu;
+  if (w === 5) {
+    sun.position.set(1600 - 40, 70, 30); sun.target.position.set(1600, 0, 0); sun.color.set('#fff6e0'); sun.intensity = 2.6;
+    hemi.color.set('#e6f0ff'); hemi.groundColor.set('#5a6a3a'); hemi.intensity = 1.05;
+    scene.fog.color.set('#bcd4e8'); scene.fog.near = 70; scene.fog.far = 190; scene.background.set('#bcd4e8');
+  } else if (w === 6) {
+    sun.intensity = 0.2; hemi.color.set('#ffc890'); hemi.groundColor.set('#2a2018'); hemi.intensity = 0.85;
+    scene.fog.color.set('#1a120c'); scene.fog.near = 14; scene.fog.far = 60; scene.background.set('#0e0a08');
+  } else if (w === 4) {
     sun.position.set(1000 - 35, 62, 40); sun.target.position.set(1000, 0, 0); sun.color.set('#fff0d8'); sun.intensity = 2.3;
     hemi.color.set('#dfe6f0'); hemi.groundColor.set('#5a5048'); hemi.intensity = 0.95;
     scene.fog.color.set('#c4c0b4'); scene.fog.near = 60; scene.fog.far = 165; scene.background.set('#c4c0b4');

@@ -6,7 +6,7 @@
 <title>Mammutones al Tigros</title>
 <meta name="description" content="Lo sparatutto di Busto Arsizio: tu e i tuoi amici contro i Mammutones, al Tigros, all'Happy Shopping e al Tribunale. Si gioca dal computer (anche col controller della Play) o dal telefono, in orizzontale.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Mammutones al Tigros · v1.1">
+<meta property="og:title" content="Mammutones al Tigros · v2.0">
 <meta property="og:description" content="Busto Arsizio è nel caos. Scegli il tuo personaggio e riprenditi il Tigros, l'Happy Shopping e il Tribunale. Dal computer, col controller della Play o dal telefono.">
 <meta property="og:url" content="https://mammutones-tigros.vercel.app/">
 <meta property="og:image" content="https://mammutones-tigros.vercel.app/og.png">
@@ -55,12 +55,12 @@
 <div class="over" id="sel" hidden>
   <div class="box home">
     <header class="hhead">
-      <div><h1>Mammutones <span>al Tigros</span></h1><p class="tag">Busto Arsizio è nel caos. Riprenditela con i tuoi amici, un posto alla volta: Tigros, Happy Shopping, Tribunale.</p></div>
-      <div class="hver"><b>v1.1</b><small>cassa e bottiglie</small></div>
+      <div><h1>Mammutones <span>al Tigros</span></h1><p class="tag">Busto Arsizio è nel caos. Riprenditela con i tuoi amici, un posto alla volta: Tigros, Happy Shopping, Tribunale e il centro di Busto.</p></div>
+      <div class="hver"><b>v2.0</b><small>capitolo 1 completo</small></div>
     </header>
     <div class="hgrid">
       <section class="hcard"><h3><i>1</i>Modalità</h3><div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button></div><p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p></section>
-      <section class="hcard"><h3><i>2</i>Mondo</h3><div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button><button class="btn ghost" type="button" data-world="3" aria-pressed="false" id="w3btn">Mondo 3 · Tribunale<small id="w3sub">Pika e il maleficio</small></button><button class="btn ghost" type="button" data-world="4" aria-pressed="false" id="w4btn">Mondo 4 · Centro di Busto<small>anteprima della mappa</small></button></div><p id="worldinfo" class="modeinfo" hidden></p></section>
+      <section class="hcard"><h3><i>2</i>Mondo</h3><div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button><button class="btn ghost" type="button" data-world="3" aria-pressed="false" id="w3btn">Mondo 3 · Tribunale<small id="w3sub">Pika e il maleficio</small></button><button class="btn ghost" type="button" data-world="4" aria-pressed="false" id="w4btn">Mondo 4 · Centro di Busto<small id="w4sub">il Re dei Mammutones</small></button></div><p id="worldinfo" class="modeinfo" hidden></p></section>
     </div>
     <section class="hcard"><h3><i>3</i>Scegli chi sei</h3><div class="pick" id="pick"></div></section>
     <div class="hbar"><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="previewEnd">Mappa del mondo<small>storie e luoghi</small></button><button class="btn ghost" type="button" id="invite">Invita gli amici<small>manda il link del gioco</small></button></div>
@@ -71,7 +71,7 @@
       <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
     </details>
     <div class="warn" id="touchwarn" hidden></div>
-    <p class="credits">Mammutones al Tigros · v1.1 · un gioco di Nico e del gruppo, fatto a Busto Arsizio</p>
+    <p class="credits">Mammutones al Tigros · v2.0 · un gioco di Nico e del gruppo, fatto a Busto Arsizio</p>
   </div>
 </div>
 <div class="over" id="inv" hidden>
@@ -139,6 +139,14 @@
   <p>«Anche <b>Fabio Regaglia</b> è stato maledetto: due metri e mezzo di armatura. E all'ingresso c'è ancora <b>Fab La Rue</b> che blocca la strada.»</p>
   <p class="kicker">Il piano</p>
   <ol class="plan"><li>Battere Fab La Rue nel parcheggio, una volta per tutte (round 5)</li><li>Superare la strada e resistere ai tavolini: Pierre e i suoi sgherri, poi Fabio Regaglia</li><li>Entrare nel garage e liberare Leodessi, Castelluccio e Bulegato</li><li>Salire con l'ascensore a casa di Pika e liberarlo dal maleficio</li></ol>
+</template>
+<template id="buIntro">
+  <p class="kicker">Mondo 4 · Il centro di Busto, la sera dopo</p>
+  <h1>L'ultima <span>tappa</span></h1>
+  <p>Dal Tribunale il gruppo scende a piedi verso il centro. Più si avvicinano a <b>piazza Garibaldi</b>, più il suono dei campanacci diventa forte. Macchine bruciate, vetrine rotte, fumo che esce dai palazzi: il centro di Busto è <b>infestato</b>, ci sono Mammutones di ogni tipo.</p>
+  <p>Alla fontana li aspetta <b>Pierre</b> con gli ultimi sgherri. Al <b>Mac</b> sotto la torre grigia c'è <b>Corti</b>, che non risponde più al telefono da giorni: chi l'ha visto dice che è diventato enorme e che non lascia avvicinare nessuno alla sua Golf GT.</p>
+  <p>Più in là, nella zona dei bar, i <b>cugini Progni</b> tengono prigionieri <b>Napo</b> e <b>Ali Debbah</b>. E in fondo, nella basilica di San Giovanni, c'è <b>Loris Busato</b>.</p>
+  <p>Si dice che sotto la chiesa ci sia un sigillo con il simbolo dei Mammutones. Per aprirlo serve un talismano diviso in due. E dietro il sigillo, le catacombe… e un passaggio per il regno dei Mammutones.</p>
 </template>
 <div class="over" id="world" hidden>
   <div class="box">

@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { scene, solid } from '../render/engine.js';
 import { M, rbox, mesh, sph, ctex, texMat, label, plane, rnd, setSeed, TEX } from './kit.js';
 import { makeCar } from './parking.js';
+import { buildSheep } from '../characters/styled.js';
 
 export const BX = 1000;
 const ROOT = new THREE.Group(); ROOT.position.x = BX; scene.add(ROOT);
@@ -21,7 +22,7 @@ export const inBU = p => p.x > 800;
 export const inMac = p => p.x > MACIN.x1 - 0.2 && p.x < MACIN.x2 + 0.3 && p.z > MACIN.z1 && p.z < MACIN.z2;
 export const inChiesa = p => p.x > CHIESA.x1 && p.x < CHIESA.x2 && p.z < CHIESA.z2 + 0.3 && p.z > CHIESA.z1;
 /* le zone (servono dopo per nemici e boss) */
-export const buRegion = p => (inChiesa(p) ? 'bchiesa' : inMac(p) ? 'bmacin' : p.z < -104 ? 'bpiazza' : p.z < -54 ? 'bbar' : p.x > BX + 24 ? 'bmac' : 'bfontana');
+export const buRegion = p => (p.x > BX + 500 ? 'bsard' : p.x > BX + 270 ? 'bcata' : inChiesa(p) ? 'bchiesa' : inMac(p) ? 'bmacin' : p.z < -104 ? 'bpiazza' : p.z < -53 ? 'bbar' : 'bfontana');
 /* sotto i portici la camera resta bassa */
 export const BU_LOW = [
   { x1: BX - 13.2, x2: BX - 10, z1: -104, z2: -4, ceil: 4 }, { x1: BX + 10, x2: BX + 13.2, z1: -104, z2: -4, ceil: 4 },
@@ -242,6 +243,7 @@ for (const z0 of [3, 21]) { pave(25.2, z0, 2.6, 7, grassM, 0.012); curb(25.2, z0
 /* macchine: una e' la GT di Corti (dopo) */
 makeCar(BX + 20.5, -1, 0, '#c8ccd0', false); makeCar(BX + 20.5, 30.5, 0, '#4a5a6a', false);
 makeCar(BU_SPOTS.gt.x, BU_SPOTS.gt.z, 0, '#1c2028', false);
+const gtCar = scene.children.find(c => c.isGroup && Math.abs(c.position.x - BU_SPOTS.gt.x) < 0.01 && Math.abs(c.position.z - BU_SPOTS.gt.z) < 0.01);
 
 /* ================= LA TORRE GRIGIA (13 piani) CON IL FAST FOOD AL PIANO TERRA ================= */
 const FFG = new THREE.Group(); FFG.position.set(-32, 0, 22); ROOT.add(FFG); G = FFG; OXo = -32; OZo = 22;
@@ -456,8 +458,224 @@ for (const [x, y, z] of [[0, 9, -161], [0, 9, -175], [0, 6, -186]]) { const l = 
 /* lampadari */
 for (const z of [-160, -174]) { mesh(new THREE.TorusGeometry(1, 0.06, 6, 18), M('#c8a050', { metalness: 0.8 }), G, [0, 10, z], [Math.PI / 2, 0, 0]); mesh(new THREE.CylinderGeometry(0.02, 0.02, 4, 4), pole, G, [0, 12, z]); }
 
+/* ===================================================================================
+   STORIA DEL MONDO 4: la citta' distrutta, porte e barricate, catacombe, Sardegna
+   =================================================================================== */
+export const buDyn = [];   /* oggetti che cambiano o si muovono: fuori dalla fusione delle mesh */
+/* ---------- la GT di Corti: si puo' rigare ---------- */
+export const buGT = gtCar;
+{
+  /* scritta GT dietro e la riga rossa davanti come una Golf GT */
+  const red = M('#d02a2a', { roughness: 0.4 }); mesh(new THREE.BoxGeometry(1.5, 0.04, 0.02), red, buGT, [0, 0.66, 2.06]);
+  plane(0.42, 0.16, new THREE.MeshStandardMaterial({ map: label('GT', { font: '900 90px Arial Black,Arial', color: '#e8e8e8', bg: '#1c2028', w: 256, h: 100, shadow: null }) }), buGT, [0, 0.82, -2.06], [0, Math.PI, 0]);
+  const sc = new THREE.Group(); sc.visible = false; buGT.add(sc); buGT.userData.scratch = sc; const wm = M('#e8e8e0', { roughness: 0.4 });
+  setSeed(91); for (const sd of [-1, 1]) for (let k = 0; k < 5; k++) mesh(new THREE.BoxGeometry(0.01, 0.015, 0.8 + rnd() * 1.4), wm, sc, [sd * 0.94, 0.5 + rnd() * 0.3, (rnd() - 0.5) * 2], [(rnd() - 0.5) * 0.3, 0, 0]);
+  buDyn.push(buGT);
+}
+/* ---------- la citta' distrutta: macchine bruciate, macerie, fuochi, fumo ---------- */
+const rubbleM = [M('#7a7672', { roughness: 0.95 }), M('#8e8478', { roughness: 0.95 }), M('#5a5652', { roughness: 0.95 }), M('#9a6a4a', { roughness: 0.9 })];
+function rubble(x, z, n = 10, s = 1, solidIt = true) {
+  setSeed(Math.abs(Math.floor(x * 13 + z * 7)) + 3);
+  for (let i = 0; i < n; i++) { const m = mesh(new THREE.DodecahedronGeometry((0.25 + rnd() * 0.45) * s, 0), rubbleM[i % 4], G, [x + (rnd() - 0.5) * 2.4 * s, 0.15 * s, z + (rnd() - 0.5) * 2.4 * s], [rnd() * 3, rnd() * 3, rnd() * 3], [1, 0.6, 1]); m.castShadow = true; }
+  for (let i = 0; i < 3; i++) mesh(new THREE.BoxGeometry(0.15 * s, 0.15 * s, 1.6 * s), M('#6a6a6e', { roughness: 0.6, metalness: 0.4 }), G, [x + (rnd() - 0.5) * 2, 0.2, z + (rnd() - 0.5) * 2], [0.2, rnd() * 3, 0.3]);
+  if (solidIt) S(x, z, 1.8 * s, 1.8 * s, null, 0, 0.5 * s);
+}
+function scorch(x, z, r = 2.5) { flat(mesh(new THREE.CircleGeometry(r, 16), new THREE.MeshBasicMaterial({ color: '#141210', transparent: true, opacity: 0.55, depthWrite: false }), G, [x, 0.02, z], [-Math.PI / 2, 0, 0])); }
+const fireMs = [new THREE.MeshBasicMaterial({ color: '#ff7a1a', transparent: true, opacity: 0.85, depthWrite: false }), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.9, depthWrite: false })];
+export const buFires = [];
+function fire(x, y, z, s = 1) {
+  const g = new THREE.Group(); g.position.set(x, y, z); G.add(g);
+  for (let k = 0; k < 4; k++) { const c = mesh(new THREE.ConeGeometry((0.35 - k * 0.05) * s, (1.1 + k * 0.2) * s, 7), fireMs[k % 2], g, [(k - 1.5) * 0.18 * s, (0.5 + k * 0.08) * s, (k % 2 - 0.5) * 0.2 * s]); c.userData.ph = k * 1.7; }
+  buFires.push(g); buDyn.push(g); return g;
+}
+const smokeM = new THREE.MeshBasicMaterial({ color: '#3a3836', transparent: true, opacity: 0.32, depthWrite: false });
+export const buSmoke = [];
+function smoke(x, z, y0 = 1) { for (let k = 0; k < 6; k++) { const m = mesh(new THREE.SphereGeometry(1, 10, 8), smokeM, G, [x, y0, z]); m.userData = { x, z, y0, t: k / 6 }; buSmoke.push(m); buDyn.push(m); } }
+function jersey(x, z, rot = 0) { const m = mesh(new THREE.BoxGeometry(2, 0.85, 0.55), M('#c8c4bc', { roughness: 0.8 }), G, [x, 0.42, z], [0, rot, 0]); m.castShadow = true; mesh(new THREE.BoxGeometry(2.02, 0.12, 0.57), M('#c83a2a', { roughness: 0.7 }), G, [x, 0.7, z], [0, rot, 0]); const h = Math.abs(Math.sin(rot)) > 0.5; S(x, z, h ? 0.6 : 2, h ? 2 : 0.6, null, 0, 0.85); }
+/* macchine bruciate e casino per tutta la citta' */
+[[-18, 30, 0.4], [16, -1, 1.3], [-6, -36, 0.2], [6, -20, 2.9], [-17, 2, 1.7], [0, 34.5, 1.57]].forEach(([x, z, r]) => makeCar(BX + x, z, r, '#2e2826', true));
+[[-20, 33], [17, 1], [-5, -34], [5, -22], [-2, -70], [4, -96], [-30, -118], [28, -140], [0, -128], [24, 18]].forEach(([x, z], i) => scorch(x, z, 2 + (i % 3)));
+[[-16, 28], [18, 4], [-4, -40], [8, -60], [-6, -88], [24, -120], [-26, -134], [12, -144], [-22, 6], [40, -2], [2, -116]].forEach(([x, z], i) => rubble(x, z, 9 + (i % 4), 0.9 + (i % 3) * 0.2));
+fire(-18, 0.9, 30, 1.1); fire(16, 0.9, -1, 1); fire(-6, 0.9, -36, 1); fire(-30, 0, -118, 0.9); fire(28, 0, -140, 1.1); fire(4, 0, -96, 0.8); fire(24, 0, 18, 0.8);
+smoke(-18, 30, 2); smoke(16, -1, 2); smoke(-6, -36, 2); smoke(28, -140, 1.5); smoke(-30, -118, 1.5);
+/* fumo che esce dalla torre e dai palazzi */
+smoke(52, 10, 64); smoke(-40, 31, 22); smoke(30, -75, 22);
+for (const [x, z, r] of [[-12, 26, 0.2], [12, 27, -0.3], [-24, -10, 1.57], [19, -50, 0.3], [-9, -100, 0.1], [9, -60, -0.2], [-36, -150, 0.5]]) jersey(x, z, r);
+/* cassonetti rovesciati */
+for (const [x, z, r] of [[-23, 20, 0.6], [23, -3, 1.8], [-9, -58, 0.4], [9, -104 + 3, 2.2], [36, -104 - 3, 1.1]]) { const m = mesh(new THREE.BoxGeometry(1.6, 1.1, 1.0), M('#3a5a3a', { roughness: 0.6 }), G, [x, 0.5, z], [0, r, 1.4]); m.castShadow = true; S(x, z, 1.4, 1.4, null, 0, 1.0); }
+/* striscioni dei Mammutones appesi ai palazzi */
+const banTex = ctex(256, 512, (g) => { g.fillStyle = '#1a1410'; g.fillRect(0, 0, 256, 512); g.strokeStyle = '#a03a2a'; g.lineWidth = 10; g.beginPath(); g.arc(128, 200, 80, 0, 6.28); g.stroke(); g.fillStyle = '#a03a2a'; g.beginPath(); g.ellipse(128, 210, 34, 44, 0, 0, 6.28); g.fill();
+  g.lineWidth = 9; g.beginPath(); g.moveTo(98, 170); g.quadraticCurveTo(70, 120, 86, 96); g.moveTo(158, 170); g.quadraticCurveTo(186, 120, 170, 96); g.stroke(); g.fillStyle = '#e8d8c0'; g.font = '900 44px Arial Black,Arial'; g.textAlign = 'center'; g.fillText('BUSTO', 128, 360); g.fillText('È NOSTRA', 128, 420); });
+const banM = new THREE.MeshStandardMaterial({ map: banTex, side: THREE.DoubleSide, roughness: 0.9 });
+for (const [x, y, z, r] of [[-27.7, 9, 6, Math.PI / 2], [29.7, 12, 12, -Math.PI / 2], [-9.7, 12, -30, Math.PI / 2], [9.7, 12, -70, -Math.PI / 2], [-39.7, 10, -128, Math.PI / 2]]) plane(3, 6, banM, G, [x, y, z], [0, r, 0]);
+
+/* ---------- porte e barricate ---------- */
+/* la porta a vetri del fast food (chiusa finche' non paghi) */
+export const buMacDoor = new THREE.Group(); G.add(buMacDoor);
+{ const gl = new THREE.MeshStandardMaterial({ color: '#8ab0c0', roughness: 0.05, metalness: 0.5, transparent: true, opacity: 0.5 }), fr = M('#2a2420', { roughness: 0.5 });
+  for (const sd of [-1, 1]) { mesh(new THREE.BoxGeometry(0.12, 3.4, 1.9), gl, buMacDoor, [34.3, 1.7, 11 + sd * 1]); mesh(new THREE.BoxGeometry(0.16, 3.4, 0.1), fr, buMacDoor, [34.3, 1.7, 11 + sd * 1.95]); }
+  mesh(new THREE.BoxGeometry(0.2, 0.08, 1.2), steel, buMacDoor, [34.15, 1.1, 11]);
+  plane(1.6, 0.5, new THREE.MeshStandardMaterial({ map: label('CHIUSO', { font: '900 70px Arial Black,Arial', color: '#ffffff', bg: '#c0302a', w: 320, h: 100, shadow: null }) }), buMacDoor, [34.1, 2.2, 11], [0, -Math.PI / 2, 0]);
+  buDyn.push(buMacDoor); }
+export const buMacSolid = S(34.3, 11, 0.5, 4.1, null, 3);
+/* barricata in fondo a via Fratelli d'Italia: per i bar */
+function barricade(z, tag) {
+  const g = new THREE.Group(); G.add(g);
+  const crate = M('#7a5a36', { roughness: 0.85 }), sand = M('#a8946a', { roughness: 1 }), wire = M('#9aa0a6', { roughness: 0.4, metalness: 0.7 });
+  setSeed(Math.abs(z) * 3 + 1);
+  for (let x = -12.6; x <= 12.6; x += 1.8) { const tall = rnd() < 0.4; mesh(new THREE.BoxGeometry(1.6, tall ? 2.4 : 1.4, 1.2), rnd() < 0.5 ? crate : sand, g, [x, tall ? 1.2 : 0.7, z + (rnd() - 0.5) * 0.4], [0, (rnd() - 0.5) * 0.3, 0]); }
+  for (let x = -12; x <= 12; x += 3) { mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.8, 6), wire, g, [x, 1.4, z + 0.8]); }
+  for (let k = 0; k < 3; k++) mesh(new THREE.TorusGeometry(0.35, 0.02, 4, 10), wire, g, [-11 + k * 11, 2.6, z + 0.8], [0, Math.PI / 2, 0], [1, 1, 30]);
+  plane(4, 1, new THREE.MeshStandardMaterial({ map: label(tag, { font: '900 64px Arial Black,Arial', color: '#1a1a1a', bg: '#f2c14e', w: 512, h: 128, shadow: null }), side: THREE.DoubleSide }), g, [0, 2.8, z + 0.7]);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; }); buDyn.push(g);
+  return { g, solid: S(0, z, 27, 1.6, null, 3) };
+}
+export const buBarGate = barricade(-52, 'STRADA CHIUSA');
+export const buPiazzaGate = barricade(-104, 'ZONA ROSSA');
+/* il portone della basilica */
+export const buChurchDoor = new THREE.Group(); G.add(buChurchDoor);
+{ const wd = M('#4a2e1a', { roughness: 0.7 }), ir = M('#2a2a2c', { roughness: 0.4, metalness: 0.7 });
+  for (const sd of [-1, 1]) { mesh(new THREE.BoxGeometry(2.95, 6.4, 0.3), wd, buChurchDoor, [sd * 1.5, 3.2, -150.3]); for (let k = 0; k < 4; k++) mesh(new THREE.BoxGeometry(2.6, 0.12, 0.34), ir, buChurchDoor, [sd * 1.5, 0.9 + k * 1.5, -150.25]); mesh(new THREE.TorusGeometry(0.16, 0.03, 6, 12), ir, buChurchDoor, [sd * 0.35, 3, -150.1]); }
+  buDyn.push(buChurchDoor); }
+export const buChurchSolid = S(0, -150.5, 6, 1, null, 6.5);
+/* il sigillo aperto: un buco con le scale che scendono */
+export const buHole = new THREE.Group(); buHole.visible = false; G.add(buHole);
+{ flat(mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({ color: '#050404' }), buHole, [0, 0.43, -182.5], [-Math.PI / 2, 0, 0]));
+  for (let k = 0; k < 5; k++) mesh(new THREE.BoxGeometry(2.6, 0.08, 0.5), M('#5a5450', { roughness: 0.9 }), buHole, [0, 0.35 - k * 0.12, -181.4 - k * 0.45]);
+  const gl = mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.05, 20), new THREE.MeshBasicMaterial({ color: '#ff4a20', transparent: true, opacity: 0.25, depthWrite: false }), buHole, [0, 0.46, -182.5]); gl.userData.glow = 1;
+  buDyn.push(buHole); }
+
+/* ---------- armi al muro del centro di Busto ---------- */
+export const BU_BUYS = [
+  { id: 'pistola', cost: 400, ammoCost: 200, x: BX - 27.9, z: 0, rot: Math.PI / 2, zone: 'bu-fontana' },
+  { id: 'pompa', cost: 2500, ammoCost: 1200, x: BX - 27.9, z: 10, rot: Math.PI / 2, zone: 'bu-fontana' },
+  { id: 'ak47', cost: 5000, ammoCost: 2500, x: BX - 27.9, z: 24, rot: Math.PI / 2, zone: 'bu-fontana' },
+  { id: 'ar', cost: 7000, ammoCost: 3500, x: BX - 27.9, z: 33, rot: Math.PI / 2, zone: 'bu-fontana' },
+  { id: 'pompauto', cost: 6000, ammoCost: 3000, x: BX - 10, z: 39.9, rot: Math.PI, zone: 'bu-fontana' },
+  { id: 'mitra', cost: 1600, ammoCost: 800, x: BX + 10, z: 39.9, rot: Math.PI, zone: 'bu-fontana' },
+  { id: 'granate', cost: 9000, ammoCost: 4500, x: BX + 46.5, z: 0.65, rot: 0, zone: 'bu-mac' },
+  { id: 'mitragliatore', cost: 12000, ammoCost: 6000, x: BX + 40, z: 23.35, rot: Math.PI, zone: 'bu-mac' },
+  { id: 'cecchino', cost: 14000, ammoCost: 5000, x: BX - 13.1, z: -66, rot: Math.PI / 2, zone: 'bu-bar' },
+  { id: 'bazooka', cost: 5000, ammoCost: 3000, x: BX - 13.1, z: -90, rot: Math.PI / 2, zone: 'bu-bar' },
+  { id: 'deagle', cost: 3000, ammoCost: 1500, x: BX + 13.1, z: -72, rot: -Math.PI / 2, zone: 'bu-bar' },
+  { id: 'minigun', cost: 25000, ammoCost: 12000, x: BX - 13.8, z: -164, rot: Math.PI / 2, zone: 'bu-chiesa' },
+];
+
+/* ================= LE CATACOMBE (sotto la chiesa) ================= */
+export const CATA = { x1: BX + 282, x2: BX + 318, z1: -36, z2: 4, ceil: 4.6 };
+export const inCata = p => p.x > BX + 270 && p.x < BX + 330;
+export const CATA_START = { x: BX + 300, z: 1, yaw: 0 };
+export const PORTAL = { x: BX + 300, z: -33 };
+{
+  const stone = texMat(wrap(ctex(256, 256, (g, w, h) => { g.fillStyle = '#4a4440'; g.fillRect(0, 0, w, h); setSeed(501);
+    for (let y = 0; y < h; y += 32) for (let x = ((y / 32) % 2) * 32 - 64; x < w; x += 64) { const v = 60 + Math.floor(rnd() * 30); g.fillStyle = `rgb(${v + 6},${v},${v - 6})`; g.fillRect(x + 2, y + 2, 60, 28); } }), 8, 2), { roughness: 0.95 });
+  const floorM = texMat(wrap(ctex(128, 128, (g, w, h) => { g.fillStyle = '#3a3430'; g.fillRect(0, 0, w, h); setSeed(503); for (let i = 0; i < 40; i++) { const v = 50 + Math.floor(rnd() * 25); g.fillStyle = `rgb(${v},${v - 4},${v - 8})`; g.fillRect(rnd() * w, rnd() * h, 20 + rnd() * 30, 14 + rnd() * 20); } }), 9, 10), { roughness: 0.95 });
+  pave(300, -16, 36, 40, floorM, 0.01);
+  const cw2 = (x, z, w, d, h = CATA.ceil) => { const m = mesh(new THREE.BoxGeometry(w, h, d), stone, G, [x, h / 2, z]); m.receiveShadow = true; S(x, z, w, d, m, h); };
+  cw2(281.5, -16, 1, 42); cw2(318.5, -16, 1, 42); cw2(300, -36.5, 38, 1); cw2(300, 4.5, 38, 1);
+  flat(mesh(new THREE.PlaneGeometry(38, 42), M('#1e1a18', { roughness: 1, side: THREE.DoubleSide }), G, [300, CATA.ceil, -16], [Math.PI / 2, 0, 0]));
+  /* scala da cui arrivi */
+  for (let k = 0; k < 6; k++) mesh(new THREE.BoxGeometry(3, 0.3, 0.6), M('#5a5450', { roughness: 0.9 }), G, [300, 0.15 + k * 0.3, 3.7 - k * 0.12 + 0.0]);
+  /* pilastri e archi */
+  for (const x of [292, 308]) for (let z = -6; z >= -30; z -= 8) { const m = mesh(new THREE.BoxGeometry(1.2, CATA.ceil, 1.2), stone, G, [x, CATA.ceil / 2, z]); m.castShadow = true; S(x, z, 1.2, 1.2); }
+  /* nicchie con i teschi */
+  const skull = M('#d8ccb4', { roughness: 0.7 }), hole = M('#141010');
+  for (const sd of [-1, 1]) for (let z = -2; z >= -32; z -= 5) { const x = 300 + sd * 17.9; mesh(new THREE.BoxGeometry(0.3, 1.4, 2.4), M('#1a1614'), G, [x, 1.6, z]);
+    for (let k = 0; k < 3; k++) { const sk = new THREE.Group(); sk.position.set(x - sd * 0.1, 1.2 + (k % 2) * 0.5, z - 0.7 + k * 0.7); G.add(sk); mesh(sph(0.16, 10, 8), skull, sk); for (const e of [-1, 1]) mesh(sph(0.04, 6, 4), hole, sk, [-sd * 0.13, 0.02, e * 0.06]); } }
+  /* sarcofagi */
+  for (const [x, z] of [[287, -14], [313, -14], [287, -28], [313, -28]]) { mesh(new THREE.BoxGeometry(1.5, 1, 2.6), M('#6a625a', { roughness: 0.8 }), G, [x, 0.5, z]); mesh(new THREE.BoxGeometry(1.7, 0.18, 2.8), M('#7a7268'), G, [x, 1.05, z]); S(x, z, 1.5, 2.6, null, 0, 1.1); }
+  /* torce */
+  for (const [x, z] of [[282.2, -8], [317.8, -8], [282.2, -24], [317.8, -24], [296, -35.8], [304, -35.8]]) { mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.6, 6), M('#4a3020'), G, [x, 2.2, z]); fire(x, 2.4, z, 0.35); }
+  for (const [x, z] of [[300, -6], [300, -22], [300, -32]]) { const l = new THREE.PointLight('#ffaa5a', 1.6, 30, 1.1); l.position.set(x, 3.6, z); l.userData.bu = 1; G.add(l); }
+}
+/* i quattro campanacci del rituale */
+const bellMs = M('#b88634', { roughness: 0.3, metalness: 0.85 });
+export const BELLS = [['rosso', '#e83a3a', 286, -8], ['verde', '#3ad05a', 314, -8], ['blu', '#3a7ae8', 286, -22], ['giallo', '#f2c83a', 314, -22]].map(([n, c, x, z]) => {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.add(g); const wd = M('#4a3020', { roughness: 0.8 });
+  for (const s of [-0.9, 0.9]) mesh(new THREE.BoxGeometry(0.16, 2.8, 0.16), wd, g, [s, 1.4, 0]); mesh(new THREE.BoxGeometry(2, 0.16, 0.16), wd, g, [0, 2.8, 0]);
+  const b = mesh(new THREE.LatheGeometry([[0.001, 0.6], [0.16, 0.6], [0.25, 0.5], [0.28, 0.25], [0.36, 0], [0.4, -0.1], [0.3, -0.1]].map(([r, y]) => new THREE.Vector2(r, y)), 18), bellMs, g, [0, 1.9, 0]);
+  mesh(new THREE.TorusGeometry(0.3, 0.05, 6, 16), M(c, { roughness: 0.6, emissive: c, emissiveIntensity: 0.3 }), g, [0, 2.3, 0], [Math.PI / 2, 0, 0]);
+  const glow = mesh(new THREE.SphereGeometry(0.75, 12, 8), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.0, depthWrite: false }), g, [0, 1.9, 0]);
+  S(x, z, 2, 0.5); buDyn.push(g);
+  return { n, c, x: BX + x, z, g, b, glow };
+});
+/* la tavola di pietra che mostra l'ordine dei campanacci */
+const tabCanvas = document.createElement('canvas'); tabCanvas.width = 512; tabCanvas.height = 256; const tabTex = new THREE.CanvasTexture(tabCanvas); tabTex.encoding = THREE.sRGBEncoding;
+export function setTablet(seq, done = 0) {
+  const g = tabCanvas.getContext('2d'); g.fillStyle = '#5a5450'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#2a2622'; g.lineWidth = 10; g.strokeRect(10, 10, 492, 236);
+  g.fillStyle = '#d8ccb4'; g.font = '700 30px Georgia,serif'; g.textAlign = 'center'; g.fillText('Suona i campanacci in quest\'ordine', 256, 56);
+  seq.forEach((k, i) => { const x = 86 + i * 113; g.fillStyle = i < done ? '#2a2622' : BELLS[k].c; g.beginPath(); g.arc(x, 150, 40, 0, 6.28); g.fill(); g.lineWidth = 6; g.strokeStyle = '#2a2622'; g.stroke(); g.fillStyle = '#f4f0e6'; g.font = '900 40px Arial Black,Arial'; g.fillText(String(i + 1), x, 164); });
+  tabTex.needsUpdate = true;
+}
+{ mesh(new THREE.BoxGeometry(2.6, 1.2, 0.5), M('#5a5450', { roughness: 0.9 }), G, [300, 0.6, -28]); const t = plane(2.8, 1.4, new THREE.MeshStandardMaterial({ map: tabTex, roughness: 0.8 }), G, [300, 1.9, -28], [-0.25, 0, 0]); buDyn.push(t); S(300, -28, 2.6, 0.5, null, 0, 1.2); }
+/* il portale */
+const portalTex = ctex(256, 256, (g) => { const gr = g.createRadialGradient(128, 128, 10, 128, 128, 128); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.3, '#c070ff'); gr.addColorStop(0.7, '#5a1a9a'); gr.addColorStop(1, '#1a0a2a'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 6; for (let k = 0; k < 5; k++) { g.beginPath(); for (let a = 0; a < 12; a += 0.1) { const r = a * 9 + k * 8; g.lineTo(128 + Math.cos(a + k * 1.25) * r, 128 + Math.sin(a + k * 1.25) * r); } g.stroke(); } });
+export const buPortal = new THREE.Group(); buPortal.position.set(300, 0, -33.5); G.add(buPortal);
+{ const ringM = M('#5a5450', { roughness: 0.85 }); mesh(new THREE.TorusGeometry(2.3, 0.45, 10, 28), ringM, buPortal, [0, 2.6, 0]);
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; mesh(new THREE.BoxGeometry(0.4, 0.4, 0.6), M('#a03a2a', { emissive: '#a03a2a', emissiveIntensity: 0.4 }), buPortal, [Math.cos(a) * 2.3, 2.6 + Math.sin(a) * 2.3, 0.2], [0, 0, a]); }
+  const disc = mesh(new THREE.CircleGeometry(2.0, 32), new THREE.MeshBasicMaterial({ map: portalTex, transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false }), buPortal, [0, 2.6, 0.05]); buPortal.userData.disc = disc;
+  mesh(new THREE.BoxGeometry(5.6, 0.4, 1.6), ringM, buPortal, [0, 0.2, 0]); buDyn.push(buPortal); S(300, -33.5, 5.6, 1.2); }
+export function setPortal(on) { const d = buPortal.userData.disc; d.material.opacity = on === 2 ? 0.95 : on === 1 ? 0.35 : 0; buPortal.userData.on = on; }
+
+/* ================= SARDEGNA: IL REGNO DEI MAMMUTONES ================= */
+export const SARD = { x1: BX + 540, x2: BX + 660, z1: -60, z2: 60 };
+export const inSard = p => p.x > BX + 500;
+export const SARD_START = { x: BX + 600, z: 50, yaw: 0 };
+export const RE_SPOT = { x: BX + 600, z: -22 };
+export const SHEEP = [];
+{
+  const grassTex = wrap(ctex(256, 256, (g, w, h) => { g.fillStyle = '#6a9a3a'; g.fillRect(0, 0, w, h); setSeed(601); for (let i = 0; i < 3000; i++) { const v = rnd(); g.fillStyle = v < 0.4 ? '#5a8a32' : v < 0.8 ? '#7aaa48' : v < 0.93 ? '#8ab050' : (v < 0.97 ? '#f2e050' : '#f0f0f0'); g.fillRect(rnd() * w, rnd() * h, 2, 2 + rnd() * 2); } }), 60, 60);
+  pave(600, 0, 420, 420, texMat(grassTex, { roughness: 1 }), 0.004);
+  /* colline intorno */
+  const hillM = [M('#5a8a34', { roughness: 1 }), M('#6a9a3e', { roughness: 1 }), M('#4e7a2e', { roughness: 1 })];
+  setSeed(611);
+  for (let k = 0; k < 26; k++) { const a = k / 26 * Math.PI * 2, R = 110 + rnd() * 50; const m = mesh(new THREE.SphereGeometry(30 + rnd() * 30, 16, 10), hillM[k % 3], G, [600 + Math.cos(a) * R, -6, Math.sin(a) * R], null, [1.4, 0.38 + rnd() * 0.25, 1.2]); m.receiveShadow = true; }
+  /* nuraghi: torri di pietra a tronco di cono */
+  const nurTex = wrap(ctex(256, 256, (g, w, h) => { g.fillStyle = '#8a7a64'; g.fillRect(0, 0, w, h); setSeed(621); for (let y = 0; y < h; y += 22) for (let x = ((y / 22) % 2) * 20 - 40; x < w; x += 40) { const v = 110 + Math.floor(rnd() * 40); g.fillStyle = `rgb(${v + 10},${v},${v - 16})`; g.beginPath(); g.ellipse(x + 20, y + 11, 18, 9, 0, 0, 6.28); g.fill(); } }), 4, 3);
+  const nurM = texMat(nurTex, { roughness: 0.95 });
+  function nuraghe(x, z, s = 1) {
+    const m = mesh(new THREE.CylinderGeometry(3.2 * s, 4.6 * s, 9 * s, 18, 1, true), nurM, G, [x, 4.5 * s, z]); m.castShadow = true;
+    mesh(new THREE.CircleGeometry(3.2 * s, 18), nurM, G, [x, 9 * s, z], [-Math.PI / 2, 0, 0]);
+    mesh(new THREE.BoxGeometry(1.3 * s, 2.2 * s, 0.6), M('#1a1612'), G, [x, 1.1 * s, z + 4.3 * s]);
+    S(x, z, 7.4 * s, 7.4 * s, m, 9 * s);
+  }
+  nuraghe(565, -35, 1.1); nuraghe(640, -28, 0.95); nuraghe(560, 25, 0.85); nuraghe(650, 30, 1);
+  for (const [x, z] of [[700, -90], [480, -60], [520, 120], [720, 60]]) nuraghe(x, z, 1.6);
+  /* ulivi e sughere */
+  const oliveL = [M('#7a8a5a', { roughness: 0.9 }), M('#8a9a6a', { roughness: 0.9 })], bark = M('#5a4a3a', { roughness: 1 });
+  setSeed(631);
+  for (let k = 0; k < 24; k++) { const x = 548 + rnd() * 104, z = -54 + rnd() * 108; if (Math.abs(x - 600) < 14 && Math.abs(z) < 20) continue; if (Math.hypot(x - 600, z - 50) < 8) continue;
+    const t = mesh(new THREE.CylinderGeometry(0.25, 0.45, 2.6, 7), bark, G, [x, 1.3, z], [rnd() * 0.3, 0, rnd() * 0.3]); t.castShadow = true;
+    for (let i = 0; i < 4; i++) mesh(new THREE.IcosahedronGeometry(1.4 + rnd() * 0.8, 1), oliveL[i % 2], G, [x + (rnd() - 0.5) * 2.4, 3 + rnd(), z + (rnd() - 0.5) * 2.4], null, [1, 0.7, 1]).castShadow = true;
+    S(x, z, 0.8, 0.8); }
+  /* muretti a secco e macchia mediterranea */
+  for (const [x, z, w, d] of [[580, 10, 14, 1], [622, -8, 1, 16], [600, -48, 22, 1], [552, -5, 1, 14]]) { mesh(new THREE.BoxGeometry(w, 0.9, d), nurM, G, [x, 0.45, z]).castShadow = true; S(x, z, w, d, null, 0, 0.9); }
+  for (let k = 0; k < 30; k++) { const x = 545 + rnd() * 110, z = -56 + rnd() * 112; mesh(new THREE.IcosahedronGeometry(0.6 + rnd() * 0.5, 1), rnd() < 0.5 ? leaf[1] : M('#4a6a2a', { roughness: 1 }), G, [x, 0.4, z], null, [1.3, 0.7, 1.3]); }
+  /* il portale da cui arrivi */
+  const ar = new THREE.Group(); ar.position.set(600, 0, 56); G.add(ar);
+  mesh(new THREE.TorusGeometry(2.3, 0.45, 10, 28), nurM, ar, [0, 2.6, 0]); const d2 = mesh(new THREE.CircleGeometry(2.0, 32), new THREE.MeshBasicMaterial({ map: portalTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }), ar, [0, 2.6, 0]);
+  ar.userData.disc = d2; buDyn.push(ar); buPortal.userData.twin = ar; S(600, 56, 5, 1);
+  /* le pecore */
+  for (let k = 0; k < 26; k++) { const m = buildSheep(); const x = 550 + rnd() * 100, z = -50 + rnd() * 100; m.position.set(BX + x, 0, z); m.rotation.y = rnd() * 6.28; scene.add(m); SHEEP.push({ m, t: rnd() * 5, dir: m.rotation.y, run: 0 }); buDyn.push(m); }
+}
+
+/* ---------- dove escono i nemici, zona per zona ---------- */
+const A = arr => arr.map(([x, z]) => [BX + x, z]);
+export const BU_SPAWNS = {
+  bfontana: A([[-20, -2], [20, -2], [-20, 30], [20, 30], [0, 38], [-22, 12], [27, -2], [27, 27], [0, -30], [0, -46]]),
+  bmac: A([[27, -2], [27, 27], [20, -2], [20, 30]]),
+  bmacin: A([[36.5, 2], [36.5, 22], [44, 22.5], [44, 1.5], [27, 11]]),
+  bbar: A([[0, -58], [-8, -100], [8, -100], [0, -80], [-11, -70], [11, -92]]),
+  bpiazza: A([[-36, -108], [36, -108], [-36, -146], [36, -146], [0, -108], [-20, -130], [20, -130]]),
+  bchiesa: A([[-11, -155], [11, -155], [-11, -184], [11, -184], [0, -158]]),
+  bcata: A([[286, -2], [314, -2], [300, -14], [290, -34], [310, -34]]),
+  bsard: A([[545, -55], [655, -55], [545, 55], [655, 55], [600, -58], [542, 0], [658, 0], [580, -50], [620, -50]]),
+};
+export const BU_DOORS = { mac: { x: BX + 34.3, z: 11 }, chiesa: { x: BX, z: -150.5 } };
+
 /* oggetti animati: fuori dalla fusione delle mesh statiche */
-export const buAnim = [...jets, ...flames];
+export const buAnim = [...jets, ...flames, ...buDyn];
 /* ---------- animazioni ---------- */
 const tmp = new THREE.Vector3();
 export function updateBU(t, dt = 0.016) {
@@ -467,4 +685,20 @@ export function updateBU(t, dt = 0.016) {
   dropsGeo.attributes.position.needsUpdate = true;
   flames.forEach((f, i) => f.scale.setScalar(0.85 + Math.sin(t * 17 + i * 2) * 0.2));
   buSeal.material.emissiveIntensity = 0.12 + Math.sin(t * 1.4) * 0.06;
+  for (const f of buFires) f.children.forEach(c => { const k = 0.8 + Math.sin(t * 14 + c.userData.ph) * 0.2; c.scale.set(k, 0.8 + Math.sin(t * 11 + c.userData.ph * 2) * 0.3, k); });
+  for (const m of buSmoke) { const d = m.userData; d.t += dt * 0.12; if (d.t > 1) d.t -= 1; m.position.set(d.x + Math.sin(d.t * 6 + d.z) * 1.2 * d.t, d.y0 + d.t * 14, d.z + d.t * 2); m.scale.setScalar(0.8 + d.t * 3.5); m.material.opacity = 0.32; }
+  if (buPortal.userData.disc) { buPortal.userData.disc.rotation.z -= dt * (buPortal.userData.on === 2 ? 2.5 : 0.6); if (buPortal.userData.twin) buPortal.userData.twin.userData.disc.rotation.z += dt * 1.5; }
+  for (const b of BELLS) { if (b.ring > 0) { b.ring -= dt; b.b.rotation.z = Math.sin(b.ring * 25) * 0.3 * b.ring; } }
+  buHole.children.forEach(c => { if (c.userData.glow) c.material.opacity = 0.2 + Math.sin(t * 3) * 0.1; });
+}
+/* pecore: brucano, ogni tanto camminano; se ci passa vicino qualcuno scappano */
+export function updateSheep(dt, px, pz) {
+  for (const s of SHEEP) { const m = s.m; s.t -= dt; const d = Math.hypot(m.position.x - px, m.position.z - pz);
+    if (d < 5) { s.dir = Math.atan2(m.position.x - px, m.position.z - pz); s.run = 1.2; }
+    if (s.t <= 0) { s.t = 2 + Math.random() * 5; if (Math.random() < 0.5) s.dir += (Math.random() - 0.5) * 2; s.walk = Math.random() < 0.5; }
+    const sp = s.run > 0 ? 4.5 : s.walk ? 0.8 : 0; s.run = Math.max(0, s.run - dt);
+    if (sp) { m.position.x += Math.sin(s.dir) * sp * dt; m.position.z += Math.cos(s.dir) * sp * dt; m.rotation.y = s.dir;
+      m.position.x = Math.max(SARD.x1 + 2, Math.min(SARD.x2 - 2, m.position.x)); m.position.z = Math.max(SARD.z1 + 2, Math.min(SARD.z2 - 2, m.position.z)); }
+    const hd = m.userData.head; if (hd) hd.position.y = sp ? 0.72 : 0.5 + Math.sin(performance.now() / 600 + s.dir) * 0.04;
+  }
 }

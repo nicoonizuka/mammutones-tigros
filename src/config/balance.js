@@ -19,6 +19,10 @@ export const WEAPONS = {
   mitragliatore: { n: 'Mitragliatore', dmg: 38, rate: 0.072, mag: 80, res: 560, spread: 0.028, auto: true, pel: 1, reload: 3.4, sound: 0 },
   minigun: { n: 'Minigun', dmg: 46, rate: 0.042, mag: 200, res: 800, spread: 0.04, auto: true, pel: 1, reload: 4.5, sound: 0 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
+  /* mondo 4, il centro di Busto: ogni arma nuova e' piu' forte di quelle prima */
+  ar:      { n: 'AR',      dmg: 55, rate: 0.085, mag: 30, res: 240, spread: 0.016, auto: true, pel: 1, reload: 2.0, sound: 0 },
+  granate: { n: 'Granate', dmg: 420, rate: 0.9, mag: 1, res: 9, spread: 0, auto: false, pel: 1, reload: 0.6, sound: 2, thrown: 1, explode: 5.5 },
+  cecchino: { n: 'Cecchino dorato', dmg: 700, rate: 1.0, mag: 12, res: 48, spread: 0, auto: false, pel: 1, reload: 2.8, sound: 2, pierce: 1 },
 };
 export const HEADSHOT = 2;
 
@@ -45,6 +49,9 @@ export const ENEMIES = {
   fachiro: { n: 'Ratto Fachiro',      hp: 120, spd: 4.2, dmg: 10, atkCd: 0.9, reward: 70,  radius: 0.5 },
   impossessato: { n: 'Mammutones Impossessato', hp: 260, spd: 2.6, dmg: 14, atkCd: 1.1, reward: 120, radius: 0.5 },
   grosso:  { n: 'Mammutones Grosso',  hp: 380, spd: 1.4, dmg: 14, atkCd: 1.5, reward: 160, radius: 0.62 },
+  /* mondo 4 */
+  sgherrone: { n: 'Sgherro potenziato', hp: 480, spd: 2.6, dmg: 26, atkCd: 1.2, reward: 220, radius: 0.62 },
+  capra:   { n: 'Capra Mammutones',   hp: 170, spd: 6.4, dmg: 20, atkCd: 0.8, reward: 140, radius: 0.5 },
 };
 
 /* ---------- ZONE ----------
@@ -65,6 +72,13 @@ export const ZONES = [
   { id: 'tr-piazza', n: 'Piazza dei tavolini', cost: 0, hp: 1.65, dmg: 1.45, coins: 1.9, types: { orco: 0.35, orcone: 0.2, base: 0.2, impossessato: 0.25 } },
   { id: 'tr-garage', n: 'Garage di Pika', cost: 0, hp: 1.8, dmg: 1.55, coins: 2.1, types: { ratto: 0.3, fachiro: 0.35, impossessato: 0.35 } },
   { id: 'tr-casa', n: 'Casa di Pika', cost: 0, hp: 1.95, dmg: 1.65, coins: 2.3, types: { impossessato: 0.5, orco: 0.25, orcone: 0.25 } },
+  /* mondo 4: il centro di Busto, infestato. Gli sgherri potenziati escono solo dopo qualche ondata */
+  { id: 'bu-fontana', n: 'Piazza Garibaldi', cost: 0, hp: 1.9, dmg: 1.6, coins: 2.3, types: { base: 0.22, cornuto: 0.14, furia: 0.12, grosso: 0.1, impossessato: 0.14, orco: 0.18, orcone: 0.1 } },
+  { id: 'bu-mac', n: 'Il Mac', cost: 0, hp: 2.05, dmg: 1.7, coins: 2.5, types: { base: 0.15, cornuto: 0.15, furia: 0.15, impossessato: 0.15, orco: 0.15, orcone: 0.1, sgherrone: 0.15 } },
+  { id: 'bu-bar', n: 'La zona dei bar', cost: 0, hp: 2.2, dmg: 1.8, coins: 2.7, types: { orco: 0.22, orcone: 0.18, sgherrone: 0.25, furia: 0.15, impossessato: 0.2 } },
+  { id: 'bu-chiesa', n: 'Piazza San Giovanni', cost: 0, hp: 2.35, dmg: 1.9, coins: 2.9, types: { capra: 0.3, furia: 0.2, impossessato: 0.2, grosso: 0.1, sgherrone: 0.2 } },
+  { id: 'bu-catacombe', n: 'Le catacombe', cost: 0, hp: 2.45, dmg: 1.95, coins: 3.0, types: { capra: 0.3, base: 0.2, furia: 0.2, impossessato: 0.2, grosso: 0.1 } },
+  { id: 'bu-sardegna', n: 'Sardegna, il regno dei Mammutones', cost: 0, hp: 2.6, dmg: 2.0, coins: 3.2, types: { capra: 0.45, furia: 0.2, base: 0.15, impossessato: 0.2 } },
 ];
 /* indice in ZONES della prima zona del mondo 2 */
 export const HS_ZONE0 = 6;
@@ -150,3 +164,17 @@ export const BOTTLE_FX = [
   { k: 'coins', n: 'Soldi doppi', w: 20 }, { k: 'spada', n: 'Ottieni la spada', w: 9 }, { k: 'insta', n: 'Un colpo, un morto (tranne i boss)', w: 4 } ];
 /* ---------- STAMINA ---------- */
 export const STAMINA = { drain: 0.24, regen: 0.18, min: 0.25 };   // circa 4 secondi di corsa, poi devi riprendere fiato
+
+/* ---------- MONDO 4: IL CENTRO DI BUSTO ---------- */
+export const BU_ZONE0 = 12;
+export const BU_START_COINS = 2500;
+export const BU_SGHERRONI_WAVE = 4;                 // da qui escono gli sgherri potenziati
+export const BU_COSTS = { mac: 8000, bar: 10000, chiesa: 12000, portale: 20000 };
+export const BU_CATA_KILLS = 12;                    // Mammutones da uccidere nelle catacombe prima del rituale
+/* Pierre per l'ultima volta (fontana, round 5), Corti maledetto (Mac, round 10), i cugini Progni (bar, round 15),
+   Loris in chiesa (round 18) e Loris gigante, il Re dei Mammutones, in Sardegna */
+export const BOSS_PIERRE4 = { n: 'Pierre', hp: 9500, spd: 2.7, dmg: 30, atkCd: 1.15, reward: 4500, summonEvery: 9, wave: 5 };
+export const BOSS_CORTI = { n: 'Corti', hp: 15000, spd: 1.8, dmg: 38, atkCd: 1.6, reward: 6000, summonEvery: 13, wave: 10, throwEvery: 2.1, throwDmg: 16 };
+export const BOSS_PROGNI = { n: 'I cugini Progni', hp: 9000, spd: 2.9, dmg: 30, atkCd: 1.1, reward: 5000, summonEvery: 10, wave: 15 };
+export const BOSS_LORIS4 = { n: 'Loris Busato', hp: 18000, spd: 3.4, dmg: 32, atkCd: 1.2, reward: 8000, summonEvery: 10, wave: 18 };
+export const BOSS_RE = { n: 'Loris, il Re dei Mammutones', hp: 36000, spd: 3.3, dmg: 44, atkCd: 1.5, reward: 15000, summonEvery: 9, throwEvery: 2.6, throwDmg: 28, stompEvery: 5, stompDmg: 34 };

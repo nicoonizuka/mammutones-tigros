@@ -20,6 +20,8 @@ const LOOKS = {
   1: { top: '#3a5a8a', mid: '#e89a6a', bot: '#c27a52', sun: '#ffd8a0', sunDir: [-0.55, 0.32, 0.45], cloud: '#ffe2c8', amt: 0.85 },   // tramonto arancione sul Tigros
   2: { top: '#4a78b8', mid: '#c8d4dc', bot: '#b8b6ac', sun: '#fff4dc', sunDir: [-0.4, 0.6, 0.5], cloud: '#ffffff', amt: 0.95 },      // giorno velato all'Happy Shopping
   4: { top: '#3c66a6', mid: '#d6d4cc', bot: '#a8a49a', sun: '#fff2d6', sunDir: [-0.5, 0.55, 0.6], cloud: '#ffffff', amt: 1.05 },     // pomeriggio con le nuvole sul centro di Busto
+  5: { top: '#2a6ad8', mid: '#a8d0f0', bot: '#8ab070', sun: '#fff8e0', sunDir: [-0.4, 0.7, 0.4], cloud: '#ffffff', amt: 0.8 },     // cielo azzurro della Sardegna
+  6: { top: '#0a0806', mid: '#140e0a', bot: '#0a0806', sun: '#2a1a10', sunDir: [0, 1, 0], cloud: '#1a1410', amt: 0 },     // catacombe
   3: { top: '#2e3e4a', mid: '#8a9a8c', bot: '#8a9484', sun: '#e8f0d8', sunDir: [-0.3, 0.5, 0.6], cloud: '#c8d0c4', amt: 1.25 },     // cielo coperto e verdognolo al Tribunale
 };
 
