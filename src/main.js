@@ -6,7 +6,7 @@ import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss } from './characters/styled.js';
-import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed } from './world/tribunale.js';
+import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
 import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
@@ -96,7 +96,7 @@ const BOSSK = {
          title: 'Fab La Rue!', sub: () => (world === 3 ? 'Ti aspettava: blocca la strada per il Tribunale' : 'Il re dei ratti esce dalla tana') },
   loris: { B: BOSS_LORIS, build: buildLoris, at: () => LORIS_SPOT, r: 0.65, name: 'Loris Busato · Capo dei Mammutones', minions: ['furia', 'furia', 'base', 'base'], call: 'Loris chiama i Mammutones!', title: 'Loris Busato!', sub: () => 'Il capo dei Mammutones esce dall\'ufficio' },
   capo: { B: BOSS_CAPO, build: buildCapo, at: () => CAPO_SPOT, r: 0.85, name: 'Il Capo · Padrone dell\'Happy Shopping', minions: ['cornuto', 'base', 'base'], call: 'Il Capo chiama i Mammutones dal magazzino!', title: 'Il Capo!', sub: () => 'Esce dal magazzino: occhio quando abbassa la testa e carica' },
-  well: { B: BOSS_WELL, build: buildWell, at: () => WELL_SPOT, r: 0.6, name: 'Well · Capo degli orchi', minions: ['orco', 'orco', 'orcone'], call: 'Well chiama i suoi orchi!', title: 'Well!', sub: () => 'Arriva ai tavolini con i suoi orchi' },
+  well: { B: BOSS_WELL, build: buildWell, at: () => WELL_SPOT, r: 0.6, name: 'Pierre · Capo degli sgherri', minions: ['orco', 'orco', 'orcone'], call: 'Pierre chiama i suoi sgherri!', title: 'Pierre!', sub: () => 'Arriva ai tavolini con i suoi sgherri' },
   fabio: { B: BOSS_FABIO, build: buildFabio, at: () => FABIO_SPOT, r: 0.75, name: 'Fabio Regaglia · Il gigante maledetto', minions: ['impossessato', 'orco'], call: 'Fabio Regaglia chiama rinforzi!', title: 'Fabio Regaglia!', sub: () => 'Il gigante di 2 metri e mezzo, maledetto e corazzato' },
   pika: { B: BOSS_PIKA, build: buildPikaBoss, at: () => (P && inCasa(P.pos) ? PIKA_SPOT_C : PIKA_SPOT_G), r: 0.5, name: 'Pika · Governatore del Tribunale (sotto maleficio)', minions: ['fachiro', 'impossessato'], call: 'Pika chiama i suoi!', title: 'Pika!', sub: () => (P && inCasa(P.pos) ? 'Il maleficio di Loris lo controlla: liberalo!' : 'Il governatore del Tribunale, impossessato. Ti lancia le sigarette da lontano') },
 };
@@ -104,8 +104,9 @@ function spawnBoss(kind = 'fab') {
   const K = BOSSK[kind], B = K.B, m = K.build(), at = K.at(); m.position.set(at.x, 0, at.z); scene.add(m);
   const phase = kind === 'pika' ? (inCasa(P.pos) ? 2 : 1) : 0;
   const base = kind === 'pika' && phase === 1 ? B.hpGarage : B.hp;
-  const hp = Math.round(base * (1 + (kind === 'fab' ? 0.04 : 0.03) * wave));
-  boss = { m, kind, capo: kind === 'capo', phase, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0, summon: B.summonEvery, ch: null, chCd: 4, throwT: 2 };
+  const tough = kind === 'fab' && world === 3 ? 2.6 : 1; /* al Tribunale Fab La Rue e' molto piu' forte */
+  const hp = Math.round(base * tough * (1 + (kind === 'fab' ? 0.04 : 0.03) * wave));
+  boss = { m, kind, capo: kind === 'capo', phase, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg * (tough > 1 ? 1.5 : 1), reward: B.reward * tough, atkCd: B.atkCd, spd: B.spd * (tough > 1 ? 1.15 : 1), atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0, summon: B.summonEvery, ch: null, chCd: 4, throwT: 2 };
   m.userData.hit.body.userData.enemy = boss; m.userData.hit.head.userData.enemy = boss; m.userData.hit.head.userData.head = true;
   enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = K.name;
   banner(K.title, K.sub()); tone(110, 0.8, 'sawtooth', 0.08, 60);
@@ -283,7 +284,8 @@ const INTER = [
   { x: TR_PANEL.x + 1.2, z: TR_PANEL.z, r: 2.4, label: () => world === 3 && inGarage(P.pos) && !trPower ? (pikaFled || (boss && boss.flee) ? `<b>E</b> Riattiva la corrente · <b>${TR_POWER_COST}</b>` : 'Il quadro è bloccato: prima affronta Pika') : null, cost: () => (pikaFled || (boss && boss.flee) ? TR_POWER_COST : 0), act: () => { trPower = true; trPanelLed.material.color.set('#3aff6a'); openLift(); if (zone < 3) zone = 3; banner('Corrente riattivata!', CAGES.every(c => c.freed) ? 'L\'ascensore per la casa di Pika funziona' : 'Libera gli amici e poi prendi l\'ascensore'); } },
   { x: TR_GDOOR.x, z: TR_GDOOR.z + 1.8, r: 3, label: () => world === 3 && zone < 2 && P.pos.z > TR_GDOOR.z ? (hasKey ? `<b>E</b> Apri il garage di Pika · <b>${TR_GARAGE_COST}</b>` : 'Il garage è chiuso a chiave: la chiave ce l\'ha Fabio Regaglia') : null, cost: () => (hasKey ? TR_GARAGE_COST : 0), act: () => { zone = 2; openGarage(); banner('Garage di Pika', 'Gli amici sono nelle gabbie in fondo… e Pika ti aspetta'); } },
   { x: TX + 97.5, z: -1.4, r: 2.4, label: () => world === 3 && inCasa(P.pos) ? '<b>E</b> Torna giù nel garage' : null, cost: () => 0, free: () => true, act: goGarage },
-  { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => banner('Damiano Ducaj', '«Bel casino qua a Busto, stasera cosa facciamo?»') },
+  { x: PAUL.x - 1.4, z: PAUL.z, r: 2.6, label: () => world === 3 ? '<b>E</b> Parla con Paul' : null, cost: () => 0, free: () => true, act: () => { const L = PAUL_LINES; let k; do { k = Math.floor(Math.random() * L.length); } while (k === paulLast); paulLast = k; banner('Paul', '«' + L[k] + '»'); tone(600, 0.08, 'triangle', 0.04, 760); } },
+  { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => { const L = DAMIANO_LINES; let k; do { k = Math.floor(Math.random() * L.length); } while (L.length > 1 && k === damLast); damLast = k; banner('Damiano Ducaj', '«' + L[k] + '»'); tone(520, 0.08, 'triangle', 0.04, 700); } },
 ];
 function openHS() {
   if (zone >= 1) return; zone = 1; scene.remove(hsDoor); hsDoorSolid.off = 1;
@@ -303,6 +305,12 @@ function useInter() {
   if (coins < c) { feed('Ti servono ' + c + ' monete'); denied(); return; }
   coins -= c; nearI.act(); buy();
 }
+
+/* frasi di Damiano nella Mercedes: una a caso ogni volta */
+const DAMIANO_LINES = ['Oh raga, stasera andiamo all\'oceano', 'Il mio Mercedes è il più veloce di tutti', 'Bel casino qua a Busto… stasera cosa facciamo?', 'Raga, stasera cosa si fa?', 'Vieni a lavorare in DHL'];
+let damLast = -1;
+const PAUL_LINES = ['Raga, avete una J?', 'Raga, qualcuno sta bene?', 'Bro, hai una siga?'];
+let paulLast = -1;
 
 /* ===================== SCENE: L'AMICO LIBERATO ESCE, RINGRAZIA E SE NE VA ===================== */
 function bubbleTex(name, txt) {
@@ -365,7 +373,7 @@ function pikaFlee(e) { e.flee = 1; e.fleeT = 3.5; banner('Pika scappa!', 'Sale i
 function trBossDown(kind, at) {
   const rats = () => { for (const e of enemies) if (!e.dead && (e.type === 'ratto' || e.type === 'fachiro')) { e.dead = 1; e.deadT = 0; alive--; } };
   if (kind === 'fab') { fabDead = true; rats(); if (mode === 'adv' && zone < 1) { zone = 1; openGate(); } banner('Fab La Rue è sconfitto per sempre!', 'La strada è libera: vai verso i tavolini del Tribunale'); return; }
-  if (kind === 'well') { wellDead = true; banner('Well scappa!', 'Gli orchi restano… e dai tavolini si alza un gigante'); return; }
+  if (kind === 'well') { wellDead = true; banner('Pierre scappa!', 'Gli sgherri restano… e dai tavolini si alza un gigante'); return; }
   if (kind === 'fabio') { fabioDead = true; if (mode === 'adv' && !hasKey) dropKey(at); banner('Fabio Regaglia è a terra!', mode === 'adv' ? 'Ha lasciato cadere la chiave del garage: raccoglila' : 'Il gigante è sconfitto'); return; }
   if (kind === 'pika') { pikaDead = true;
     for (const e of enemies) if (!e.dead) { e.dead = 1; e.deadT = 0; alive--; }
@@ -743,7 +751,7 @@ function update(dt) {
   /* vita che si ricarica dopo qualche secondo senza colpi */
   sinceHit += dt; if (sinceHit > REGEN.delay && P.hp < 100) P.hp = Math.min(100, P.hp + REGEN.perSec * dt);
   if (boss && !boss.dead && !boss.flee) { boss.summon -= dt; if (boss.summon <= 0) { const K = BOSSK[boss.kind]; boss.summon = K.B.summonEvery;
-      const list = boss.kind === 'pika' && boss.phase === 2 ? ['impossessato', 'orcone'] : K.minions; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(K.call); }
+      const list = boss.kind === 'pika' && boss.phase === 2 ? ['impossessato', 'orcone'] : boss.kind === 'fab' && world === 3 ? ['ratto', 'ratto', 'fachiro', 'impossessato'] : K.minions; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(K.call); }
     $('bossb').style.width = Math.max(0, boss.hp / boss.max * 100) + '%'; }
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
@@ -856,7 +864,7 @@ function showEnding(real, wf) {
   $('endkick').textContent = 'Mappa ' + ww + ' completata';
   $('endtitle').innerHTML = ww === 3 ? 'Pika è <span>libero</span>!' : w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
   $('endtext').innerHTML = ww === 3
-    ? `<p><b>${who}</b> ha liberato il Tribunale. Fab La Rue è sconfitto per sempre, Well è scappato con quello che resta dei suoi orchi e Fabio Regaglia è tornato in sé.</p>
+    ? `<p><b>${who}</b> ha liberato il Tribunale. Fab La Rue è sconfitto per sempre, Pierre è scappato con quello che resta dei suoi sgherri e Fabio Regaglia è tornato in sé.</p>
        <p>Nel garage avete liberato <b>Leodessi</b>, <b>Castelluccio</b> e <b>Bulegato</b>. E sopra, a casa sua, il maleficio di Loris si è spezzato: <b>Pika</b> è di nuovo lui, e chiede scusa a tutti con un pacchetto di sigarette in mano.</p>
        <p>Ma Loris Busato è scappato dalla finestra. Il gruppo adesso è al completo, e c'è un'ultima tappa: il <b>centro di Busto</b>.</p>`
     : w2
@@ -886,7 +894,7 @@ const PLACES = {
   2: { n: 'Happy Shopping', open: () => hsOpen() || mode === 'sandbox', state: () => unlocks.hs ? 'Liberato · Debe è libero' : hsOpen() ? 'Disponibile · Mondo 2' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura batti prima Loris' : 'Bloccato · in Avventura batti prima Loris',
        t: 'Il bazar di Sant\'Edoardo. Parcheggio e negozio, Tefalin e Diego da ritrovare, il Capo da sconfiggere per liberare Debe.' },
   3: { n: 'Tribunale di Busto', open: () => !!unlocks.hs || mode === 'sandbox', state: () => unlocks.tr ? 'Liberato · Pika è libero dal maleficio' : unlocks.hs ? 'Disponibile · Mondo 3' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima l\'Happy Shopping' : 'Bloccato · finisci prima l\'Happy Shopping',
-       t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Well e Fabio Regaglia, i garage e la casa di Pika.' },
+       t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Pierre e Fabio Regaglia, i garage e la casa di Pika.' },
   4: { n: 'Il centro di Busto', open: () => false, state: () => 'Bloccato · prossimamente', t: 'L\'ultima tappa: liberare Busto Arsizio.' },
 };
 function showPlace(k) {
@@ -961,7 +969,7 @@ function setWorld(w) {
   $('w2btn').classList.toggle('locked', !hsOpen()); $('w2sub').textContent = hsOpen() ? 'il Capo del bazar' : 'in Avventura: finisci il Tigros';
   const wi = $('worldinfo'); wi.hidden = w === 1;
   if ($('w3btn')) { $('w3btn').classList.toggle('locked', !unlocks.hs); $('w3sub').textContent = unlocks.hs ? 'Pika e il maleficio' : 'in Avventura: finisci l\'Happy Shopping'; }
-  if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Well (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
+  if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Pierre (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
   if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
   if (state === 'menu') { world = w; applyWorldLook(w); }
 }
@@ -1008,7 +1016,7 @@ if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
 applyWorldLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */

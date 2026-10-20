@@ -1,5 +1,5 @@
 /* Mondo 3: il Tribunale di Busto Arsizio.
-   Parcheggio (Fab La Rue) -> strada bloccata -> piazza con i tavolini (Well e Fabio Regaglia)
+   Parcheggio (Fab La Rue) -> strada bloccata -> piazza con i tavolini (Pierre e Fabio Regaglia)
    -> garage di Pika (gli amici in gabbia) -> ascensore -> casa di Pika.
    Tutto il mondo sta lontano dagli altri (x = +400) cosi' le mappe non si vedono mai. */
 import * as THREE from 'three';
@@ -274,7 +274,12 @@ export const liftLed = mesh(sph(0.08, 8, 6), new THREE.MeshBasicMaterial({ color
 for (const [x, z] of [[12, -40], [28, -40], [20, -52]]) { const l = new THREE.PointLight('#f2e8d0', 0.75, 22, 1.5); l.position.set(TX + x, 3.9, z); l.userData.tr = 1; scene.add(l); }
 
 export const LIBE_CAR = { x: TX - 6, z: 24 };
+/* easter egg: Paul, appoggiato al muro accanto al garage di Pika */
+export const PAUL = { x: TX + 34.2, z: -24 };
+export const paulM = buildHuman(19); paulM.position.set(PAUL.x, 0, PAUL.z); paulM.rotation.y = -Math.PI / 2 - 0.4; scene.add(paulM); S(34.2, -24, 0.7, 0.7);
+paulM.userData.P.armR.rotation.x = -0.3; paulM.userData.P.armL.rotation.z = 0.25;
 export function updateTR(t) {
+  paulM.userData.P.torso.rotation.z = Math.sin(t * 1.3) * 0.04; paulM.userData.P.head.rotation.y = Math.sin(t * 0.7) * 0.4;
   liftLed.scale.setScalar(1 + Math.sin(t * 6) * 0.15);
   for (const n of trNeons) if (n.f) { const on = Math.sin(t * 11 + n.l.position.x) + Math.sin(t * 2.7) > -0.5; n.l.intensity = on ? 0.9 : 0.08; n.tube.visible = on; }
   for (const f of trFires) { const vis = f.g.visible && f.g.parent.visible; if (f.l) f.l.visible = vis; if (!vis) continue; const k = 0.85 + Math.sin(t * 9 + f.ph) * 0.15 + Math.sin(t * 23 + f.ph) * 0.08; f.g.scale.set(1, k, 1); if (f.l) f.l.intensity = 1.1 * k; }

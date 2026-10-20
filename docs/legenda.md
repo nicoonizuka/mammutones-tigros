@@ -250,7 +250,7 @@ Si apre in Avventura dopo aver finito l'Happy Shopping (in Sandbox subito). Si p
 | Area | Com'è | Boss / evento |
 |---|---|---|
 | 1 · Parcheggio coperto | un piano solo, buio, colonne di cemento con la fascia gialla e nera, neon che sfarfallano | **Fab La Rue** dal round 5, sconfitto per sempre: la barricata di macchine in fiamme sparisce |
-| 2 · Strada e Tribunale | strada con le macchine in fiamme; il Tribunale è marroncino con la struttura in vetro e i portici con i tavolini sotto | **Well** dal round 6 con gli orchi; poi **Fabio Regaglia** dal round 10, che lascia cadere la **chiave del garage** |
+| 2 · Strada e Tribunale | strada con le macchine in fiamme; il Tribunale è marroncino con la struttura in vetro e i portici con i tavolini sotto | **Pierre** dal round 6 con gli sgherri; poi **Fabio Regaglia** dal round 10, che lascia cadere la **chiave del garage** |
 | 3 · Garage di Pika (di lato al Tribunale) | si apre con la chiave **e** pagando **7000** | appena entri arriva **Pika**: a metà vita scappa in casa. Poi riattivi la corrente dal quadro (**9000**) e liberi Leodessi, Castelluccio e Bulegato dalle gabbie |
 | 4 · Casa di Pika | con l'ascensore, solo con la corrente accesa e gli amici liberi | c'è **Loris**, che scappa dalla finestra; poi la sfida finale con **Pika** |
 
@@ -266,8 +266,8 @@ Si apre in Avventura dopo aver finito l'Happy Shopping (in Sandbox subito). Si p
 
 | Nemico | Vita | Velocità | Danno | Monete | Note |
 |---|---|---|---|---|---|
-| Orco di Well (tubo) | 220 | 2,7 | 15 | 120 | mostro inventato, pelle grigio-verde, zanne, stracci |
-| Orco di Well (palo) | 340 | 2,15 | 22 | 160 | più grosso e lento |
+| Sgherro di Pierre (tubo) | 220 | 2,7 | 15 | 120 | tipo tosto e grosso, vestiti stracciati, pelle dal rosa al marrone scuro |
+| Sgherro di Pierre (palo) | 340 | 2,15 | 22 | 160 | più grosso e lento |
 | Ratto fachiro | 120 | 4,2 | 10 | 70 | mezzo ratto e mezzo fachiro: scuro, pieno di denti, chiodi sulla schiena |
 | Mammutones Impossessato | 260 | 2,6 | 14 | 120 | persone possedute dai Mammutones: verdi, più alti, con le corna e gli occhi verdi |
 
@@ -276,8 +276,8 @@ Si apre in Avventura dopo aver finito l'Happy Shopping (in Sandbox subito). Si p
 | Boss | Vita | Danno | Speciale |
 |---|---|---|---|
 | Fab La Rue (parcheggio) | 2000 | 16 | chiama i ratti |
-| Well | 6500 | 26 | ogni 9 s chiama 2 orchi col tubo e 1 col palo |
-| Fabio Regaglia | 11000 | 42 | gigante corazzato con la lancia, lento; chiama Impossessati e orchi |
+| Pierre | 6500 | 26 | ogni 9 s chiama 2 sgherri col tubo e 1 col palo |
+| Fabio Regaglia | 11000 | 42 | gigante corazzato con la lancia, lento; chiama Impossessati e sgherri |
 | Pika (garage) | 5000 | 24 | lancia pacchetti di sigarette da lontano (16 danni, si schivano spostandosi); a metà vita scappa |
 | Pika (casa) | 9000 | 24 | come sopra, fino alla fine |
 

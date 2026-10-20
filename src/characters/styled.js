@@ -530,6 +530,13 @@ const CONFIGS = [
       mesh(rbox(0.07, 0.016, 0.012, 0.006), M('#ffffff', { roughness: 0.3 }), H, [0, -0.083, 0.114]);
     },
   }),
+  /* 19 Paul: ragazzo alto e magro, felpa nera col cappuccio, cappellino girato, pantaloni della tuta (easter egg al Tribunale) */
+  () => human({
+    h: 1.92, w: 0.95, skin: '#ecc0a0', top: '#1c1d22', pants: '#5a5e66', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'long', cuff: '#141518', hem: '#141518', hair: '#3a2618', eye: '#3a2a1c', brow: 1, mouth: '#a8564a',
+    hairFn: (H) => { const cap = M('#c0302a', { roughness: 0.8 }); mesh(new THREE.SphereGeometry(0.148, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.45), cap, H, [0, 0.02, 0], null, [1, 0.95, 1.05]); mesh(rbox(0.14, 0.02, 0.12, 0.01), cap, H, [0, 0.07, -0.17], [0.25, 0, 0]); },
+    extra: (G, T, H) => { const hood = M('#141518', { roughness: 0.95 }); mesh(new THREE.TorusGeometry(0.11, 0.045, 8, 20, Math.PI * 1.3), hood, T, [0, 0.58, -0.04], [Math.PI / 2 + 0.3, 0, Math.PI * 0.85]);
+      for (const sd of [-1, 1]) limb([sd * 0.03, 0.55, 0.12], [sd * 0.035, 0.4, 0.13], 0.005, M('#e8e8e8'), T); mesh(rbox(0.06, 0.012, 0.012, 0.005), M('#7a3a30'), H, [0, -0.085, 0.113], [0, 0, 0.12]); },
+  }),
 ];
 export function buildHuman(i) { return CONFIGS[i](); }
 
@@ -751,39 +758,41 @@ function addHits(G, bw, bh, bd, hr) {
   const head = mesh(new THREE.SphereGeometry(hr, 8, 6), invM(), G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
   body.castShadow = head.castShadow = false; G.userData.hit = { body, head }; G.userData.P.bells = G.userData.P.bells || [];
 }
-/* orchi di Well: mostri inventati, pelle grigio-verde, zanne, orecchie a punta, vestiti stracciati, armati di tubo o di palo */
+/* sgherri di Pierre: tipi tosti e grossi, vestiti stracciati, armati di tubo o di palo. Pelle di vari colori, dal rosa al marrone scuro */
+const THUG_SKIN = ['#f0c4a8', '#d8a080', '#b07a58', '#7a4e34'];
 const orcTemplates = {};
 export function buildOrc(type) {
-  if (!orcTemplates[type]) {
-    const T0 = makeOrc(type); const P = T0.userData.P;
+  const v = Math.floor(Math.random() * THUG_SKIN.length), key = type + v;
+  if (!orcTemplates[key]) {
+    const T0 = makeOrc(type, v); const P = T0.userData.P;
     for (const k of ['legL', 'legR', 'armL', 'armR', 'head', 'torso']) P[k].name = k;
-    T0.traverse(o => { o.userData = {}; }); orcTemplates[type] = T0;
+    T0.traverse(o => { o.userData = {}; }); orcTemplates[key] = T0;
   }
-  const G = orcTemplates[type].clone(true); const P = { bells: [] };
+  const G = orcTemplates[key].clone(true); const P = { bells: [] };
   G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; });
-  G.userData.P = P; G.userData.height = type === 'orcone' ? 2.15 : 2.0; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  G.userData.P = P; G.userData.height = type === 'orcone' ? 2.1 : 1.95; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
   return G;
 }
-function makeOrc(type) {
+function makeOrc(type, v) {
   const big = type === 'orcone';
-  const skin = big ? '#6a7a4a' : '#7a8a5a', rag = big ? '#3a3430' : '#2a2c34';
+  const skin = THUG_SKIN[v], rag = big ? '#3a3430' : ['#2a2c34', '#4a2a2a', '#2a3a2e', '#3a3a40'][v];
   const G = human({
-    h: big ? 2.15 : 2.0, w: big ? 1.55 : 1.35, chest: big ? 1.2 : 1.1, arm: big ? 1.45 : 1.3, skin, top: rag, pants: big ? '#2a2620' : '#3a3e48', shoe: '#2a2420', sole: '#1a1612', sleeve: 'short', hair: '#141210', eye: '#e8c020', brow: 1, browTilt: 0.35, mouth: '#3a1a14',
-    hairFn: (H, mat) => { hairCap(H, mat, 0.14, big ? 0.22 : 0.3); if (!big) clumps(H, mat, 8, 311, 0.06); },
+    h: big ? 2.1 : 1.95, w: big ? 1.55 : 1.35, chest: big ? 1.2 : 1.1, arm: big ? 1.45 : 1.3, skin, top: rag, pants: big ? '#2a2620' : '#3a3e48', shoe: '#2a2420', sole: '#1a1612', sleeve: 'short', hair: v === 0 ? '#5a3a22' : '#141210', eye: '#2a1a12', brow: 1, browTilt: 0.35, mouth: '#6a3a30',
+    hairFn: (H, mat) => { hairCap(H, mat, 0.14, big ? 0.22 : 0.3); if (!big) clumps(H, mat, 8, 311 + v, 0.06); },
     extra: (G, T, H, P, sk) => {
-      const tusk = M('#efe6cc', { roughness: 0.4 });
-      for (const sd of [-1, 1]) { mesh(new THREE.ConeGeometry(0.018, 0.07, 6), tusk, H, [sd * 0.04, -0.075, 0.115], [-0.25, 0, sd * 0.2]); mesh(new THREE.ConeGeometry(0.035, 0.12, 6), sk, H, [sd * 0.14, 0.03, -0.01], [0, 0, sd * -1.1]); }
-      mesh(sph(0.06, 10, 8), sk, H, [0, -0.04, 0.12], null, [1.3, 0.8, 0.8]);
+      /* barba di qualche giorno e una cicatrice */
+      mesh(new THREE.SphereGeometry(0.11, 16, 10, 0, Math.PI * 2, Math.PI * 0.58, Math.PI * 0.27), M('#2a1c14', { roughness: 1, transparent: true, opacity: 0.35 }), H, [0, -0.06, 0.025]);
+      mesh(rbox(0.008, 0.05, 0.004, 0.002), M('#c86a6a'), H, [0.06, 0.03, 0.128], [0, 0, 0.3]);
       const rg = M(rag, { roughness: 1 }), rg2 = M(big ? '#5a4a3a' : '#4a4e5a', { roughness: 1 }); seed = big ? 321 : 322;
       for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; mesh(rbox(0.07, 0.12 + rnd() * 0.08, 0.02, 0.01), i % 2 ? rg : rg2, T, [Math.cos(a) * 0.15, -0.02, Math.sin(a) * 0.1], [0, -a + Math.PI / 2, (rnd() - 0.5) * 0.4]); }
       mesh(rbox(0.1, 0.08, 0.02, 0.01), rg2, T, [0.06, 0.3, 0.12]); mesh(rbox(0.06, 0.1, 0.02, 0.01), rg2, T, [-0.08, 0.2, 0.12], [0, 0, 0.3]);
       const wpn = M(big ? '#6a5a3a' : '#7a8086', { roughness: 0.5, metalness: big ? 0 : 0.6 });
       const A = P.armR, hd = A.userData.hand.position;
-      const stick = mesh(new THREE.CylinderGeometry(big ? 0.05 : 0.035, big ? 0.06 : 0.035, big ? 1.5 : 1.0, 8), wpn, A, [hd.x, hd.y - 0.05, hd.z + 0.05], [Math.PI / 2 - 0.4, 0, 0]);
+      mesh(new THREE.CylinderGeometry(big ? 0.05 : 0.035, big ? 0.06 : 0.035, big ? 1.5 : 1.0, 8), wpn, A, [hd.x, hd.y - 0.05, hd.z + 0.05], [Math.PI / 2 - 0.4, 0, 0]);
       if (!big) mesh(new THREE.TorusGeometry(0.05, 0.02, 6, 10), wpn, A, [hd.x, hd.y - 0.25, hd.z + 0.5]);
     },
   });
-  G.scale.setScalar(1); addHits(G, big ? 0.9 : 0.75, big ? 2.1 : 1.95, 0.6, 0.2); G.userData.height = big ? 2.15 : 2.0;
+  G.scale.setScalar(1); addHits(G, big ? 0.9 : 0.75, big ? 2.05 : 1.9, 0.6, 0.2); G.userData.height = big ? 2.1 : 1.95;
   return G;
 }
 /* ratto fachiro: mezzo ratto e mezzo fachiro, piu' grosso e scuro, pieno di denti, chiodi sulla schiena */
@@ -805,7 +814,7 @@ export function buildFachiro() {
   G.userData.P = P; G.userData.height = 1.05; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
   return G;
 }
-/* Well: il capo degli orchi. Cappello nero con la stampa bianca, felpa grigia col cappuccio, piumino marrone */
+/* Pierre: il capo degli sgherri. Cappello nero con la stampa bianca, felpa grigia col cappuccio, piumino marrone */
 export function buildWell() {
   const G = human({
     h: 1.78, w: 1.25, chest: 1.12, arm: 1.2, skin: '#e2b08c', top: '#4a3428', pants: '#26282e', shoe: '#e8e8e8', sole: '#bdbdbd', sleeve: 'long', cuff: '#3a2a20', hem: '#3a2a20', hair: '#1a1210', brow: 1, browTilt: 0.15,

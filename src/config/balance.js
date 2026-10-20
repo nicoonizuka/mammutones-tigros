@@ -39,8 +39,8 @@ export const ENEMIES = {
   cornuto: { n: 'Mammutones Cornuto', hp: 80,  spd: 3.8, dmg: 7,  atkCd: 1.0, reward: 70,  radius: 0.45 },
   ratto:   { n: 'Ratto',              hp: 30,  spd: 4.8, dmg: 3,  atkCd: 0.8, reward: 25,  radius: 0.3 },
   furia:   { n: 'Mammutones Furia',   hp: 45,  spd: 6.0, dmg: 22, atkCd: 1.1, reward: 90,  radius: 0.4 },
-  orco:    { n: 'Orco di Well (tubo)', hp: 220, spd: 2.7, dmg: 15, atkCd: 1.1, reward: 120, radius: 0.55 },
-  orcone:  { n: 'Orco di Well (palo)', hp: 340, spd: 2.15, dmg: 22, atkCd: 1.4, reward: 160, radius: 0.6 },
+  orco:    { n: 'Sgherro di Pierre (tubo)', hp: 220, spd: 2.7, dmg: 15, atkCd: 1.1, reward: 120, radius: 0.55 },
+  orcone:  { n: 'Sgherro di Pierre (palo)', hp: 340, spd: 2.15, dmg: 22, atkCd: 1.4, reward: 160, radius: 0.6 },
   fachiro: { n: 'Ratto Fachiro',      hp: 120, spd: 4.2, dmg: 10, atkCd: 0.9, reward: 70,  radius: 0.5 },
   impossessato: { n: 'Mammutones Impossessato', hp: 260, spd: 2.6, dmg: 14, atkCd: 1.1, reward: 120, radius: 0.5 },
   grosso:  { n: 'Mammutones Grosso',  hp: 380, spd: 1.4, dmg: 14, atkCd: 1.5, reward: 160, radius: 0.62 },
@@ -60,7 +60,7 @@ export const ZONES = [
   { id: 'hs-parcheggio', n: 'Parcheggio Happy Shopping', cost: 0, hp: 1.2, dmg: 1.15, coins: 1.3, types: { base: 0.7, cornuto: 0.3 } },
   { id: 'hs-negozio', n: 'Negozio Happy Shopping', cost: 1000, hp: 1.4, dmg: 1.3, coins: 1.55, types: { base: 0.45, cornuto: 0.3, grosso: 0.15, furia: 0.1 } },
   /* mondo 3: il Tribunale */
-  { id: 'tr-parcheggio', n: 'Parcheggio del Tribunale', cost: 0, hp: 1.5, dmg: 1.35, coins: 1.7, types: { base: 0.45, cornuto: 0.3, grosso: 0.15, impossessato: 0.1 } },
+  { id: 'tr-parcheggio', n: 'Parcheggio del Tribunale', cost: 0, hp: 1.5, dmg: 1.35, coins: 1.7, types: { base: 0.3, cornuto: 0.2, grosso: 0.1, impossessato: 0.1, ratto: 0.12, fachiro: 0.18 } },
   { id: 'tr-piazza', n: 'Piazza dei tavolini', cost: 0, hp: 1.65, dmg: 1.45, coins: 1.9, types: { orco: 0.35, orcone: 0.2, base: 0.2, impossessato: 0.25 } },
   { id: 'tr-garage', n: 'Garage di Pika', cost: 0, hp: 1.8, dmg: 1.55, coins: 2.1, types: { ratto: 0.3, fachiro: 0.35, impossessato: 0.35 } },
   { id: 'tr-casa', n: 'Casa di Pika', cost: 0, hp: 1.95, dmg: 1.65, coins: 2.3, types: { impossessato: 0.5, orco: 0.25, orcone: 0.25 } },
@@ -133,6 +133,6 @@ export const TR_START_COINS = 1500;
 export const TR_FAB_WAVE = 5;
 export const TR_GARAGE_COST = 7000;  // serve anche la chiave che lascia Fabio Regaglia
 export const TR_POWER_COST = 9000;   // riattivare la corrente per l'ascensore   // Fab La Rue blocca la strada dal round 5
-export const BOSS_WELL = { n: 'Well', hp: 6500, spd: 2.5, dmg: 26, atkCd: 1.2, reward: 3500, summonEvery: 9, wave: 6 };
+export const BOSS_WELL = { n: 'Pierre', hp: 6500, spd: 2.5, dmg: 26, atkCd: 1.2, reward: 3500, summonEvery: 9, wave: 6 };
 export const BOSS_FABIO = { n: 'Fabio Regaglia', hp: 11000, spd: 1.9, dmg: 42, atkCd: 1.8, reward: 5000, summonEvery: 14, wave: 10 };
 export const BOSS_PIKA = { n: 'Pika', hp: 9000, hpGarage: 5000, spd: 2.7, dmg: 24, atkCd: 1.1, reward: 7000, summonEvery: 11, throwEvery: 2.2, throwDmg: 16 };
