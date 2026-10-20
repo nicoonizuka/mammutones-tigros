@@ -63,22 +63,24 @@ for (const [x, z] of [[-26, 9.6], [-8, 9.6], [10, 9.6], [28, 9.6], [-18, 22], [1
 }
 /* carrelli */
 const cartM = M('#aab2bb', { roughness: 0.3, metalness: 0.75 }), redM = M('#e0403a', { roughness: 0.5 });
-export function cart(parent, x, z, r, fallen) {
+export function cart(parent, x, z, r, fallen, noSolid) {
   const G = new THREE.Group();
   mesh(rbox(0.62, 0.48, 0.95, 0.04), new THREE.MeshStandardMaterial({ color: '#aab2bb', roughness: 0.3, metalness: 0.75, wireframe: true }), G, [0, 0.78, 0]);
   mesh(rbox(0.62, 0.03, 0.95, 0.01), cartM, G, [0, 0.55, 0]);
   mesh(rbox(0.64, 0.05, 0.05, 0.02), redM, G, [0, 1.08, -0.52]);
   for (const sx of [-0.25, 0.25]) for (const sz of [-0.38, 0.38]) { mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), cartM, G, [sx, 0.3, sz]); mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.04, 10), M('#222'), G, [sx, 0.05, sz], [0, 0, Math.PI / 2]); }
   G.position.set(x, 0, z); G.rotation.y = r; if (fallen) { G.rotation.z = 1.45; G.position.y = 0.32; }
-  G.traverse(m => { if (m.isMesh) m.castShadow = true; }); parent.add(G); return G;
+  G.traverse(m => { if (m.isMesh) m.castShadow = true; }); parent.add(G);
+  if (!noSolid) solid(x, z, fallen ? 1.15 : 1.0, fallen ? 1.15 : 1.0); /* non si attraversa */
+  return G;
 }
 mesh(rbox(7.2, 0.14, 2.7, 0.05), M('#7a8592', { roughness: 0.4, metalness: 0.5 }), scene, [24, 2.45, -10.5]);
 for (const x of [20.6, 27.4]) mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.4, 8), pole, scene, [x, 1.2, -11.7]);
-for (let i = 0; i < 6; i++) cart(scene, 21.5 + i * 1, -10.5, 0); solid(24, -10.5, 7, 2.4);
+for (let i = 0; i < 6; i++) cart(scene, 21.5 + i * 1, -10.5, 0, false, true); solid(24, -10.5, 7, 2.4);
 cart(scene, -15, 12, 0.7, true); cart(scene, 3, 20, 2); cart(scene, 30, 9, 1, true); cart(scene, -30, 25, 0.3);
 /* paletti davanti all'ingresso */
 const bollM = M('#a9b1ba', { roughness: 0.35, metalness: 0.6 });
-for (let x = 2.6; x < 14; x += 1.5) mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.9, 12), bollM, scene, [x, 0.5, -12.4]);
+for (let x = 2.6; x < 14; x += 1.5) { mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.9, 12), bollM, scene, [x, 0.5, -12.4]); solid(x, -12.4, 0.26, 0.26); }
 /* detriti */
 const deb = [M('#6b6560'), M('#8a837b'), M('#a87a4a'), M('#d8d0c0')]; setSeed(40);
 for (let i = 0; i < 90; i++) mesh(rbox(0.12 + rnd() * 0.4, 0.04 + rnd() * 0.1, 0.12 + rnd() * 0.4, 0.02), deb[i % 4], scene, [-38 + rnd() * 76, 0.05, -5 + rnd() * 34], [0, rnd() * 3, 0]);

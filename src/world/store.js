@@ -100,7 +100,8 @@ function shelfUnit(x, fallen) {
   for (const sz of [-L / 2, L / 2]) mesh(rbox(1.1, Hh, 0.08, 0.02), shelfD, G, [0, Hh / 2, sz]);
   G.position.set(x, 0, -29); scene.add(G);
   G.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
-  if (fallen) { G.rotation.z = -Math.PI / 2 + 0.06; G.position.y = 0.55; G.position.x = x + 1.1; solid(x + 1.15, -29, 2.4, 14, G.children[0]);
+  if (fallen) { G.rotation.z = -Math.PI / 2 + 0.06; G.position.y = 0.55; G.position.x = x + 1.1; solid(x + 2.25, -29, 2.5, 14.2, G.children[0], 1.2);
+    solid(x + 3.9, -29, 2.6, 14, null); /* prodotti rovesciati a terra */
     for (let k = 0; k < 120; k++) addProd(x + 2.6 + rnd() * 2.4, 0.11, -36 + rnd() * 14, rnd() * 3, 0.9, PROD[k % PROD.length]); return; }
   solid(x, -29, 1.15, 14.2, G.children[0]);
   const prodColor = PROD[Math.floor(rnd() * PROD.length)];

@@ -49,7 +49,9 @@ function rack(x0, z, len) {
 }
 rack(-9, -48.5, 22); rack(-9, -55, 22); rack(-9, -61.5, 22);
 /* scatoloni caduti */
-for (let k = 0; k < 40; k++) { const s = 0.4 + rnd() * 0.3; d3.position.set(-10 + rnd() * 36, s / 2, -46 - rnd() * 22); d3.rotation.set(rnd() * 0.5, rnd() * 3, rnd() * 0.5); d3.scale.set(s * 1.2, s, s); d3.updateMatrix(); boxes.setMatrixAt(bi, d3.matrix); boxes.setColorAt(bi, col.set(BOXC[k % BOXC.length])); bi++; }
+const KEEP = [[-10, -68], [20, -69], [-10, -48], [10, -60], [-9.5, -67], [13, -67], [26, -46.5], [31, -61], [37.5, -46], [-10.8, -58.2], [-6, -45.5]];
+for (let k = 0; k < 40; k++) { const s = 0.4 + rnd() * 0.3; d3.position.set(-10 + rnd() * 36, s / 2, -46 - rnd() * 22);
+  if (!KEEP.some(([kx, kz]) => Math.hypot(kx - d3.position.x, kz - d3.position.z) < 2.6)) solid(d3.position.x, d3.position.z, s * 1.25, s * 1.25); d3.rotation.set(rnd() * 0.5, rnd() * 3, rnd() * 0.5); d3.scale.set(s * 1.2, s, s); d3.updateMatrix(); boxes.setMatrixAt(bi, d3.matrix); boxes.setColorAt(bi, col.set(BOXC[k % BOXC.length])); bi++; }
 boxes.count = bi; boxes.castShadow = true; boxes.receiveShadow = true; scene.add(boxes);
 /* celle frigo */
 const coldM = M('#e6eef2', { roughness: 0.4, metalness: 0.2 }), coldD = M('#9aa8b2', { roughness: 0.4, metalness: 0.4 });

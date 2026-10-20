@@ -11,7 +11,7 @@ export const WEAPONS = {
   fucile:  { n: 'Fucile',  dmg: 60, rate: 0.6,  mag: 5, res: 35, spread: 0.004, auto: false, pel: 1, reload: 2.0, sound: 2 },
   pompa:   { n: 'Fucile a pompa', dmg: 30, rate: 0.85, mag: 6, res: 36, spread: 0.075, auto: false, pel: 8, reload: 2.6, sound: 1 },
   ak47:    { n: 'AK-47',   dmg: 40, rate: 0.095, mag: 30, res: 210, spread: 0.02, auto: true, pel: 1, reload: 2.2, sound: 0 },
-  deagle:  { n: 'Desert Eagle', dmg: 2500, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0.5, sound: 2, pierce: 1, noPack: 1 },
+  deagle:  { n: 'Desert Eagle', dmg: 1000, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0.5, sound: 2, pierce: 1, noPack: 1 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
@@ -91,7 +91,7 @@ export function pickType(zoneIdx) {
 
 /* ---------- BOSS ---------- */
 export const BOSS_FAB = { n: 'Fab La Rue', hp: 2000, spd: 2.4, dmg: 16, atkCd: 1.4, reward: 1500, summonEvery: 9, summonCount: 2, wave: 8 };
-export const BOSS_LORIS = { n: 'Loris Busato', hp: 8000, spd: 2.5, dmg: 24, atkCd: 1.3, reward: 5000, summonEvery: 11, wave: 15 };
+export const BOSS_LORIS = { n: 'Loris Busato', hp: 12000, spd: 2.6, dmg: 26, atkCd: 1.25, reward: 5000, summonEvery: 10, wave: 15 };
 export const GENERATOR_COST = 1000;
 /* inventario: pacchi di munizioni da portare con se' e zaino per alzare il massimo di munizioni */
 export const INVENTORY = { packCost: 400, packMax: 3, bags: [{ cost: 800, mult: 1.5 }, { cost: 2000, mult: 2 }] };

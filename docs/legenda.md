@@ -13,9 +13,9 @@ L'idea di fondo: il gioco è **facile all'inizio** e diventa più difficile **ma
 | Fucile a pompa | al muro del seminterrato | 30 × 8 pallini | 60 × 8 | 6 | 36 | 1 colpo ogni 0,85 s | 2,6 s |
 | Mitra | al muro dell'ortofrutta, negozio | 22 | 44 | 30 | 150 | raffica, 10 colpi al secondo | 2,0 s |
 | AK-47 | al muro del magazzino | 40 | 80 | 30 | 210 | raffica, circa 10 colpi al secondo | 2,2 s |
-| Desert Eagle | al muro della zona controllo | 2500 | 5000 | 1 | 0 | un solo colpo, poi va ripagato al muro | — |
+| Desert Eagle | al muro della zona controllo | 1000 | 2000 | 1 | 0 | un solo colpo, poi va ripagato al muro | — |
 
-La Desert Eagle ha un colpo solo che attraversa i nemici e abbatte chiunque tranne Loris; per ricaricarla torni al muro e paghi di nuovo.
+La Desert Eagle ha un colpo solo che attraversa i nemici e abbatte quasi tutti in un colpo (a Loris toglie 1000, 2000 in testa); per ricaricarla torni al muro e paghi di nuovo.
 
 ### Comprare al muro
 
@@ -114,7 +114,7 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 | Quando | dall'ondata 8, quando sei nel seminterrato |
 | Vita | 2000, +4% per ogni ondata già passata |
 | Danno | 16 ogni 1,4 s |
-| Speciale | ogni 11 secondi chiama 2 ratti |
+| Speciale | ogni 9 secondi chiama 2 ratti |
 | Ricompensa | 1500 monete |
 
 Quando lo sconfiggi i ratti scappano e puoi riaccendere la corrente dal quadro elettrico nel locale tecnico. La corrente servirà ad aprire il magazzino.
@@ -126,9 +126,9 @@ Quando lo sconfiggi i ratti scappano e puoi riaccendere la corrente dal quadro e
 | Dove | l'ufficio della zona controllo, in fondo al magazzino |
 | Come ci arrivi | apri il magazzino (3000, serve la corrente), poi accendi i 3 generatori (1000 l'uno) |
 | Quando | dall'ondata 15, con l'ufficio aperto |
-| Vita | 8000, +3% per ogni ondata già passata |
-| Danno | 24 ogni 1,3 s |
-| Speciale | ogni 11 secondi chiama 2 Mammutones Furia e 2 normali |
+| Vita | 12000, +3% per ogni ondata già passata |
+| Danno | 26 ogni 1,25 s |
+| Speciale | ogni 10 secondi chiama 2 Mammutones Furia e 2 normali |
 | Ricompensa | 5000 monete e il finale: Loris e Fab scappano e si apre la mappa del mondo |
 
 ## Inventario
