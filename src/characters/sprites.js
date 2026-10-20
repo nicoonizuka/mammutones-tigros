@@ -158,19 +158,26 @@ const CH=[
      [[-4,4],[-1,5],[2,4]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%2]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
      s.px(cx-3,t+10,"#9a7a62");s.px(cx-1,t+11,"#9a7a62");s.px(cx+1,t+11,"#9a7a62");s.px(cx+3,t+10,"#9a7a62");
      s.rect(cx-4,t+12,2,2,"#a89c84");s.rect(cx+2,t+12,2,2,"#a89c84");}})},
- {name:"Bulegato",role:"Ricci alti, occhi azzurri, maglietta bianca larga",h:"1,80 m",c:"#7ac0ff",tag:"DAL TRIBUNALE",pw:"Onda d'urto",pd:"Respinge e ferisce i nemici vicini.",ic:"aim",
-  fn:()=>human({seed:53,H:51,bw:7,aw:4,skin:"#eec3a4",top:"#f4f4f0",sleeve:6,pants:"#2a3348",shoe:"#8f8a84",sole:"#e4e0d8",nose:"#d8a888",brow:"#2a1a12",
-   extra:(s,cx,t)=>{const C=["#2a1a12","#3a2618","#1e130d"];
+ {name:"Bulegato",role:"Il re dei vampiri: mantello nero, occhi rossi",h:"1,91 m",c:"#c0303a",tag:"DAL TRIBUNALE",pw:"Pipistrelli",pd:"Evoca tre pipistrelli che mordono i nemici.",ic:"aim",
+  fn:()=>human({seed:53,H:55,bw:7,aw:4,skin:"#f0d8cc",top:"#f4f4f0",sleeve:6,pants:"#22283a",shoe:"#1c1c20",sole:"#3a3a40",nose:"#dcc0b2",brow:"#1e130d",mouth:"#7a1e28",
+   extra:(s,cx,t,T,lt,bw)=>{const C=["#1e130d","#2a1a12","#140c08"];
+     for(let y=t+12;y<lt+10;y++){s.rect(cx-bw-4,y,2,1,"#141218");s.rect(cx+bw+2,y,2,1,"#141218");s.px(cx-bw-2,y,"#8a1020");s.px(cx+bw+1,y,"#8a1020");}
+     s.rect(cx-bw-3,t+10,3,3,"#141218");s.rect(cx+bw,t+10,3,3,"#141218");s.px(cx-bw-1,t+11,"#8a1020");s.px(cx+bw,t+11,"#8a1020");
      [[-5,0],[-3,-1],[-1,-2],[1,-2],[3,-1],[5,0],[-6,2],[6,2],[-4,-2],[0,-3],[4,-2],[-2,-3],[2,-3]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.9,C[k%3]));
      [[-4,4],[-2,4],[0,4],[2,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%3]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
-     s.px(cx-3,t+6,"#3a6a9a");s.px(cx+2,t+6,"#3a6a9a");s.px(cx-3,t+10,"#a88a74");s.px(cx+2,t+10,"#a88a74");}})},
- {name:"Castelluccio",role:"Ricci castani sopra, lati rasati, giacca grigio-verde",h:"1,78 m",c:"#8ad0a0",tag:"DAL TRIBUNALE",pw:"Rallentatore",pd:"Tutti i nemici rallentano quasi fino a fermarsi.",ic:"aim",
-  fn:()=>human({seed:59,H:50,bw:7,aw:4,skin:"#ebbf9e",top:"#7d8a84",topFn:(x,y)=>x===22?"#c8ccd2":"#7d8a84",hem:"#6c7872",pants:"#2b2f38",shoe:"#f0f0f0",nose:"#d6a684",brow:"#4a3020",
-   extra:(s,cx,t)=>{const C=["#4a3020","#5c3c28"];
-     s.rect(cx-6,t+2,1,4,"#8a6a54");s.rect(cx+5,t+2,1,4,"#8a6a54");
-     [[-3,0],[-1,-1],[1,-1],[3,0],[-4,2],[4,2],[0,-2],[-2,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,1.9,1.7,C[k%2]));
-     [[-3,3],[-1,3],[1,3]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%2]));
-     s.px(cx-3,t+10,"#9a7a62");s.px(cx+2,t+10,"#9a7a62");s.rect(cx-3,t+12,6,2,"#f2f2ee");}})},
+     s.rect(cx-3,t+6,2,1,"#c0202a");s.rect(cx+1,t+6,2,1,"#c0202a");s.px(cx-1,t+10,"#ffffff");s.px(cx+1,t+10,"#ffffff");s.px(cx,t+14,"#c8a03a");}})},
+ {name:"Castelluccio",role:"Alto e magro, capelli corti mossi, maglietta bianca",h:"1,88 m",c:"#8ad0a0",tag:"DAL TRIBUNALE",pw:"Colpi esplosivi",pd:"Ogni colpo esplode e fa più danno.",ic:"aim",
+  fn:()=>human({seed:59,H:54,bw:6,skin:"#efc4a6",top:"#f2f0ea",sleeve:5,pants:"#24272e",shoe:"#f0f0f0",nose:"#d8aa8a",brow:"#3e2a1c",
+   extra:(s,cx,t)=>{const C=["#3e2a1c","#4e3624"];
+     s.rect(cx-6,t+2,1,4,"#8a6e5a");s.rect(cx+5,t+2,1,4,"#8a6e5a");s.rect(cx-5,t+1,10,1,"#6a5040");
+     [[-3,0],[-1,-1],[1,-1],[3,0],[-4,1],[4,1],[0,-1]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,1.8,1.3,C[k%2]));
+     s.rect(cx-3,t+3,6,1,C[0]);s.rect(cx-3,t+17,6,1,"#9a9ca0");}})},
+ {name:"Pika",role:"Ricci biondi, canottiera bianca, sorriso largo",h:"1,75 m",c:"#e8c060",tag:"DAL TRIBUNALE",pw:"Sigarette",pd:"Lancia pacchetti di sigarette che fanno male.",ic:"aim",
+  fn:()=>human({seed:61,H:49,bw:6,skin:"#e8b48e",top:"#f4f4f0",sleeve:0,pants:"#3a4252",shoe:"#f0f0f0",nose:"#d09a74",brow:"#6a4a26",mouth:"#ffffff",
+   extra:(s,cx,t)=>{const C=["#6a4a26","#8a6434","#4e3418","#a07a44"];
+     [[-6,1],[-4,-1],[-2,-2],[0,-2],[2,-2],[4,-1],[6,1],[-7,3],[7,3],[-7,6],[7,6],[-3,-3],[1,-3],[-5,-2],[5,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.2,2,C[k%4]));
+     [[-5,4],[-3,4],[-1,5],[1,4],[3,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy-1,2,1,C[k%4]));
+     s.rect(cx-2,t+9,5,1,"#ffffff");s.rect(cx-3,t+12,6,1,"#e8b48e");}})},
 ];
 
 export {Sprite,human,CH,OUT};

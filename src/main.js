@@ -153,8 +153,10 @@ function shoot() {
       if (e.dead || hitE.has(e)) continue; hitE.add(e);
       const head = !!h.object.userData.head; const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1) * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1);
       if (P.pwT > 0 && P.pw.k === 'lenti') e.slowT = 3.5;
-      if (!w.explode) damageEnemy(e, w.dmg * mult, head); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
+      const boom = P.pwT > 0 && P.pw.k === 'esplosivi';
+      if (!w.explode) damageEnemy(e, w.dmg * mult * (boom ? 1.5 : 1), head); if (boom) explode(h.point, 1.7, w.dmg * 1.5, true, e); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
     }
+    if (!anyHit && P.pwT > 0 && P.pw.k === 'esplosivi' && hits.length && !hits[0].object.userData.enemy) explode(end, 1.7, w.dmg * 1.5, true);
     if (w.explode) { explode(end, w.explode, w.dmg * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1)); anyHit = true; }
     tracer(muzzle(), end);
   }
@@ -172,11 +174,11 @@ function slash(w) {
 }
 /* bazooka: esplosione con danno ad area */
 const boomM = new THREE.MeshBasicMaterial({ color: '#ff9a3a', transparent: true, opacity: 0.85, depthWrite: false });
-function explode(p, R, dmg) {
+function explode(p, R, dmg, small, skip) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), boomM.clone()); m.position.copy(p); scene.add(m); let t = 0;
   const step = () => { t += 0.016; m.scale.setScalar(0.5 + t * R * 6); m.material.opacity = Math.max(0, 0.85 - t * 2.6); if (t < 0.33) requestAnimationFrame(step); else { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } }; step();
-  tone(70, 0.6, 'sawtooth', 0.12, 30); shake(0.4);
-  for (const e of enemies) { if (e.dead) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
+  if (small) tone(140, 0.12, 'square', 0.03, 60); else { tone(70, 0.6, 'sawtooth', 0.12, 30); shake(0.4); }
+  for (const e of enemies) { if (e.dead || e === skip) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
 }
 function tracer(a, b) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const l = new THREE.Line(g, tracerM); scene.add(l); tracers.push({ l, t: 0.06 }); }
 function spark(p, blood) { const m = new THREE.Mesh(sparkG, blood ? bloodM : sparkM); m.position.copy(p); scene.add(m); sparks.push({ m, t: 0.18 }); }
@@ -310,6 +312,62 @@ function updRescues(dt) {
   rescues = rescues.filter(r => !r.gone);
 }
 
+/* ===================== PIPISTRELLI DI BULEGATO ===================== */
+let bats = [];
+const batM = new THREE.MeshStandardMaterial({ color: '#1a1420', roughness: 0.6, side: THREE.DoubleSide }), batEye = new THREE.MeshBasicMaterial({ color: '#ff3040' });
+function makeBat() {
+  const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), batM); body.scale.set(0.8, 0.8, 1.2); g.add(body);
+  for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 4), batEye); e.position.set(sd * 0.04, 0.03, 0.11); g.add(e);
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.08, 4), batM); ear.position.set(sd * 0.05, 0.12, 0.02); g.add(ear); }
+  const wings = []; for (const sd of [-1, 1]) { const w = new THREE.Group(); w.position.x = sd * 0.08; const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(sd * 0.42, 0.12); sh.lineTo(sd * 0.36, -0.04); sh.lineTo(sd * 0.24, 0.02); sh.lineTo(sd * 0.16, -0.08); sh.lineTo(0, -0.04);
+    const wm = new THREE.Mesh(new THREE.ShapeGeometry(sh), batM); wm.rotation.x = -Math.PI / 2; w.add(wm); g.add(w); wings.push(w); }
+  g.userData.wings = wings; return g;
+}
+function callBats() {
+  bats.forEach(b => scene.remove(b.m)); bats = [];
+  for (let k = 0; k < 3; k++) { const m = makeBat(); m.position.copy(P.pos).add(new V3(Math.cos(k * 2.1) * 1.2, 1.8, Math.sin(k * 2.1) * 1.2)); scene.add(m); bats.push({ m, k, t: P.pw.dur, cd: k * 0.15, flap: k }); }
+  banner('I pipistrelli del re dei vampiri!', 'Bulegato evoca tre pipistrelli'); tone(1800, 0.3, 'square', 0.04, 900);
+}
+function updBats(dt) {
+  for (const b of bats) {
+    b.t -= dt; const m = b.m; b.flap += dt * 22; m.userData.wings.forEach((w, i) => (w.rotation.z = Math.sin(b.flap) * 0.9 * (i ? -1 : 1)));
+    if (b.t <= 0) { m.scale.multiplyScalar(0.9); m.position.y += dt * 3; if (m.scale.x < 0.05) { scene.remove(m); b.gone = 1; } continue; }
+    let tgt = null, bd = 22; for (const e of enemies) { if (e.dead) continue; const d = e.m.position.distanceTo(P.pos); if (d < bd) { bd = d; tgt = e; } }
+    b.cd -= dt; let goal;
+    if (tgt) { goal = tgt.m.userData.hit.head.getWorldPosition(new V3()); goal.y -= 0.1; }
+    else goal = P.pos.clone().add(new V3(Math.cos(time * 2 + b.k * 2.1) * 1.4, 1.9, Math.sin(time * 2 + b.k * 2.1) * 1.4));
+    const to = goal.clone().sub(m.position); const d = to.length();
+    if (tgt && d < 0.7 && b.cd <= 0) { b.cd = 0.35; damageEnemy(tgt, tgt.boss ? 16 : 32, false); spark(goal, true); m.position.add(to.clone().normalize().multiplyScalar(-1.2)); m.position.y += 0.4; }
+    else if (d > 0.05) { m.position.addScaledVector(to.normalize(), Math.min(d, 10 * dt)); }
+    m.lookAt(goal);
+  }
+  if (bats.length && bats.every(b => b.gone)) bats = [];
+}
+/* ===================== SIGARETTE DI PIKA ===================== */
+let cigs = [], cigT = 0;
+const packM = [new THREE.MeshStandardMaterial({ color: '#f2f2ee', roughness: 0.5 }), new THREE.MeshStandardMaterial({ color: '#c8302a', roughness: 0.5 })];
+function updCigs(dt) {
+  if (P && P.pwT > 0 && P.pw.k === 'sigarette') {
+    cigT -= dt;
+    if (cigT <= 0) { let tgt = null, bd = 24; for (const e of enemies) { if (e.dead) continue; const d = e.m.position.distanceTo(P.pos); if (d < bd) { bd = d; tgt = e; } }
+      if (tgt) { cigT = 0.42; const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.2, 0.06), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.142, 0.07, 0.062), packM[1]); top.position.y = 0.07; g.add(top);
+        g.position.copy(P.pos); g.position.y += 1.4; scene.add(g); cigs.push({ m: g, from: g.position.clone(), tgt, t: 0, T: 0.25 + bd * 0.025 }); tone(600, 0.06, 'triangle', 0.03, 300);
+        const A = pModel.userData.P.armL; A.rotation.x = -2.4; setTimeout(() => { A.rotation.x = 0; }, 150); } else cigT = 0.15; }
+  }
+  for (const c of cigs) {
+    c.t += dt; const k = Math.min(1, c.t / c.T); const to = c.tgt.m.userData.hit.body.getWorldPosition(new V3());
+    c.m.position.lerpVectors(c.from, to, k); c.m.position.y += Math.sin(k * Math.PI) * 1.2; c.m.rotation.x += dt * 14; c.m.rotation.z += dt * 9;
+    if (k >= 1) { if (!c.tgt.dead) damageEnemy(c.tgt, 80, false); explode(to, 1.4, 40, true, c.tgt); spark(to, true); scene.remove(c.m); c.gone = 1; }
+  }
+  cigs = cigs.filter(c => !c.gone);
+}
+/* ===================== LIBE IL MATTO: IL POTERE INUTILE ===================== */
+function libeMatto() {
+  banner('Libe il matto…', 'ha avuto un\'idea. Una pessima idea.'); tone(300, 0.4, 'triangle', 0.05, 900);
+  setTimeout(() => { if (state !== 'play') return; const p = P.pos.clone(); p.y += 0.6; explode(p, 2.2, 0); P.hp = 0;
+    gameOver('Libe il <span>matto</span>', 'Libe ha usato il suo potere. Era il potere più inutile del gioco: ha acceso la miccia, si è girato a guardare… e boom. Hai perso.'); }, 1500);
+}
+
 /* ===================== AMICI ALBANESI DI TEFALIN ===================== */
 let albanesi = [];
 const redBand = new THREE.MeshStandardMaterial({ color: '#d8202a', roughness: 0.6 });
@@ -402,6 +460,8 @@ function usePower() {
   else if (pw.k === 'blast') blast();
   else if (pw.k === 'albanesi') callAlbanesi();
   else if (pw.k === 'fischio') fischio();
+  else if (pw.k === 'pipistrelli') callBats();
+  else if (pw.k === 'matto') { libeMatto(); return; }
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
 }
@@ -551,7 +611,7 @@ function update(dt) {
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt); updAlbanesi(dt); updRescues(dt);
+  updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
   if (world === 2) { updateHS(time);
@@ -617,7 +677,7 @@ function startWave() { wave++; toSpawn = WAVES.count(wave); spawnT = 0.5; banner
 function resetWorld() {
   enemies.forEach(e => scene.remove(e.m)); drops.forEach(d => scene.remove(d.m)); enemies = []; drops = [];
   alive = 0; toSpawn = 0; wave = 0; kills = 0; coins = ECONOMY.start; breakT = 3;
-  if (mirko) { scene.remove(mirko.m); mirko = null; } albanesi.forEach(a => scene.remove(a.m)); albanesi = []; rescues.forEach(r => scene.remove(r.m)); rescues = [];
+  if (mirko) { scene.remove(mirko.m); mirko = null; } albanesi.forEach(a => scene.remove(a.m)); albanesi = []; rescues.forEach(r => scene.remove(r.m)); rescues = []; bats.forEach(b => scene.remove(b.m)); bats = []; cigs.forEach(c => scene.remove(c.m)); cigs = [];
   if (boss) { scene.remove(boss.m); } boss = null; fabDead = false; lorisDead = false; power = false; packs = 0; bag = 0; panelLed.material.color.set('#ff3030'); $('boss').hidden = true;
   GENERATORS.forEach(g => { g.on = false; g.led.material.color.set('#ff3030'); });
   if (world === 1) { if (zone >= 4) { scene.add(wareDoor); wareDoorSolid.off = 0; } if (zone >= 5) { scene.add(officeDoor); officeDoorSolid.off = 0; }
@@ -651,10 +711,10 @@ function startGame(i) {
 }
 function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
 function resume() { state = 'play'; $('pause').hidden = true; last = performance.now(); lock(); }
-function gameOver() {
+function gameOver(title, msg) {
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
-  $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = 'Ti hanno <span>preso</span>';
-  $('deadmsg').textContent = world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
+  $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = title || 'Ti hanno <span>preso</span>';
+  $('deadmsg').textContent = msg || world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
   $('deadstats').innerHTML = `<div>${wave}<small>Ondata raggiunta</small></div><div>${kills}<small>Mammutones abbattuti</small></div>`;
 }
 function victory() {

@@ -10,10 +10,14 @@ export const POWERS = {
   coins:  { k: 'coins',  n: 'Monete doppie',       d: 'Le monete che guadagni valgono il doppio',      dur: 12, cd: 30 },
   double: { k: 'double', n: 'Doppio colpo',        d: 'Ogni colpo ne spara due',                       dur: 8,  cd: 24 },
   blast:  { k: 'blast',  n: "Onda d'urto",         d: 'Respinge e ferisce tutti i nemici vicini',      dur: 0,  cd: 20 },
-  rage:   { k: 'rage',   n: 'Furia',               d: 'Ogni colpo fa il doppio dei danni',             dur: 8,  cd: 24 },
+  rage:   { k: 'rage',   n: 'Furia',               d: 'Ogni colpo fa il doppio dei danni',             dur: 9,  cd: 22 },
   albanesi: { k: 'albanesi', n: 'Amici albanesi',  d: 'Arrivano due amici albanesi con l\'AK-47: sparano a raffica ai Mammutones (non al boss)', dur: 8, cd: 32 },
   fischio:  { k: 'fischio',  n: 'Fischio',         d: 'Fischia con le dita: tutti i nemici vicini restano congelati per qualche secondo', dur: 0, cd: 24 },
   lenti:    { k: 'lenti',    n: 'Proiettili lenti', d: 'Per qualche secondo ogni nemico che colpisci rallenta tantissimo', dur: 9, cd: 22 },
+  matto:       { k: 'matto',       n: 'Da matto',        d: 'Il potere più inutile del gioco: Libe fa una cavolata da matto e perdi la partita', dur: 0, cd: 5 },
+  pipistrelli: { k: 'pipistrelli', n: 'Pipistrelli',     d: 'Il re dei vampiri evoca tre pipistrelli che mordono i nemici più vicini', dur: 11, cd: 26 },
+  esplosivi:   { k: 'esplosivi',   n: 'Colpi esplosivi', d: 'Ogni colpo fa una piccola esplosione e fa ×1,5 di danno, con qualsiasi arma', dur: 9, cd: 24 },
+  sigarette:   { k: 'sigarette',   n: 'Sigarette',       d: 'Mentre spara, Pika lancia pacchetti di sigarette di contrabbando che fanno molto male', dur: 9, cd: 24 },
   freeze: { k: 'freeze', n: 'Rallentatore',        d: 'Tutti i nemici rallentano quasi fino a fermarsi',     dur: 7,  cd: 26 },
 };
 export const ROSTER = [
@@ -31,8 +35,10 @@ export const ROSTER = [
   { name: 'Debe',              short: 'Debe',   c: '#7ad0ff', sprite: 10, model: 10, power: 'lenti', unlock: 'hs', world: 2 },
   /* arrivano dal mondo 3, il Tribunale: si liberano nel garage di Pika (poteri provvisori) */
   { name: 'Leodessi',        short: 'Leodessi', c: '#9aa0ff', sprite: 12, model: 14, power: 'rage', world: 3 },
-  { name: 'Bulegato',        short: 'Bulegato', c: '#7ac0ff', sprite: 14, model: 16, power: 'blast', world: 3 },
-  { name: 'Castelluccio',    short: 'Castelluccio', c: '#8ad0a0', sprite: 15, model: 17, power: 'freeze', world: 3 },
+  { name: 'Libe il matto',   short: 'Libe', c: '#d8c08a', sprite: 13, model: 15, power: 'matto', world: 3 },
+  { name: 'Bulegato',        short: 'Bulegato', c: '#c0303a', sprite: 14, model: 16, power: 'pipistrelli', world: 3 },
+  { name: 'Castelluccio',    short: 'Castelluccio', c: '#8ad0a0', sprite: 15, model: 17, power: 'esplosivi', world: 3 },
+  { name: 'Pika',            short: 'Pika', c: '#e8c060', sprite: 16, model: 18, power: 'sigarette', world: 3 },
 ];
 export const DAMIANO_MODEL = 12;
 export const LIBE_MODEL = 15;

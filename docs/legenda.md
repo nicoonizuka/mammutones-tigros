@@ -270,11 +270,16 @@ Appunti della storia, da sviluppare quando arrivano le foto (Libe il matto, Well
 - Loris compare solo nella scena della casa di Pika e scappa subito: non si combatte.
 - I Mammutones "speciali" del garage e della casa sono da definire.
 
-### Personaggi del Tribunale (modelli pronti)
+### Personaggi del Tribunale
 
-| Personaggio | Aspetto | Potere (provvisorio) | Come si sblocca |
+In Avventura si sbloccano al Tribunale (prossimamente); in **Sandbox** sono già giocabili. I poteri sono più forti di quelli dei mondi prima.
+
+| Personaggio | Altezza | Aspetto | Potere |
 |---|---|---|---|
-| Leodessi | ricci scuri morbidi con la frangia, felpa grigia con la zip | Furia (danno doppio) | liberato nel garage di Pika · in Sandbox già giocabile |
-| Bulegato | ricci alti, occhi azzurri, maglietta bianca larga, jeans scuri | Onda d'urto | liberato nel garage di Pika · in Sandbox già giocabile |
-| Castelluccio | ricci castani sopra e lati rasati, giacca grigio-verde | Rallentatore | liberato nel garage di Pika · in Sandbox già giocabile |
-| Libe il matto | capelli spettinati, camicia beige aperta sulla maglietta bianca | — | alleato: guida la macchina verso il Tribunale con Damiano |
+| Leodessi | 1,78 m | ricci scuri morbidi con la frangia, felpa grigia con la zip | **Furia**: ogni colpo fa il doppio dei danni (9 s, ricarica 22 s) |
+| Libe il matto | 1,74 m | capelli spettinati, camicia beige aperta sulla maglietta bianca | **Da matto**: il potere più inutile del gioco. Libe fa una cavolata, tutto esplode e perdi la partita (anche da invincibile) |
+| Bulegato | 1,91 m | il re dei vampiri: pelle pallida, occhi rossi, canini, mantello nero e rosso, ricci scuri | **Pipistrelli**: tre pipistrelli per 11 s mordono il nemico più vicino (32 danni a morso, 16 sui boss) |
+| Castelluccio | 1,88 m | alto e magro, capelli corti mossi con i lati sfumati, maglietta bianca aderente | **Colpi esplosivi**: per 9 s ogni colpo, con qualsiasi arma, fa ×1,5 di danno e una piccola esplosione (raggio 1,7 m, ×1,5) |
+| Pika | 1,75 m | ricci biondo scuro voluminosi, canottiera bianca, sorriso largo | **Sigarette**: per 9 s, mentre spari, lanci pacchetti di sigarette di contrabbando al nemico più vicino (80 danni + piccola esplosione). Da boss li lancerà contro di te |
+
+Il bazooka ora fa **260** danni al centro (prima 600), con lo stesso raggio di 4,5 m.
