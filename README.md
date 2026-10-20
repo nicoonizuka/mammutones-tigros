@@ -83,9 +83,9 @@ src/
 | Ponta | Chiama Mirko, che combatte al suo fianco |
 | Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due (si sblocca battendo Fab La Rue) |
 | Corti | Monete doppie per qualche secondo |
-| Tefalin | Onda d'urto: respinge e ferisce i nemici vicini |
-| Diego Margarito | Furia: ogni colpo fa il doppio dei danni |
-| Debe | Occhiolino: i nemici rallentano quasi fino a fermarsi (si sblocca battendo il Capo dell'Happy Shopping) |
+| Tefalin | Amici albanesi: due amici con l'AK-47 smitragliano i Mammutones (non il boss) |
+| Diego Margarito | Fischio: congela tutti i nemici vicini per qualche secondo |
+| Debe | Proiettili lenti: i nemici colpiti rallentano tantissimo (si sblocca battendo il Capo dell'Happy Shopping) |
 
 ## Percorso previsto
 

@@ -214,3 +214,13 @@ Tefalin, Diego e Debe vengono dall'Happy Shopping. In Avventura si usano solo do
 ### Storie
 
 All'inizio dell'Happy Shopping in Avventura c'è la sua intro. Il finale dice che hai sconfitto il Capo e liberato Debe, e mostra la lettera: gli altri amici sono tenuti in segreto nel garage di Pika, al Tribunale. Dalla mappa del mondo si rivedono intro e finale del Tigros e dell'Happy Shopping.
+
+### Poteri dei personaggi del mondo 2
+
+| Personaggio | Potere | Durata / ricarica |
+|---|---|---|
+| Tefalin | Amici albanesi: arrivano due amici con l'AK-47 che sparano a raffica (26 danni a colpo, 9 colpi al secondo ciascuno). Non attaccano il boss | 8 s · 32 s |
+| Diego Margarito | Fischio: tutti i nemici entro 20 m restano congelati 4,5 s (il boss 1,5 s) | subito · 24 s |
+| Debe | Proiettili lenti: per 9 s ogni nemico che colpisci va a un terzo della velocità per 3,5 s | 9 s · 22 s |
+
+Onda d'urto e Furia restano nel gioco, pronti per i personaggi dei prossimi mondi.

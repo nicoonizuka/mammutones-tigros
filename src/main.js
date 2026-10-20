@@ -1,7 +1,7 @@
 /* Mammutones al Tigros - avvio, giocatore, nemici, armi, HUD e loop */
 import * as THREE from 'three';
 import './style.css';
-import { ROSTER, POWERS, MIRKO_MODEL } from './characters/roster.js';
+import { ROSTER, POWERS, MIRKO_MODEL, DAMIANO_MODEL } from './characters/roster.js';
 import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
@@ -138,6 +138,7 @@ function shoot() {
       const e = h.object.userData.enemy; if (!e) { end = h.point; spark(h.point, false); break; }
       if (e.dead || hitE.has(e)) continue; hitE.add(e);
       const head = !!h.object.userData.head; const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1) * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1);
+      if (P.pwT > 0 && P.pw.k === 'lenti') e.slowT = 3.5;
       if (!w.explode) damageEnemy(e, w.dmg * mult, head); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
     }
     if (w.explode) { explode(end, w.explode, w.dmg * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1)); anyHit = true; }
@@ -265,6 +266,44 @@ function useInter() {
   coins -= c; nearI.act(); buy();
 }
 
+/* ===================== AMICI ALBANESI DI TEFALIN ===================== */
+let albanesi = [];
+const redBand = new THREE.MeshStandardMaterial({ color: '#d8202a', roughness: 0.6 });
+function callAlbanesi() {
+  albanesi.forEach(a => scene.remove(a.m)); albanesi = [];
+  for (const s of [-1, 1]) {
+    const m = buildHuman(DAMIANO_MODEL); m.position.copy(P.pos).add(new V3(1.6 * s, 0, 1.4)); scene.add(m);
+    const hb = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 20), redBand); hb.rotation.x = Math.PI / 2; hb.position.y = 1.78; m.add(hb);
+    const A = m.userData.P.armR; const g = buildWeapon('ak47'); g.position.copy(A.userData.hand.position); g.rotation.x = Math.PI / 2; A.add(g);
+    albanesi.push({ m, s, t: P.pw.dur, fire: Math.random() * 0.1, walk: 0 });
+  }
+  banner('Arrivano gli albanesi!', 'Due amici di Tefalin con l\'AK-47: smitragliano tutto per qualche secondo');
+}
+function updAlbanesi(dt) {
+  for (const a of albanesi) {
+    if (a.gone) continue; a.t -= dt; const m = a.m; if (a.t <= 0) { scene.remove(m); a.gone = 1; continue; }
+    let target = null, bd = 24; for (const e of enemies) { if (e.dead || e.boss) continue; const d = e.m.position.distanceTo(m.position); if (d < bd) { bd = d; target = e; } }
+    const want = P.pos.clone().add(new V3(Math.sin(time * 0.6 + a.s * 1.6) * 2.6, 0, Math.cos(time * 0.6 + a.s * 1.6) * 2.6)); const mv = want.sub(m.position); mv.y = 0; const dist = mv.length();
+    if (dist > 1) { mv.normalize().multiplyScalar(Math.min(dist, 6.5 * dt)); m.position.add(mv); a.walk += dt * 9; animLimbs(m, a.walk, 0.6); }
+    collide(m.position, 0.4, 1);
+    if (target) {
+      const d = target.m.position.clone().sub(m.position); m.rotation.y = Math.atan2(d.x, d.z); m.userData.P.armR.rotation.x = -1.5;
+      a.fire -= dt;
+      if (a.fire <= 0) { a.fire = 0.11; const s = m.position.clone(); s.y = 1.35; const b = target.m.userData.hit.body.getWorldPosition(new V3()); tracer(s, b); spark(b, true); damageEnemy(target, 26, false); shotSound(0, 0.25); }
+    }
+  }
+  if (albanesi.length && albanesi.every(a => a.gone)) { albanesi = []; feed('Gli albanesi se ne vanno'); }
+}
+/* fischio di Diego: congela tutti i nemici vicini (il boss solo per poco) */
+const iceM = new THREE.MeshBasicMaterial({ color: '#9ae4ff', transparent: true, opacity: 0.35, depthWrite: false });
+function fischio() {
+  tone(2400, 0.5, 'sine', 0.09, 2900); setTimeout(() => tone(2900, 0.35, 'sine', 0.07, 2200), 120);
+  let n = 0; for (const e of enemies) { if (e.dead) continue; if (e.m.position.distanceTo(P.pos) > 20) continue;
+    e.frozen = e.boss ? 1.5 : 4.5; n++;
+    if (!e.ice) { e.ice = new THREE.Mesh(new THREE.SphereGeometry(0.75, 12, 10), iceM); e.ice.position.y = 1; e.ice.scale.set(1, 1.5, 1); e.m.add(e.ice); } }
+  banner('Fischio di Diego!', n ? n + ' nemici congelati' : 'Nessuno a portata di fischio');
+}
+
 /* ===================== MIRKO ===================== */
 function callMirko() {
   if (mirko) scene.remove(mirko.m);
@@ -316,6 +355,8 @@ function usePower() {
   if (pw.k === 'heal') { P.hp = Math.min(100, P.hp + 60); feed('Dado si cura'); pickS(); }
   else if (pw.k === 'call') callMirko();
   else if (pw.k === 'blast') blast();
+  else if (pw.k === 'albanesi') callAlbanesi();
+  else if (pw.k === 'fischio') fischio();
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
 }
@@ -423,9 +464,12 @@ function update(dt) {
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
   else if (w.ammo === 0 && w.res > 0 && !(P.pwT > 0 && P.pw.k === 'ammo')) startReload();
   /* nemici */
-  const slow = P.pwT > 0 && P.pw.k === 'freeze' ? 0.15 : 1;
+  const slow0 = P.pwT > 0 && P.pw.k === 'freeze' ? 0.15 : 1;
   for (const e of enemies) {
     const m = e.m, EP = m.userData.P;
+    if (e.frozen > 0) e.frozen -= dt; if (e.slowT > 0) e.slowT -= dt;
+    const slow = slow0 * (e.frozen > 0 ? 0 : 1) * (e.slowT > 0 ? 0.35 : 1);
+    if (e.ice) e.ice.visible = e.frozen > 0;
     if (!e.dead && e.capo && updCapo(e, dt * slow)) continue;
     if (e.dead) { e.deadT += dt; m.rotation.x = Math.min(1.5, e.deadT * 4); m.position.y = -Math.max(0, e.deadT - 1.2) * 0.8; if (e.deadT > 2.6) { scene.remove(m); e.gone = 1; } continue; }
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
@@ -457,7 +501,7 @@ function update(dt) {
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt);
+  updMirko(dt); updAlbanesi(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
   if (world === 2) { updateHS(time);
@@ -523,7 +567,7 @@ function startWave() { wave++; toSpawn = WAVES.count(wave); spawnT = 0.5; banner
 function resetWorld() {
   enemies.forEach(e => scene.remove(e.m)); drops.forEach(d => scene.remove(d.m)); enemies = []; drops = [];
   alive = 0; toSpawn = 0; wave = 0; kills = 0; coins = ECONOMY.start; breakT = 3;
-  if (mirko) { scene.remove(mirko.m); mirko = null; }
+  if (mirko) { scene.remove(mirko.m); mirko = null; } albanesi.forEach(a => scene.remove(a.m)); albanesi = [];
   if (boss) { scene.remove(boss.m); } boss = null; fabDead = false; lorisDead = false; power = false; packs = 0; bag = 0; panelLed.material.color.set('#ff3030'); $('boss').hidden = true;
   GENERATORS.forEach(g => { g.on = false; g.led.material.color.set('#ff3030'); });
   if (world === 1) { if (zone >= 4) { scene.add(wareDoor); wareDoorSolid.off = 0; } if (zone >= 5) { scene.add(officeDoor); officeDoorSolid.off = 0; }

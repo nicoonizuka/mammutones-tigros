@@ -11,6 +11,9 @@ export const POWERS = {
   double: { k: 'double', n: 'Doppio colpo',        d: 'Ogni colpo ne spara due',                       dur: 8,  cd: 24 },
   blast:  { k: 'blast',  n: "Onda d'urto",         d: 'Respinge e ferisce tutti i nemici vicini',      dur: 0,  cd: 20 },
   rage:   { k: 'rage',   n: 'Furia',               d: 'Ogni colpo fa il doppio dei danni',             dur: 8,  cd: 24 },
+  albanesi: { k: 'albanesi', n: 'Amici albanesi',  d: 'Arrivano due amici albanesi con l\'AK-47: sparano a raffica ai Mammutones (non al boss)', dur: 8, cd: 32 },
+  fischio:  { k: 'fischio',  n: 'Fischio',         d: 'Fischia con le dita: tutti i nemici vicini restano congelati per qualche secondo', dur: 0, cd: 24 },
+  lenti:    { k: 'lenti',    n: 'Proiettili lenti', d: 'Per qualche secondo ogni nemico che colpisci rallenta tantissimo', dur: 9, cd: 22 },
   freeze: { k: 'freeze', n: 'Occhiolino',          d: 'I nemici rallentano quasi fino a fermarsi',     dur: 7,  cd: 26 },
 };
 export const ROSTER = [
@@ -23,9 +26,9 @@ export const ROSTER = [
   { name: 'Jacopo Castiglioni',short: 'Jacopo', c: '#c07ae8', sprite: 7, model: 7, power: 'double', unlock: 'fab' },
   { name: 'Corti',             short: 'Corti',  c: '#e8c35a', sprite: 8, model: 8, power: 'coins' },
   /* arrivano dal mondo 2, l'Happy Shopping */
-  { name: 'Tefalin',           short: 'Tefalin', c: '#ff6a7a', sprite: 9,  model: 9,  power: 'blast', world: 2 },
-  { name: 'Diego Margarito',   short: 'Diego',  c: '#f2a63b', sprite: 11, model: 11, power: 'rage', world: 2 },
-  { name: 'Debe',              short: 'Debe',   c: '#7ad0ff', sprite: 10, model: 10, power: 'freeze', unlock: 'hs', world: 2 },
+  { name: 'Tefalin',           short: 'Tefalin', c: '#ff6a7a', sprite: 9,  model: 9,  power: 'albanesi', world: 2 },
+  { name: 'Diego Margarito',   short: 'Diego',  c: '#f2a63b', sprite: 11, model: 11, power: 'fischio', world: 2 },
+  { name: 'Debe',              short: 'Debe',   c: '#7ad0ff', sprite: 10, model: 10, power: 'lenti', unlock: 'hs', world: 2 },
 ];
 export const DAMIANO_MODEL = 12;
 export const MIRKO_MODEL = 6;
