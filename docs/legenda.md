@@ -245,11 +245,18 @@ Dal menu, **Mappa del mondo** apre la mappa di Busto. Scegli un luogo (pulsanti 
 
 ## Prossimo mondo: il Tribunale (da fare)
 
-Appunti della storia, da sviluppare quando arrivano le foto:
+Appunti della storia, da sviluppare quando arrivano le foto (Libe il matto, Well, gli orchi, Fabio Regaglia, Pika, Leodessi, Castelluccio, Bulegato).
 
-- Dopo l'Happy Shopping il gruppo, al completo, sale in macchina con **Damiano** e **Libe il matto**. Durante il viaggio Libe racconta cosa è successo (schermate con testo e immagini mentre si arriva).
-- **Pika**, il governatore del Tribunale che vendeva sigarette di contrabbando, è stato corrotto dai Mammutones e dall'esercito di **Well** (mostri inventati). Pika è sotto un maleficio: è costretto a obbedire.
-- Nel **garage di Pika** sono imprigionati **Leodessi**, **Castelluccio** e **Bulegato**.
-- **Fabio Regaglia**, alto 2,50 m, è stato corrotto: nemico gigante di metà livello.
-- Percorso: parcheggio di fianco al Tribunale (si sconfigge **Fab La Rue** una volta per tutte, con alcuni soldati di Well, perché blocca la strada) → piazza centrale con i tavolini → interno del Tribunale: i garage con gli amici e la stanza centrale con **Pika** come boss finale.
-- Ci sono Mammutones ma **non Loris**. Nemici e armi nuove da definire.
+**Viaggio**: dopo l'Happy Shopping il gruppo, al completo, sale in macchina con **Damiano** e **Libe il matto**. Durante il viaggio Libe racconta cosa è successo (schermate con testo e immagini mentre si arriva). **Pika**, il governatore del Tribunale che vendeva sigarette di contrabbando, è stato corrotto dai Mammutones e da **Well** con i suoi **orchi** (mostri inventati). Pika è sotto un maleficio e obbedisce per forza. Ha imprigionato **Leodessi**, **Castelluccio** e **Bulegato** nel suo garage. Anche **Fabio Regaglia** (2,50 m) è stato corrotto.
+
+**Percorso, in ordine**
+
+| Area | Nemici | Boss / evento |
+|---|---|---|
+| 1 · Parcheggio di fianco al Tribunale | Mammutones, Fab La Rue con i ratti | **Fab La Rue** al round 5, sconfitto una volta per tutte: libera la strada bloccata |
+| 2 · Piazza con i tavolini del Tribunale | **orchi di Well** (un solo tipo), Mammutones | **Well** attacca con gli orchi dal round 6; **Fabio Regaglia**, gigante, al round 10 |
+| 3 · Garage di Pika | — | si aprono dopo aver battuto Fabio Regaglia: liberi Leodessi, Castelluccio e Bulegato |
+| 4 · Casa di Pika (ci si arriva con l'ascensore) | da definire | **Pika** come boss finale: sconfiggerlo lo libera dal maleficio |
+
+- Ci sono Mammutones ma **non Loris**.
+- Nemici nuovi e armi nuove da definire.
