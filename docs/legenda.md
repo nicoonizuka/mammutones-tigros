@@ -247,12 +247,20 @@ Dal menu, **Mappa del mondo** apre la mappa di Busto. Scegli un luogo (pulsanti 
 
 Si apre in Avventura dopo aver finito l'Happy Shopping (in Sandbox subito). Si parte con l'intro: il viaggio in macchina con **Libe il matto** e **Damiano**, e il racconto di Libe. Monete iniziali: 1500.
 
-| Area | Nemici | Boss / evento |
+| Area | Com'è | Boss / evento |
 |---|---|---|
-| 1 · Parcheggio | Mammutones, Cornuti, Grossi, qualche Impossessato | **Fab La Rue** dal round 5, sconfitto per sempre: la barricata sparisce e la strada si apre |
-| 2 · Piazza dei tavolini | **orchi di Well** (col tubo e col palo), Mammutones, Impossessati | **Well** dal round 6 (chiama gli orchi); poi **Fabio Regaglia** dal round 10. Battuto Fabio, la saracinesca del garage si apre |
-| 3 · Garage di Pika | ratti, **ratti fachiri**, Impossessati | con **E** liberi Leodessi, Castelluccio e Bulegato dalle gabbie; poi arriva **Pika**, che a metà vita scappa con l'ascensore |
-| 4 · Casa di Pika (ascensore in fondo al garage) | Impossessati, orchi | c'è **Loris Busato**: ha fatto lui il maleficio, e scappa dalla finestra. Poi **Pika** combatte: sconfitto, è libero e si sbloccano tutti i personaggi del Tribunale |
+| 1 · Parcheggio coperto | un piano solo, buio, colonne di cemento con la fascia gialla e nera, neon che sfarfallano | **Fab La Rue** dal round 5, sconfitto per sempre: la barricata di macchine in fiamme sparisce |
+| 2 · Strada e Tribunale | strada con le macchine in fiamme; il Tribunale è marroncino con la struttura in vetro e i portici con i tavolini sotto | **Well** dal round 6 con gli orchi; poi **Fabio Regaglia** dal round 10, che lascia cadere la **chiave del garage** |
+| 3 · Garage di Pika (di lato al Tribunale) | si apre con la chiave **e** pagando **7000** | appena entri arriva **Pika**: a metà vita scappa in casa. Poi riattivi la corrente dal quadro (**9000**) e liberi Leodessi, Castelluccio e Bulegato dalle gabbie |
+| 4 · Casa di Pika | con l'ascensore, solo con la corrente accesa e gli amici liberi | c'è **Loris**, che scappa dalla finestra; poi la sfida finale con **Pika** |
+
+### Armi del Tribunale
+
+| Arma | Dove | Costo (ricarica) | Danno | Caricatore / riserva |
+|---|---|---|---|---|
+| Fucile a pompa automatico | parcheggio, muro est | 6000 (3000) | 7 pallini da 22, raffica | 12 / 120 |
+| Mitragliatore | sotto i portici, vetrata del Tribunale | 12000 (6000) | 38, 14 colpi al secondo | **80** / 560: l'arma più forte del gioco |
+| Pistola, AK-47, bazooka | parcheggio, piazza, garage | come prima | | |
 
 ### Nemici nuovi
 
@@ -272,10 +280,6 @@ Si apre in Avventura dopo aver finito l'Happy Shopping (in Sandbox subito). Si p
 | Fabio Regaglia | 11000 | 42 | gigante corazzato con la lancia, lento; chiama Impossessati e orchi |
 | Pika (garage) | 5000 | 24 | lancia pacchetti di sigarette da lontano (16 danni, si schivano spostandosi); a metà vita scappa |
 | Pika (casa) | 9000 | 24 | come sopra, fino alla fine |
-
-### Armi al muro del Tribunale
-
-Pistola (parcheggio), fucile a pompa (parcheggio), AK-47 (piazza), bazooka (garage). Le armi nuove arriveranno nel prossimo passo.
 
 ### Personaggi del Tribunale
 

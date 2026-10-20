@@ -6,14 +6,15 @@ import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss } from './characters/styled.js';
-import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR } from './world/tribunale.js';
+import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed } from './world/tribunale.js';
+import { hemi } from './render/engine.js';
 import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
 import { gzBar, gzSolids } from './world/parking.js';
 import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
-import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, BOSS_WELL, BOSS_FABIO, BOSS_PIKA } from './config/balance.js';
+import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, TR_GARAGE_COST, TR_POWER_COST, BOSS_WELL, BOSS_FABIO, BOSS_PIKA } from './config/balance.js';
 import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoorSolid, OFFICE_DOOR, LORIS_SPOT, updateWare } from './world/warehouse.js';
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
@@ -29,7 +30,7 @@ let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead =
 /* world 1 = Tigros, world 2 = Happy Shopping */
 let world = 1, pickWorld = 1, capoDead = false, rings = [];
 /* mondo 3 = Tribunale */
-let wellDead = false, fabioDead = false, pikaFled = false, pikaDead = false, lorisScene = false, casaT = 0, hostile = [];
+let wellDead = false, fabioDead = false, pikaFled = false, pikaDead = false, lorisScene = false, casaT = 0, hostile = [], hasKey = false, trPower = false, trKey = null;
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
 const region = p => (world === 3 ? trRegion(p) : world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
@@ -278,7 +279,9 @@ const INTER = [
   /* mondo 2 */
   { x: HS_DOOR.x, z: 1.7, r: 3, label: () => world !== 2 || zone >= 1 ? null : `<b>E</b> Apri l'Happy Shopping · <b>${ZONES[HS_ZONE0 + 1].cost}</b>`, cost: () => (zone < 1 ? ZONES[HS_ZONE0 + 1].cost : 0), act: () => openHS() },
   ...CAGES.map(c => ({ x: c.x, z: c.z + 1.9, r: 2.3, label: () => world === 3 && !c.freed && (zone >= 2 || mode === 'sandbox') ? `<b>E</b> Libera ${c.name}` : null, cost: () => 0, free: () => true, act: () => freeCage(c) })),
-  { x: LIFT.x, z: LIFT.z + 1.8, r: 2.4, label: () => world === 3 && inGarage(P.pos) ? (zone >= 3 || mode === 'sandbox' ? '<b>E</b> Sali a casa di Pika' : 'L\'ascensore è bloccato') : null, cost: () => 0, free: () => zone >= 3 || mode === 'sandbox', act: goCasa },
+  { x: LIFT.x, z: LIFT.z + 1.8, r: 2.4, label: () => world === 3 && inGarage(P.pos) ? (mode === 'sandbox' || (trPower && CAGES.every(c => c.freed)) ? '<b>E</b> Sali a casa di Pika' : !trPower ? 'Ascensore senza corrente: riattivala dal quadro elettrico' : 'Prima libera Leodessi, Castelluccio e Bulegato') : null, cost: () => 0, free: () => mode === 'sandbox' || (trPower && CAGES.every(c => c.freed)), act: goCasa },
+  { x: TR_PANEL.x + 1.2, z: TR_PANEL.z, r: 2.4, label: () => world === 3 && inGarage(P.pos) && !trPower ? (pikaFled || (boss && boss.flee) ? `<b>E</b> Riattiva la corrente · <b>${TR_POWER_COST}</b>` : 'Il quadro è bloccato: prima affronta Pika') : null, cost: () => (pikaFled || (boss && boss.flee) ? TR_POWER_COST : 0), act: () => { trPower = true; trPanelLed.material.color.set('#3aff6a'); openLift(); if (zone < 3) zone = 3; banner('Corrente riattivata!', CAGES.every(c => c.freed) ? 'L\'ascensore per la casa di Pika funziona' : 'Libera gli amici e poi prendi l\'ascensore'); } },
+  { x: TR_GDOOR.x, z: TR_GDOOR.z + 1.8, r: 3, label: () => world === 3 && zone < 2 && P.pos.z > TR_GDOOR.z ? (hasKey ? `<b>E</b> Apri il garage di Pika · <b>${TR_GARAGE_COST}</b>` : 'Il garage è chiuso a chiave: la chiave ce l\'ha Fabio Regaglia') : null, cost: () => (hasKey ? TR_GARAGE_COST : 0), act: () => { zone = 2; openGarage(); banner('Garage di Pika', 'Gli amici sono nelle gabbie in fondo… e Pika ti aspetta'); } },
   { x: TX + 97.5, z: -1.4, r: 2.4, label: () => world === 3 && inCasa(P.pos) ? '<b>E</b> Torna giù nel garage' : null, cost: () => 0, free: () => true, act: goGarage },
   { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => banner('Damiano Ducaj', '«Bel casino qua a Busto, stasera cosa facciamo?»') },
 ];
@@ -336,27 +339,34 @@ function G3add(o) { if (!o.parent) { o.visible = true; } o.visible = true; }
 function openGate() { trGate.visible = false; trGateSolid.off = 1; }
 function openGarage() { trGDoor.visible = false; trGDoorSolid.off = 1; }
 function openLift() { liftLed.material.color.set('#3aff6a'); }
-function openTR() { openGate(); openGarage(); openLift(); zone = 3; }
+function openTR() { openGate(); openGarage(); openLift(); hasKey = true; trPower = true; trPanelLed.material.color.set('#3aff6a'); zone = 3; }
 /* chi sta nella zona sbagliata sparisce quando prendi l'ascensore (come nel seminterrato) */
 function despawnTR(toCasa) { for (const e of enemies) { if (e.dead || e.boss) continue; if (inCasa(e.m.position) !== toCasa) { scene.remove(e.m); e.gone = 1; alive--; toSpawn++; } } enemies = enemies.filter(e => !e.gone); }
 function endFlee(msg) {
   if (!boss || !boss.flee) return; scene.remove(boss.m); boss.gone = 1; boss.dead = 1; alive--; enemies = enemies.filter(e => e !== boss); boss = null; $('boss').hidden = true;
-  pikaFled = true; if (zone < 3) zone = 3; openLift(); if (msg) banner('Pika è salito in casa', 'Prendi l\'ascensore in fondo al garage');
+  pikaFled = true; if (msg) banner('Pika è scappato in casa', 'Riattiva la corrente dal quadro e libera gli amici, poi prendi l\'ascensore');
 }
 function goCasa() { if (boss) boss.flee = 1; endFlee(false); despawnTR(true); P.pos.set(CASA_START.x, 0, CASA_START.z); yaw = CASA_START.yaw; banner('Casa di Pika', 'Qualcuno ti aspetta…'); }
 function goGarage() { despawnTR(false); P.pos.set(LIFT.x, 0, LIFT.z + 2.4); yaw = 0; }
 const CAGE_LINES = { Leodessi: 'Raga, finalmente! Pika ci teneva chiusi qui da giorni.', Castelluccio: 'Grazie! Pika non è cattivo, è il maleficio. Dobbiamo salvarlo.', Bulegato: 'Il re dei vampiri vi ringrazia. Andiamo a prendere Pika.' };
+function dropKey(at) {
+  const g = new THREE.Group(); const gold = new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.25, metalness: 0.9, emissive: '#6a4a00', emissiveIntensity: 0.6 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.045, 8, 16), gold); g.add(ring); const st = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.42, 0.04), gold); st.position.y = -0.34; g.add(st);
+  for (const y of [-0.46, -0.36]) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 0.04), gold); t.position.set(0.06, y, 0); g.add(t); }
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), new THREE.MeshBasicMaterial({ color: '#ffd25e', transparent: true, opacity: 0.18, depthWrite: false })); g.add(halo);
+  const p = at ? at.clone() : P.pos.clone(); g.position.set(p.x, 0.8, p.z); scene.add(g); trKey = g;
+}
 function freeCage(c) {
   c.freed = true; c.bars.visible = false; c.solid.off = 1; c.who.visible = false;
   rescue(c.model, c.name, CAGE_LINES[c.name], new V3(c.x, 0, c.z));
   if (CAGES.every(k => k.freed)) setTimeout(() => { if (state === 'play' && world === 3) banner('Tutti liberi!', 'Ma qualcuno sta scendendo dalle scale…'); }, 5200);
 }
-function pikaFlee(e) { e.flee = 1; e.fleeT = 5; banner('Pika scappa!', 'Sale in casa con l\'ascensore: seguilo'); tone(200, 0.5, 'triangle', 0.06, 600); }
+function pikaFlee(e) { e.flee = 1; e.fleeT = 3.5; banner('Pika scappa!', 'Sale in casa con l\'ascensore: seguilo'); tone(200, 0.5, 'triangle', 0.06, 600); }
 function trBossDown(kind, at) {
   const rats = () => { for (const e of enemies) if (!e.dead && (e.type === 'ratto' || e.type === 'fachiro')) { e.dead = 1; e.deadT = 0; alive--; } };
   if (kind === 'fab') { fabDead = true; rats(); if (mode === 'adv' && zone < 1) { zone = 1; openGate(); } banner('Fab La Rue è sconfitto per sempre!', 'La strada è libera: vai verso i tavolini del Tribunale'); return; }
   if (kind === 'well') { wellDead = true; banner('Well scappa!', 'Gli orchi restano… e dai tavolini si alza un gigante'); return; }
-  if (kind === 'fabio') { fabioDead = true; if (mode === 'adv' && zone < 2) { zone = 2; openGarage(); } banner('Fabio Regaglia è a terra!', 'Il maleficio si indebolisce: la saracinesca del garage si apre'); return; }
+  if (kind === 'fabio') { fabioDead = true; if (mode === 'adv' && !hasKey) dropKey(at); banner('Fabio Regaglia è a terra!', mode === 'adv' ? 'Ha lasciato cadere la chiave del garage: raccoglila' : 'Il gigante è sconfitto'); return; }
   if (kind === 'pika') { pikaDead = true;
     for (const e of enemies) if (!e.dead) { e.dead = 1; e.deadT = 0; alive--; }
     setTimeout(() => rescue(18, 'Pika', 'Raga… non ero io. Era il maleficio di Loris. Grazie per avermi liberato!', at), 1600);
@@ -380,6 +390,9 @@ function pikaThrow(e) {
 }
 function updTR(dt) {
   const r = trRegion(P.pos);
+  /* il parcheggio coperto e' buio */
+  const hk = r === 'trpark' ? 0.32 : r === 'trgarage' ? 0.45 : r === 'trcasa' ? 0.5 : 0.9; hemi.intensity += (hk - hemi.intensity) * Math.min(1, dt * 3);
+  if (trKey) { trKey.rotation.y += dt * 2.5; trKey.position.y = 0.8 + Math.sin(time * 4) * 0.12; if (Math.hypot(P.pos.x - trKey.position.x, P.pos.z - trKey.position.z) < 1.6) { scene.remove(trKey); trKey = null; hasKey = true; pickS(); banner('Hai la chiave del garage!', 'Aprilo davanti alla saracinesca · ' + TR_GARAGE_COST + ' monete'); } }
   if (mode === 'sandbox') {
     if (r !== 'trpark') fabDead = false; if (r !== 'trpiazza') { wellDead = false; fabioDead = false; } if (r !== 'trgarage') pikaFled = false; if (r !== 'trcasa') { pikaDead = false; lorisScene = false; }
     if (!boss) { if (r === 'trpark' && !fabDead) spawnBoss('fab'); else if (r === 'trpiazza' && !wellDead) spawnBoss('well'); else if (r === 'trpiazza' && !fabioDead) spawnBoss('fabio');
@@ -388,8 +401,8 @@ function updTR(dt) {
     if (!fabDead && r === 'trpark' && wave >= TR_FAB_WAVE) spawnBoss('fab');
     else if (zone >= 1 && !wellDead && r === 'trpiazza' && wave >= BOSS_WELL.wave) spawnBoss('well');
     else if (zone >= 1 && wellDead && !fabioDead && r === 'trpiazza' && wave >= BOSS_FABIO.wave) spawnBoss('fabio');
-    else if (zone >= 2 && !pikaFled && r === 'trgarage' && CAGES.every(c => c.freed) && !rescues.length) spawnBoss('pika');
-    else if (zone >= 3 && !pikaDead && r === 'trcasa') casaScene();
+    else if (zone >= 2 && !pikaFled && r === 'trgarage') spawnBoss('pika');
+    else if (!pikaDead && r === 'trcasa') casaScene();
   }
   if (casaT > 0) { casaT -= dt; if (casaT <= 0 && !boss && !pikaDead && inCasa(P.pos)) spawnBoss('pika'); }
   /* Pika: lancia le sigarette da lontano; nel garage a meta' vita scappa verso l'ascensore */
@@ -654,7 +667,8 @@ function update(dt) {
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
   if (world === 3) { const A = inCasa(P.pos) ? CASA : inGarage(P.pos) ? GARAGE : null;
     if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
-    else { cam.x = Math.max(TRB.x1 + 0.6, Math.min(TRB.x2 - 0.6, cam.x)); cam.z = Math.max(-29.4, Math.min(TRB.z2 - 0.6, cam.z)); } }
+    else { cam.x = Math.max(TRB.x1 + 0.6, Math.min(TRB.x2 - 0.6, cam.x)); cam.z = Math.max(-29.4, Math.min(TRB.z2 - 0.6, cam.z));
+      if (cam.z > 6.4 && P.pos.z > 6) cam.y = Math.min(3.9, cam.y); else if (cam.z < -19.8 && cam.x < TX + 4.5) cam.y = Math.min(4.15, cam.y); } }
   else if (world === 2) { if (inHSStore(P.pos)) { cam.x = Math.max(HSTORE.x1 + 0.4, Math.min(HSTORE.x2 - 0.4, cam.x)); cam.z = Math.max(HSTORE.z1 + 0.4, Math.min(HSTORE.z2 - 0.3, cam.z)); cam.y = Math.min(HSTORE.ceil - 0.4, cam.y); } else { cam.x = Math.max(HSB.x1 + 0.6, Math.min(HSB.x2 - 0.6, cam.x)); cam.z = Math.max(0.7, Math.min(HSB.z2 - 0.6, cam.z)); } }
   else if (inBasement(P.pos)) { cam.x = Math.max(BASE.x1 + 0.4, Math.min(BASE.x2 - 0.4, cam.x)); cam.z = Math.max(BASE.z1 + 0.4, Math.min(BASE.z2 - 0.4, cam.z)); cam.y = Math.min(BASE.ceil - 0.3, cam.y); }
   else if (inWare(P.pos)) { cam.x = Math.max(WARE.x1 + 0.4, Math.min(WARE.x2 - 0.4, cam.x)); cam.z = Math.max(WARE.z1 + 0.4, cam.z); cam.y = Math.min(WARE.ceil - 0.4, cam.y); }
@@ -786,7 +800,7 @@ function resetWorld() {
   capoDead = false; rings.forEach(r => scene.remove(r.m)); rings = [];
   if (trGateSolid.off) { G3add(trGate); trGateSolid.off = 0; } if (trGDoorSolid.off) { G3add(trGDoor); trGDoorSolid.off = 0; } liftLed.material.color.set('#ff3030');
   CAGES.forEach(c => { c.freed = false; c.bars.visible = true; c.who.visible = true; c.solid.off = 0; });
-  wellDead = fabioDead = pikaFled = pikaDead = lorisScene = false; casaT = 0; hostile.forEach(h => scene.remove(h.m)); hostile = [];
+  wellDead = fabioDead = pikaFled = pikaDead = lorisScene = hasKey = trPower = false; if (trKey) { scene.remove(trKey); trKey = null; } trPanelLed.material.color.set('#ff3030'); casaT = 0; hostile.forEach(h => scene.remove(h.m)); hostile = [];
   zone = 0; shieldMesh.visible = false;
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
@@ -986,7 +1000,7 @@ if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
 applyWorldLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */

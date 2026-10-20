@@ -61,7 +61,20 @@ function finish(G) {
 /* ---------- armi ---------- */
 export function buildWeapon(id) {
   const g = new THREE.Group(); const dark = M('#2a2d33', { roughness: 0.4, metalness: 0.55 });
-  if (id === 'pistauto') {
+  if (id === 'pompauto') {
+    mesh(rbox(0.07, 0.1, 0.5, 0.02), dark, g, [0, 0.02, 0.12]); mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.36, 12), dark, g, [0, 0.05, 0.52], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.07, 18), M('#3a3d44', { roughness: 0.4, metalness: 0.6 }), g, [0, -0.08, 0.16], [0, 0, Math.PI / 2]);
+    mesh(rbox(0.045, 0.14, 0.06, 0.012), dark, g, [0, -0.08, -0.04], [0.25, 0, 0]); mesh(rbox(0.06, 0.1, 0.24, 0.025), M('#24262a', { roughness: 0.6 }), g, [0, -0.02, -0.24], [0.1, 0, 0]);
+    g.userData.muzzle = new V3(0, 0.05, 0.7);
+  } else if (id === 'mitragliatore') {
+    const ol = M('#3e4632', { roughness: 0.6 });
+    mesh(rbox(0.08, 0.11, 0.6, 0.02), dark, g, [0, 0.02, 0.1]); mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 10), dark, g, [0, 0.05, 0.62], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.28, 12), M('#2a2c30', { roughness: 0.4 }), g, [0, 0.05, 0.5], [Math.PI / 2, 0, 0]);
+    mesh(rbox(0.12, 0.13, 0.16, 0.02), ol, g, [0.07, -0.06, 0.12]); mesh(rbox(0.045, 0.14, 0.06, 0.012), dark, g, [0, -0.08, -0.06], [0.25, 0, 0]);
+    mesh(rbox(0.06, 0.11, 0.26, 0.025), ol, g, [0, -0.01, -0.3], [0.1, 0, 0]);
+    for (const sd of [-1, 1]) mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.26, 6), dark, g, [sd * 0.04, -0.08, 0.72], [0.4, 0, sd * 0.3]);
+    g.userData.muzzle = new V3(0, 0.05, 0.88);
+  } else if (id === 'pistauto') {
     mesh(rbox(0.045, 0.065, 0.22, 0.012), dark, g, [0, 0.02, 0.06]);
     mesh(rbox(0.035, 0.1, 0.05, 0.012), dark, g, [0, -0.04, 0]);
     mesh(rbox(0.03, 0.2, 0.04, 0.01), M('#3a3d44', { roughness: 0.4, metalness: 0.5 }), g, [0, -0.14, 0.005]);

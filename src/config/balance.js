@@ -15,6 +15,8 @@ export const WEAPONS = {
   katana:  { n: 'Katana',  dmg: 150, rate: 0.5, mag: 1, res: 0, spread: 0, auto: false, pel: 1, reload: 0, sound: 0, melee: 1, range: 3.0, noPack: 1 },
   bazooka: { n: 'Bazooka', dmg: 260, rate: 1.3, mag: 1, res: 9, spread: 0, auto: false, pel: 1, reload: 1.8, sound: 2, explode: 4.5 },
   pistauto: { n: 'Pistola automatica', dmg: 15, rate: 0.075, mag: 20, res: 160, spread: 0.032, auto: true, pel: 1, reload: 1.5, sound: 0 },
+  pompauto: { n: 'Fucile a pompa automatico', dmg: 22, rate: 0.26, mag: 12, res: 120, spread: 0.07, auto: true, pel: 7, reload: 2.8, sound: 1 },
+  mitragliatore: { n: 'Mitragliatore', dmg: 38, rate: 0.072, mag: 80, res: 560, spread: 0.028, auto: true, pel: 1, reload: 3.4, sound: 0 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
@@ -128,7 +130,9 @@ export const SANDBOX = { coins: 40000 };        // tutto aperto, corrente e gene
 /* ---------- MONDO 3: IL TRIBUNALE ---------- */
 export const TR_ZONE0 = 8;
 export const TR_START_COINS = 1500;
-export const TR_FAB_WAVE = 5;   // Fab La Rue blocca la strada dal round 5
+export const TR_FAB_WAVE = 5;
+export const TR_GARAGE_COST = 7000;  // serve anche la chiave che lascia Fabio Regaglia
+export const TR_POWER_COST = 9000;   // riattivare la corrente per l'ascensore   // Fab La Rue blocca la strada dal round 5
 export const BOSS_WELL = { n: 'Well', hp: 6500, spd: 2.5, dmg: 26, atkCd: 1.2, reward: 3500, summonEvery: 9, wave: 6 };
 export const BOSS_FABIO = { n: 'Fabio Regaglia', hp: 11000, spd: 1.9, dmg: 42, atkCd: 1.8, reward: 5000, summonEvery: 14, wave: 10 };
 export const BOSS_PIKA = { n: 'Pika', hp: 9000, hpGarage: 5000, spd: 2.7, dmg: 24, atkCd: 1.1, reward: 7000, summonEvery: 11, throwEvery: 2.2, throwDmg: 16 };
