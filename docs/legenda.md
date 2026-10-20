@@ -335,6 +335,6 @@ Ogni 45-75 secondi può comparire una bottiglia viola luminosa nella zona in cui
 ## Mondo 4: il centro di Busto (anteprima della mappa)
 Per ora si può solo esplorare: niente nemici, boss o storia. Si sceglie dal menu (Mondo 4) o dalla mappa del mondo.
 - **Piazza Garibaldi**: si parte qui, davanti alla fontana con i gradoni di pietra e i tre zampilli, tra i palazzi gialli con le persiane verdi.
-- **Verso il Mac**: a ovest, i portici del palazzo rosa coi negozi, poi la torre grigia di 13 piani con il fast food al piano terra (bancone, menu luminosi, totem e tavoli). Fuori sono parcheggiate le macchine, una sarà la GT di Corti.
+- **Il Mac**: a destra della fontana (guardando la chiesa), la torre grigia di 13 piani con il porticato e il fast food al piano terra (bancone, menu luminosi, totem e tavoli), le aiuole coi pioppi davanti. Fuori è parcheggiata la macchina scura che sarà la GT di Corti. A sinistra della fontana, per ora, solo palazzi.
 - **Via Fratelli d'Italia e il corso**: a nord, i palazzoni a balconi sulle colonne, poi il corso pedonale coi rombi a scacchi e i tavolini dei bar sotto gli ombrelloni (qui verrà liberato Napo).
 - **Piazza San Giovanni**: il pavimento a fasce, i dehors, la basilica con il campanile di mattoni. Dentro: navata con le colonne, panche, altare e, nel pavimento, il sigillo dei Mammutones che un giorno aprirà le catacombe.
