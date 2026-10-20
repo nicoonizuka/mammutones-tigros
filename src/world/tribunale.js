@@ -88,6 +88,18 @@ for (const [x, z, f] of [[-20, 20, 1], [20, 20, 0], [0, 28, 1]]) {
   const l = new THREE.PointLight('#cfe4ff', 1.1, 26, 1.4); l.position.set(TX + x, 3.6, z); l.userData.tr = 1; scene.add(l); trNeons.push({ l, tube, f });
 }
 for (const [x, z] of [[-30, 20], [30, 20], [-10, 32], [10, 8], [-10, 8], [10, 32], [-20, 12], [20, 12], [-20, 28], [20, 28]]) mesh(rbox(2.2, 0.08, 0.2, 0.03), Math.abs(x) === 30 ? tubeOff : tubeOn, G, [x, 4.12, z]);
+/* facciata del Multipiano Volturno verso la strada: fascia salmone, fascia grigia e l'insegna blu */
+const salmon = M('#e0a084', { roughness: 0.9 });
+mesh(new THREE.BoxGeometry(73, 1.6, 0.5), salmon, G, [0, 5.3, 5.9]); mesh(new THREE.BoxGeometry(73, 0.8, 0.3), M('#c8c8c4', { roughness: 0.9 }), G, [0, 3.8, 5.95]);
+for (const sd of [-1, 1]) mesh(new THREE.BoxGeometry(0.6, 6.1, 31), salmon, G, [sd * 36.8, 3.05, 21]);
+const signT = ctex(1024, 128, (g, w, h) => { g.fillStyle = '#1e8ad8'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffffff'; g.font = '900 80px Arial Black,Arial'; g.textBaseline = 'middle'; g.fillText('MULTIPIANO VOLTURNO', 190, h / 2);
+  g.font = '700 26px Arial'; g.fillText('ENTRATA', 30, 40); g.fillText('PARK', 30, 72);
+  for (const [cx, t] of [[880, '10'], [970, '2,00']]) { g.fillStyle = '#ffffff'; g.beginPath(); g.arc(cx, h / 2, 40, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#d02020'; g.lineWidth = 9; g.stroke(); g.fillStyle = '#111'; g.font = '900 30px Arial'; g.textAlign = 'center'; g.fillText(t, cx, h / 2 + 2); g.textAlign = 'left'; } });
+const signM = new THREE.MeshStandardMaterial({ map: signT, roughness: 0.6 });
+plane(14, 1.75, signM, G, [-12, 3.8, 5.78], [0, Math.PI, 0]); plane(14, 1.75, signM, G, [-12, 3.8, 6.12]);
+/* posti gialli a righe davanti all'ingresso */
+const hatch = texMat(ctex(64, 64, (g, w, h) => { g.fillStyle = '#4a4a4c'; g.fillRect(0, 0, w, h); g.strokeStyle = '#e8c030'; g.lineWidth = 5; g.strokeRect(3, 3, w - 6, h - 6); for (let k = -64; k < 64; k += 16) { g.beginPath(); g.moveTo(k, 64); g.lineTo(k + 64, 0); g.stroke(); } }), { roughness: 0.9, transparent: true, opacity: 0.9 });
+for (const x of [14, 18, 22]) flat(plane(3.2, 3.2, hatch, G, [x, 0.014, 3.6], [-Math.PI / 2, 0, 0]));
 /* uscita nord del parcheggio: muretto e colonne, con il passaggio in mezzo */
 for (const sd of [-1, 1]) { cwall(sd * 20.5, 6, 31, 0.6, 1.1); for (let x = 6; x <= 34; x += 7) { mesh(new THREE.BoxGeometry(0.8, 4.2, 0.8), conc, G, [sd * x, 2.1, 6]).castShadow = true; S(sd * x, 6, 0.85, 0.85); } }
 const pole = M('#3a3e44', { roughness: 0.5, metalness: 0.5 });
@@ -134,10 +146,23 @@ for (const [x, z] of [[-28, -12], [-12, -8], [12, -10], [28, -6]]) {
   S(x, z, 2.4, 2.4);
 }
 
+/* prato davanti al Tribunale con la cancellata di ferro, e il vialetto in autobloccanti al centro */
+const grassM = texMat(ctex(64, 64, (g, w, h) => { g.fillStyle = '#4a8a3a'; g.fillRect(0, 0, w, h); setSeed(308); for (let i = 0; i < 500; i++) { g.fillStyle = rnd() < 0.5 ? '#3e7a32' : '#5a9a44'; g.fillRect(rnd() * w, rnd() * h, 1, 2); } }, 8, 4), { roughness: 1 });
+for (const sd of [-1, 1]) {
+  flat(plane(26, 12, grassM, G, [sd * 22, 0.02, -7.5], [-Math.PI / 2, 0, 0]));
+  /* muretto con la cancellata verso la strada */
+  const wall = mesh(rbox(26, 0.5, 0.35, 0.03), M('#9a9890', { roughness: 0.95 }), G, [sd * 22, 0.25, -1.3]); S(sd * 22, -1.3, 26, 0.5);
+  const fenceM = M('#3a3e44', { roughness: 0.4, metalness: 0.6 }); mesh(rbox(26, 0.05, 0.05, 0.01), fenceM, G, [sd * 22, 1.7, -1.3]); for (let x = 9.2; x <= 35; x += 0.22) mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 4), fenceM, G, [sd * x, 1.1, -1.3]);
+}
+const pathT = ctex(128, 128, (g, w, h) => { g.fillStyle = '#9a6a56'; g.fillRect(0, 0, w, h); setSeed(309); for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 16) { g.fillStyle = rnd() < 0.5 ? '#a8786a' : '#8e5e4c'; g.fillRect(x + ((y / 8) % 2) * 8 + 1, y + 1, 14, 6); } g.strokeStyle = 'rgba(240,235,225,.8)'; g.lineWidth = 3; for (let y = 16; y < h; y += 32) { g.beginPath(); for (let x = 0; x <= w; x += 4) g.lineTo(x, y + Math.sin(x / 10) * 5); g.stroke(); } }, 2, 4);
+flat(plane(18, 14, texMat(pathT, { roughness: 0.9 }), G, [0, 0.015, -8], [-Math.PI / 2, 0, 0]));
+const bloom = [M('#4a7a3a', { roughness: 0.95 }), M('#f4f2ec', { roughness: 0.9 }), M('#3e6a32', { roughness: 0.95 })];
+setSeed(310); for (const [x, z] of [[-12, -4], [12, -3], [-20, -12], [24, -10]]) { for (let k = 0; k < 7; k++) mesh(sph(0.6 + rnd() * 0.4, 8, 6), bloom[k % 3], G, [x + (rnd() - 0.5) * 2, 0.8 + rnd() * 0.8, z + (rnd() - 0.5) * 1.6]); S(x, z, 2.2, 1.8); }
+
 /* ---------- il Tribunale: edificio marroncino con la struttura in vetro e i portici con i tavolini ---------- */
-const brownT = ctex(128, 128, (g, w, h) => { g.fillStyle = '#7a5640'; g.fillRect(0, 0, w, h); setSeed(306); for (let x = 0; x < w; x += 16) { g.fillStyle = ['#6e4c38', '#84604a', '#76533e'][(x / 16) % 3]; g.fillRect(x, 0, 15, h); } g.fillStyle = 'rgba(0,0,0,.18)'; for (let y = 0; y < h; y += 32) g.fillRect(0, y, w, 2); }, 4, 2);
-const brownM = texMat(brownT, { roughness: 0.8 }), brownD = M('#5a3e2e', { roughness: 0.8 });
-const glass = M('#6a9ab0', { roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.55 }), frame = M('#3a2e28', { roughness: 0.5, metalness: 0.4 });
+const brownT = ctex(128, 128, (g, w, h) => { g.fillStyle = '#a8644e'; g.fillRect(0, 0, w, h); setSeed(306); for (let y = 0; y < h; y += 8) for (let x = ((y / 8) % 2) * 8 - 8; x < w; x += 16) { const c = rnd(); g.fillStyle = c < 0.33 ? '#b4705a' : c < 0.66 ? '#a86450' : '#bc7a62'; g.fillRect(x + 1, y + 1, 14, 6); } }, 10, 6);
+const brownM = texMat(brownT, { roughness: 0.85 }), brownD = M('#8a4e3c', { roughness: 0.8 });
+const glass = M('#4a86b8', { roughness: 0.04, metalness: 0.5, transparent: true, opacity: 0.78 }), frame = M('#2e3238', { roughness: 0.4, metalness: 0.6 }), darkGlass = M('#1e3442', { roughness: 0.04, metalness: 0.6, transparent: true, opacity: 0.85 });
 {
   /* corpo dell'edificio, pieno, dietro i portici */
   const core = mesh(new THREE.BoxGeometry(40, 16, 28), brownM, G, [-16, 8, -44]); core.receiveShadow = core.castShadow = true; S(-16, -44, 40.4, 28, core, 9);
@@ -149,6 +174,15 @@ const glass = M('#6a9ab0', { roughness: 0.05, metalness: 0.3, transparent: true,
   mesh(new THREE.BoxGeometry(14, 18, 8), glass, G, [-16, 13.6, -33]); for (let x = -22.6; x <= -9.4; x += 2.2) mesh(rbox(0.1, 18, 0.12, 0.01), frame, G, [x, 13.6, -28.95]);
   for (let y = 5; y <= 22; y += 3) mesh(rbox(14, 0.12, 0.12, 0.01), frame, G, [-16, y, -28.95]);
   plane(22, 1.6, new THREE.MeshStandardMaterial({ map: label('TRIBUNALE DI BUSTO ARSIZIO', { font: '900 76px Arial Black,Arial', color: '#f0e8d8', shadow: 'rgba(0,0,0,.4)', w: 1024, h: 128 }), transparent: true, roughness: 0.6 }), G, [-16, 13.4, -19.38]);
+  /* lunghe vetrate verticali sulla facciata, come nelle foto */
+  for (const x of [-33, -3]) { mesh(rbox(3.2, 14, 0.1, 0.02), glass, G, [x, 9, -19.4]); for (let k = -1; k <= 1; k++) mesh(rbox(0.08, 14, 0.14, 0.01), frame, G, [x + k * 1.05, 9, -19.36]); }
+  for (const z of [-36, -44, -52]) { mesh(rbox(0.1, 12, 3, 0.02), glass, G, [-36.06, 9, z]); mesh(rbox(0.12, 12, 0.08, 0.01), frame, G, [-36.08, 9, z]); }
+  /* padiglione basso di vetro scuro accanto all'ingresso */
+  mesh(new THREE.BoxGeometry(9, 3.6, 4.2), darkGlass, G, [-29, 1.8, -17.8]); mesh(rbox(9.2, 0.25, 4.4, 0.03), brownD, G, [-29, 3.7, -17.8]);
+  for (let x = -33.4; x <= -24.6; x += 1.47) mesh(rbox(0.06, 3.6, 0.06, 0.01), frame, G, [x, 1.8, -15.68]);
+  S(-29, -17.8, 9.1, 4.3);
+  /* scritta sopra la porta */
+  plane(6, 0.6, new THREE.MeshStandardMaterial({ map: label('TRIBUNALE DI BUSTO ARSIZIO', { font: '700 58px Arial,sans-serif', color: '#e8e4d8', shadow: null, w: 1024, h: 96, bg: '#1e1e22' }), roughness: 0.6 }), G, [-16, 3.35, -29.92]);
   /* pilastri dei portici */
   for (const x of [-34, -27, -20, -12, -5, 2]) { mesh(new THREE.BoxGeometry(0.9, 4.4, 0.9), brownD, G, [x, 2.2, -20.2]).castShadow = true; S(x, -20.2, 0.95, 0.95); }
   /* vetrate al piano terra sotto i portici, con la porta d'ingresso */
@@ -162,7 +196,7 @@ const glass = M('#6a9ab0', { roughness: 0.05, metalness: 0.3, transparent: true,
 const tblM = M('#2e3238', { roughness: 0.4, metalness: 0.6 }), chairM = M('#5a3a26', { roughness: 0.7 });
 const umb = [M('#b8302a', { roughness: 0.8, side: THREE.DoubleSide }), M('#e8e2d4', { roughness: 0.8, side: THREE.DoubleSide })];
 setSeed(307);
-for (const [x, z, u] of [[-31, -26, 0], [-24, -24, 0], [-17, -27, 0], [-9, -24, 0], [-2, -26.5, 0], [-28, -16, 1], [-6, -16, 1], [20, -18, 1], [28, -14, 1]]) {
+for (const [x, z, u] of [[-31, -26, 0], [-24, -24, 0], [-17, -27, 0], [-9, -24, 0], [-2, -26.5, 0], [-6, -16, 1], [20, -18, 1], [28, -14, 1]]) {
   mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.05, 20), tblM, G, [x, 0.78, z]); mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.78, 8), tblM, G, [x, 0.39, z]); mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.03, 14), tblM, G, [x, 0.02, z]);
   for (let k = 0; k < 3; k++) { const a = k * 2.1 + rnd(); const c = new THREE.Group(); mesh(rbox(0.42, 0.05, 0.42, 0.02), chairM, c, [0, 0.45, 0]); mesh(rbox(0.42, 0.4, 0.04, 0.02), chairM, c, [0, 0.68, -0.19]);
     for (const sx of [-0.16, 0.16]) for (const sz of [-0.16, 0.16]) mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 6), tblM, c, [sx, 0.22, sz]);
