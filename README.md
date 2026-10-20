@@ -27,6 +27,10 @@ npm run dev
 
 Poi apri l'indirizzo che compare nel terminale, di solito http://localhost:5173.
 
+## Da telefono
+
+Si gioca anche da telefono o tablet, tenendolo **in orizzontale**: joystick a sinistra (compare dove appoggi il pollice, spingendolo in fondo corri), trascina a destra per mirare, pulsante **SPARA** (tenendolo premuto puoi anche mirare), salto, R ricarica, Q potere, E compra/apri, cambio arma, e in alto inventario, visuale e pausa. Sul telefono la grafica è più leggera (niente ombre) e c'è un piccolo aiuto alla mira.
+
 ## Comandi
 
 | Tasto | Azione |

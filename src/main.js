@@ -4,6 +4,7 @@ import './style.css';
 import { ROSTER, POWERS, MIRKO_MODEL, DAMIANO_MODEL } from './characters/roster.js';
 import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
+import { isTouch, touch, initTouch, takeLook } from './input/touch.js';
 const SPR = SPRITES.map(c => c.fn());
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
@@ -149,6 +150,7 @@ function shoot() {
   fireT = w.rate * (aimPow ? 0.6 : 1); shotSound(w.sound); muzzleFlash(muzzle()); shake(w.pel > 1 ? 0.18 : w.dmg > 50 ? 0.12 : 0.04);
   const camDir = new V3(); camera.getWorldDirection(camDir); let assist = null;
   if (aimPow) { let best = 0.17; for (const e of enemies) { if (e.dead) continue; const hp = e.m.userData.hit.head.getWorldPosition(new V3()); const a = hp.clone().sub(camera.position).normalize().angleTo(camDir); if (a < best) { best = a; assist = hp; } } }
+  if (!assist && isTouch) { let best = 0.075; for (const e of enemies) { if (e.dead) continue; const hp = e.m.userData.hit.body.getWorldPosition(new V3()); const a = hp.clone().sub(camera.position).normalize().angleTo(camDir); if (a < best) { best = a; assist = hp; } } }
   if (!assist) {
     let bd = 2.6; const pf = new V3(-Math.sin(yaw), 0, -Math.cos(yaw));
     for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length(); if (d < bd && to.normalize().dot(pf) > 0.55) { bd = d; assist = e.m.userData.hit.body.getWorldPosition(new V3()); } }
@@ -542,7 +544,7 @@ function updMirko(dt) {
 
 /* ===================== INPUT ===================== */
 const cv = renderer.domElement;
-function lock() { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (_) {} }
+function lock() { if (isTouch) return; try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (_) {} }
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (state === 'inv') { if (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape') { e.preventDefault(); closeInv(); } return; }
@@ -628,6 +630,7 @@ let last = performance.now();
 function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(window.__dtMax || 0.05, (t - last) / 1000); last = t;
   pollPad(); if (pad.connected) padMenus(dt);
+  if (touchUI) { const show = state === 'play'; if (touchUI.hidden === show) touchUI.hidden = !show; if (!show) { touch.fire = false; touch.mx = touch.my = 0; } }
   if (state === 'play') { time += dt; update(dt); }
   else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   renderer.render(scene, camera);
@@ -648,6 +651,8 @@ function update(dt) {
   if (keys.ArrowLeft) yaw += dt * 2.2; if (keys.ArrowRight) yaw -= dt * 2.2;
   const mv = new V3(); if (keys.KeyW) mv.add(fwd); if (keys.KeyS) mv.sub(fwd); if (keys.KeyD) mv.add(right); if (keys.KeyA) mv.sub(right);
   let padSprint = false;
+  if (isTouch) { mv.addScaledVector(fwd, -touch.my).addScaledVector(right, touch.mx); if (touch.sprint) padSprint = true;
+    const [lx, ly] = takeLook(); yaw -= lx * 0.0058; pitch = Math.max(-1.1, Math.min(0.9, pitch - ly * 0.0046)); }
   if (pad.connected) {
     mv.addScaledVector(fwd, -pad.ly).addScaledVector(right, pad.lx);
     yaw -= pad.rx * 2.6 * dt; pitch = Math.max(-1.1, Math.min(0.9, pitch - pad.ry * 1.9 * dt));
@@ -687,7 +692,7 @@ function update(dt) {
   if (fp) { vmKick = Math.max(0, vmKick - dt * 6); const bob = moving ? Math.sin(P.walk * 2) * 0.012 : 0; vm.position.set(0.16, -0.15 + bob, -0.36 + vmKick * 0.08); vm.scale.setScalar(0.62); vm.rotation.set(vmKick * 0.25 + (P.reloadT > 0 ? -0.6 : 0), 0, 0); }
   camera.position.copy(cam); camera.lookAt(cam.clone().add(d)); updateFx(dt, camera, P.pos, inBasement(P.pos));
   /* sparo */
-  fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire) && w.auto && fireT <= 0) shoot();
+  fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire || touch.fire) && w.auto && fireT <= 0) shoot();
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
   else if (w.ammo === 0 && w.res > 0 && !(P.pwT > 0 && P.pw.k === 'ammo')) startReload();
   /* nemici */
@@ -977,7 +982,7 @@ document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click
 $('storyGo').onclick = () => { $('story').hidden = true; if (storyBack) { storyBack = false; backToMap(); return; } $('sel').hidden = false; menuIdx = 0; };
 /* invito: condivide il link del gioco (su telefono si apre la condivisione, su PC si copia) */
 const GAME_URL = 'https://mammutones-tigros.vercel.app';
-const INVITE_TXT = 'Gioca con me a Mammutones al Tigros! Busto è nel caos: scegli il tuo personaggio e riprenditi il Tigros. Si gioca dal computer, anche col controller della Play.';
+const INVITE_TXT = 'Gioca con me a Mammutones al Tigros! Busto è nel caos: scegli il tuo personaggio e riprenditi il Tigros. Si gioca dal computer, col controller della Play o dal telefono (in orizzontale).';
 function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 4000); }
 $('invite').onclick = async () => {
   try { if (navigator.share) { await navigator.share({ title: 'Mammutones al Tigros', text: INVITE_TXT, url: GAME_URL }); return; } } catch (_) {}
@@ -1012,7 +1017,19 @@ function renderPick() {
   });
 }
 renderPick();
-if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
+/* telefono: comandi touch, grafica piu' leggera */
+const touchUI = initTouch({
+  fire: () => { if (state === 'play' && fireT <= 0) shoot(); }, jump: () => { if (state === 'play' && P.pos.y <= 0.001) P.vy = 6.2; },
+  reload: () => state === 'play' && startReload(), power: () => state === 'play' && usePower(), use: () => state === 'play' && useInter(),
+  swap: () => { if (state === 'play' && P.weapons.length > 1) switchWeapon(1 - P.cur); }, inv: () => state === 'play' && openInv(),
+  view: () => setFP(!fp), pause: () => pauseGame(),
+});
+if (isTouch) {
+  document.body.classList.add('touch');
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25) * 0.85); renderer.shadowMap.enabled = false;
+  scene.traverse(o => { if (o.isDirectionalLight) o.castShadow = false; });
+  dispatchEvent(new Event('resize'));
+}
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
