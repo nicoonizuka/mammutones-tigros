@@ -78,9 +78,9 @@ src/
 | Dado | Cura: +60 di vita |
 | Nico | Velocità: corre quasi il doppio |
 | Slime | Scudo: immune ai colpi per qualche secondo |
-| Leonardo Ceriotti | Munizioni infinite |
+| Leonardo Ceriotti | Munizioni infinite (si sblocca finendo la storia) |
 | Ponta | Chiama Mirko, che combatte al suo fianco |
-| Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due |
+| Jacopo Castiglioni | Doppio colpo: ogni colpo ne spara due (si sblocca battendo Fab La Rue) |
 | Corti | Monete doppie per qualche secondo |
 
 ## Percorso previsto
@@ -92,7 +92,7 @@ src/
 5. Magazzino (fatto, 3000 dopo la corrente): scaffali alti, celle frigo, muletto, Mammutones Furia, AK-47
 6. Zona controllo (fatto, 3 generatori): Desert Eagle e boss finale Loris Busato all'ondata 15
 
-Dopo il Tigros (prossimamente, già oscurate nella mappa del mondo): Tribunale di Busto, Happy Shopping, il centro col Mac.
+Dopo il Tigros (prossimamente, già oscurate nella mappa del mondo): Tribunale di Busto, Happy Shopping, il centro di Busto.
 
 ## Bilanciamento
 

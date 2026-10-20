@@ -100,3 +100,11 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:14px}
 .sw{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border-radius:2px}
 .sw.on{background:#ffd25e}.sw.off{background:#2a2f38;border:1px solid #4a505a}
+.pc{position:relative}
+.pc.locked canvas{filter:brightness(.18) grayscale(1)}
+.pc.locked b,.pc.locked span{opacity:.55}
+.pc .lk{position:absolute;top:38%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%);image-rendering:pixelated;shape-rendering:crispEdges}
+.pc em{font-style:normal;font-size:11px;line-height:1.25;color:#ffd25e;max-width:150px}
+.pc.nope{animation:nope .3s}
+@keyframes nope{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.ending .unlock{font-family:var(--pix);font-size:20px;color:#ffd25e}

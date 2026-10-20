@@ -150,7 +150,7 @@ Si apre con **Tab** o **I** (sul controller: tasto Share o touchpad).
 
 ## Finale e mappa del mondo
 
-Quando sconfiggi Loris Busato compare la schermata "Complimenti, hai liberato il Tigros!". Loris e Fab La Rue in realtà scappano e torneranno più avanti. Poi si apre la mappa di Busto Arsizio: il Tigros è la prima mappa, le altre sono bloccate, con il nome visibile ma l'immagine oscurata (Tribunale di Busto, Happy Shopping, il centro col Mac) e arriveranno con nuovi nemici e nuovi boss.
+Quando sconfiggi Loris Busato compare la schermata "Complimenti, hai liberato il Tigros!". Loris e Fab La Rue in realtà scappano e torneranno più avanti. I Mammutones sono il problema del Tigros: il resto di Busto è nel caos per altri motivi, con nemici diversi. Poi si apre la mappa di Busto Arsizio: il Tigros è la prima mappa, le altre sono bloccate, con il nome visibile ma l'immagine oscurata (Tribunale di Busto, Happy Shopping, il centro di Busto) e arriveranno con nuovi nemici e nuovi boss.
 
 Nella versione di prova il finale e la mappa si vedono anche senza giocare, col pulsante **Finale e mappa** nella schermata dei personaggi.
 
@@ -159,3 +159,14 @@ Nella versione di prova il finale e la mappa si vedono anche senza giocare, col 
 - Ogni mondo ha cattivi e boss diversi.
 - Ogni mondo ha personaggi nuovi da sbloccare; anche i personaggi iniziali del Tigros potranno cambiare.
 - La difficoltà sale piano piano da un mondo all'altro: l'inizio del mondo successivo è più difficile dell'inizio del Tigros, ma non quanto la sfida con Loris.
+
+## Personaggi sbloccabili
+
+| Personaggio | Potere | Come si sblocca |
+|---|---|---|
+| Nathan, Dado, Nico, Slime, Ponta, Corti | vedi sopra | disponibili da subito |
+| Jacopo Castiglioni | Doppio colpo | sconfiggi Fab La Rue nel seminterrato (in Avventura) |
+| Leonardo Ceriotti | Munizioni infinite | finisci la storia sconfiggendo Loris Busato nell'ufficio (in Avventura) |
+| Altri personaggi | — | arriveranno con i prossimi mondi |
+
+I personaggi bloccati si vedono nella schermata di scelta, oscurati e con il lucchetto. Lo sblocco resta salvato nel browser.

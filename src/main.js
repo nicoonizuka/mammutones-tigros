@@ -22,7 +22,7 @@ const V3 = THREE.Vector3;
 
 /* ===================== STATO ===================== */
 let P, charIdx = 0, pModel, state = 'menu', enemies = [], drops = [], tracers = [], sparks = [];
-let mode = 'adv', quiet = false, sinceHit = 99, god = false, stickDir = 0;
+let lastUnlock = null, mode = 'adv', quiet = false, sinceHit = 99, god = false, stickDir = 0;
 let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead = false, power = false, packs = 0, bag = 0;
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
@@ -152,8 +152,9 @@ function damageEnemy(e, d, head) {
 function bossDown() {
   const kind = boss && boss.kind; boss = null; $('boss').hidden = true;
   if (kind === 'loris' && mode === 'sandbox') { lorisDead = true; banner('Loris Busato è sconfitto!', 'Esci dall\'ufficio e rientra per sfidarlo di nuovo'); return; }
-  if (kind === 'loris') { lorisDead = true; setTimeout(victory, 2500); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo'); return; }
-  fabDead = true; banner('Fab La Rue è sconfitto!', 'I ratti scappano: riaccendi la corrente nel locale tecnico');
+  if (kind === 'loris') { lorisDead = true; lastUnlock = unlockChar('loris'); setTimeout(victory, 2500); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo'); return; }
+  fabDead = true; const nu = unlockChar('fab');
+  banner('Fab La Rue è sconfitto!', nu ? 'Hai sbloccato ' + nu.short + '! Ora riaccendi la corrente nel locale tecnico' : 'I ratti scappano: riaccendi la corrente nel locale tecnico');
   for (const e of enemies) if (!e.dead && e.type === 'ratto') { e.dead = 1; e.deadT = 0; alive--; }
 }
 function startReload() { const w = P.weapons[P.cur]; if (P.reloadT > 0 || w.ammo >= w.mag || w.res <= 0) return; P.reloadT = w.reload; reloadSound(); }
@@ -471,6 +472,7 @@ function showEnding(real) {
   ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true));
   $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
   $('endwho').textContent = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
+  $('endunlock').hidden = !(real && lastUnlock); if (real && lastUnlock) $('endunlock').textContent = 'Hai sbloccato ' + lastUnlock.name + '!'; lastUnlock = null;
   $('ending').hidden = false; menuIdx = 0;
 }
 function showWorld() { $('ending').hidden = true; $('world').hidden = false; menuIdx = 0; }
@@ -502,11 +504,28 @@ $('storyGo').onclick = () => { $('story').hidden = true; $('sel').hidden = false
 $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = false; };
 
 /* schermata di scelta: ritratti in pixel art */
-ROSTER.forEach((c, i) => {
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'pc'; b.style.setProperty('--c', c.c);
-  const can = document.createElement('canvas'); SPR[c.sprite].draw(can, 3); b.append(can);
-  b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>`); b.title = POWERS[c.power].d; b.onclick = () => startGame(i); $('pick').append(b);
-});
+/* personaggi da sbloccare: Jacopo battendo Fab La Rue, Leo finendo la storia (solo in Avventura) */
+const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato' };
+let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
+const isLocked = c => !!c.unlock && !unlocks[c.unlock];
+function unlockChar(k) {
+  if (mode !== 'adv' || unlocks[k]) return null; unlocks[k] = 1; try { localStorage.setItem('mt_unlocks', JSON.stringify(unlocks)); } catch (_) {}
+  renderPick(); const c = ROSTER.find(r => r.unlock === k); return c;
+}
+const LOCK_SVG = '<svg class="lk" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="#ffd25e" stroke-width="2"/><rect x="3" y="7" width="10" height="8" fill="#ffd25e"/><rect x="7" y="9" width="2" height="4" fill="#12161c"/></svg>';
+function renderPick() {
+  $('pick').innerHTML = '';
+  ROSTER.forEach((c, i) => {
+    const lock = isLocked(c);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pc' + (lock ? ' locked' : ''); b.style.setProperty('--c', c.c);
+    const can = document.createElement('canvas'); SPR[c.sprite].draw(can, 3); b.append(can);
+    b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>` + (lock ? LOCK_SVG + `<em>${UNLOCK_TXT[c.unlock]}</em>` : ''));
+    b.title = lock ? 'Bloccato: ' + UNLOCK_TXT[c.unlock] : POWERS[c.power].d;
+    b.onclick = () => { if (isLocked(c)) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); tone(160, 0.12, 'square', 0.04); return; } startGame(i); };
+    $('pick').append(b);
+  });
+}
+renderPick();
 if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */

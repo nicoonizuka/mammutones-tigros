@@ -34,7 +34,7 @@
     <h1>Mammutones <span>al Tigros</span></h1>
     <p class="kicker">Busto Arsizio, una sera d'estate. L'ultima sera normale.</p>
     <p>Come ogni sera, il gruppo era seduto ai tavolini sotto il gazebo del Buongusto, davanti al Tigros. Nathan, Dado, Nico, Slime, Leo, Ponta, Jacopo e Corti. Poi dal parcheggio è arrivato un suono che nessuno di loro aveva mai sentito in Lombardia: <b>campanacci</b>. Centinaia di campanacci.</p>
-    <p>Era tornato <b>Loris Busato</b>. Dopo un'estate in Sardegna si era messo addosso la maschera nera e la pelliccia dei Mammutones e non se l'era più tolta. Ma non era tornato da solo: dietro di lui marciava un'armata di Mammutones veri, maschere di legno e sonagli di bronzo. In una notte hanno preso il Tigros e da lì il resto della città. Il mondo, fuori, è finito in apocalisse.</p>
+    <p>Era tornato <b>Loris Busato</b>. Dopo un'estate in Sardegna si era messo addosso la maschera nera e la pelliccia dei Mammutones e non se l'era più tolta. Ma non era tornato da solo: dietro di lui marciava un'armata di Mammutones veri, maschere di legno e sonagli di bronzo. In una notte hanno preso il Tigros. Fuori, intanto, il mondo era già finito in apocalisse, e Busto Arsizio nel caos: non solo per i Mammutones, che sono il problema del Tigros, ma per mille altri guai che nessuno ha ancora visto da vicino.</p>
     <p>Nel seminterrato si è nascosto il suo luogotenente, <b>Fab La Rue</b>, diventato il re dei ratti. Ha staccato la corrente a tutto il supermercato. Loris invece si è chiuso nell'ufficio della zona controllo, in fondo al magazzino, e da lì comanda la sua armata guardando le telecamere.</p>
     <p class="kicker">Il piano è semplice: riprendersi il Tigros, zona per zona.</p>
     <ol class="plan"><li>Resistere nel parcheggio e liberare il gazebo</li><li>Entrare nel negozio</li><li>Scendere nel seminterrato, battere Fab e riaccendere la corrente</li><li>Aprire il magazzino e accendere i tre generatori</li><li>Entrare nell'ufficio e sconfiggere Loris Busato</li></ol>
@@ -76,17 +76,18 @@
     <h1>Complimenti, hai liberato <span>il Tigros</span>!</h1>
     <p><b id="endwho">Il gruppo</b> ha ripreso il supermercato: la corrente è tornata, i generatori ronzano e stasera i tavolini del Buongusto sono di nuovo vostri.</p>
     <p>Ma quando il fumo si è diradato, nell'ufficio della zona controllo non c'era nessuno. La maschera nera di <b>Loris Busato</b> era a terra, spaccata a metà. Dal tombino del seminterrato si sentiva solo uno squittio che si allontanava: <b>Fab La Rue</b> è scappato con i suoi ratti.</p>
-    <p>Non sono stati sconfitti davvero. I campanacci adesso suonano dall'altra parte di Busto Arsizio. <b>Torneranno.</b></p>
+    <p>Non sono stati sconfitti davvero: <b>torneranno</b>. Ma per ora il Tigros è vostro. Fuori, però, Busto Arsizio è ancora nel caos, e i Mammutones erano solo uno dei problemi: in città vi aspettano nemici nuovi.</p>
+    <p class="unlock" id="endunlock" hidden></p>
     <div class="stats" id="endstats"></div>
     <div class="btns"><button class="btn" id="toWorld" type="button">Apri la mappa del mondo</button></div>
   </div>
 </div>
 <div class="over" id="world" hidden>
   <div class="box">
-    <h1>Busto Arsizio <span>in apocalisse</span></h1>
-    <p>Il Tigros è solo la prima mappa. Le altre zone sono ancora in mano ai Mammutones: si sbloccheranno nei prossimi aggiornamenti.</p>
+    <h1>Busto Arsizio <span>nel caos</span></h1>
+    <p>Il Tigros è solo la prima mappa. Nel resto di Busto i problemi sono altri, con nemici e boss nuovi: le prossime zone si sbloccheranno nei prossimi aggiornamenti.</p>
     <div class="map" id="map">
-      <svg viewBox="0 0 960 520" role="img" aria-label="Mappa di Busto Arsizio con il Tigros liberato e tre zone ancora oscurate">
+      <svg viewBox="0 0 960 520" role="img" aria-label="Mappa di Busto Arsizio con il Tigros liberato e tre zone ancora bloccate">
         <defs>
           <pattern id="grass" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#2c3a2a"/><rect x="2" y="3" width="2" height="2" fill="#35472f"/><rect x="10" y="11" width="2" height="2" fill="#35472f"/></pattern>
           <filter id="fog"><feGaussianBlur stdDeviation="3.2"/></filter>
@@ -118,16 +119,19 @@
           <rect x="0" y="20" width="200" height="60" fill="#3a6aa8"/><rect x="0" y="12" width="200" height="12" fill="#f0b030"/><rect x="60" y="34" width="80" height="20" fill="#f6f2e8"/>
           <rect x="20" y="88" width="40" height="22" fill="#555"/><rect x="140" y="88" width="40" height="22" fill="#555"/>
         </g></g>
-        <!-- 4 Centro con il Mac: oscurato -->
+        <!-- 4 Centro di Busto: oscurato, con il fast food -->
         <g class="node locked" transform="translate(150 40)"><g filter="url(#fog)">
           <rect x="0" y="30" width="70" height="60" fill="#a8463a"/><rect x="80" y="10" width="40" height="80" fill="#cfc4ae"/><polygon points="80,10 100,-12 120,10" fill="#8a7a64"/>
-          <rect x="130" y="40" width="110" height="50" fill="#c8302a"/><rect x="160" y="48" width="50" height="20" fill="#f6c83a"/>
+          <rect x="130" y="40" width="110" height="50" fill="#c8302a"/><rect x="130" y="34" width="110" height="8" fill="#f6c83a"/>
+          <rect x="250" y="20" width="6" height="70" fill="#777"/><rect x="236" y="0" width="34" height="26" rx="3" fill="#f6c83a"/>
+          <rect x="242" y="5" width="22" height="6" rx="3" fill="#c8862a"/><rect x="241" y="12" width="24" height="3" fill="#5a2e1a"/><rect x="241" y="16" width="24" height="2" fill="#5fb84a"/><rect x="242" y="19" width="22" height="4" rx="2" fill="#c8862a"/>
+          <rect x="165" y="56" width="40" height="34" fill="#2a3440"/>
         </g></g>
         <!-- etichette -->
         <g class="lbl"><rect x="130" y="448" width="230" height="44" rx="4" fill="#12161c" stroke="#ffd25e" stroke-width="2"/><text x="145" y="468" class="t1">1 · TIGROS</text><text x="145" y="484" class="t2">Liberato · Fab e Loris sono scappati</text></g>
-        <g class="lbl dim"><rect x="555" y="446" width="210" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="570" y="466" class="t1">2 · TRIBUNALE DI BUSTO</text><text x="570" y="482" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lbl dim"><rect x="555" y="446" width="240" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="570" y="466" class="t1">2 · TRIBUNALE DI BUSTO</text><text x="570" y="482" class="t2">Bloccato · prossimamente</text></g>
         <g class="lbl dim"><rect x="640" y="176" width="210" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="655" y="196" class="t1">3 · HAPPY SHOPPING</text><text x="655" y="212" class="t2">Bloccato · prossimamente</text></g>
-        <g class="lbl dim"><rect x="150" y="152" width="230" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="165" y="172" class="t1">4 · IL CENTRO COL MAC</text><text x="165" y="188" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lbl dim"><rect x="150" y="152" width="230" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="165" y="172" class="t1">4 · IL CENTRO DI BUSTO</text><text x="165" y="188" class="t2">Bloccato · prossimamente</text></g>
         <g class="lock"><text x="635" y="400">?</text><text x="740" y="128">?</text><text x="265" y="110">?</text></g>
       </svg>
     </div>
