@@ -243,32 +243,39 @@ In Avventura (e anche in Sandbox, per vederle) quando batti **Fab La Rue** esce 
 
 Dal menu, **Mappa del mondo** apre la mappa di Busto. Scegli un luogo (pulsanti sotto la mappa o clic sull'edificio) e vedi il suo stato, la sua intro e il suo finale, e puoi andarci a giocare.
 
-## Prossimo mondo: il Tribunale (da fare)
+## Mondo 3: il Tribunale
 
-Appunti della storia, da sviluppare quando arrivano le foto (Libe il matto, Well, gli orchi, Fabio Regaglia, Pika, Leodessi, Castelluccio, Bulegato).
-
-**Viaggio**: dopo l'Happy Shopping il gruppo, al completo, sale in macchina con **Damiano** e **Libe il matto**. Durante il viaggio Libe racconta cosa è successo (schermate con testo e immagini mentre si arriva). **Pika**, il governatore del Tribunale che vendeva sigarette di contrabbando, è stato corrotto dai Mammutones e da **Well** con i suoi **orchi** (mostri inventati). Pika è sotto un maleficio e obbedisce per forza. Ha imprigionato **Leodessi**, **Castelluccio** e **Bulegato** nel suo garage. Anche **Fabio Regaglia** (2,50 m) è stato corrotto.
-
-**Percorso, in ordine**
+Si apre in Avventura dopo aver finito l'Happy Shopping (in Sandbox subito). Si parte con l'intro: il viaggio in macchina con **Libe il matto** e **Damiano**, e il racconto di Libe. Monete iniziali: 1500.
 
 | Area | Nemici | Boss / evento |
 |---|---|---|
-| 1 · Parcheggio di fianco al Tribunale | Mammutones, i ratti di Fab | **Fab La Rue** al round 5, sconfitto una volta per tutte: libera la strada bloccata |
-| 2 · Piazza con i tavolini del Tribunale | **orchi di Well** (due tipi), Mammutones, un nemico nuovo di un altro tipo | **Well** attacca con gli orchi dal round 6; **Fabio Regaglia**, gigante, al round 10 |
-| 3 · Garage di Pika | ratti e **ratti più grossi**, alcuni Mammutones speciali | si aprono dopo aver battuto Fabio Regaglia: liberi Leodessi, Castelluccio e Bulegato. **Pika** combatte, viene sconfitto per poco e scappa su in casa |
-| 4 · Casa di Pika (con l'ascensore) | alcuni Mammutones speciali | c'è **Loris** con Pika: è lui che gli ha fatto il maleficio. Loris scappa subito, Pika resta a combattere. Sconfitto Pika, il maleficio si spezza |
+| 1 · Parcheggio | Mammutones, Cornuti, Grossi, qualche Impossessato | **Fab La Rue** dal round 5, sconfitto per sempre: la barricata sparisce e la strada si apre |
+| 2 · Piazza dei tavolini | **orchi di Well** (col tubo e col palo), Mammutones, Impossessati | **Well** dal round 6 (chiama gli orchi); poi **Fabio Regaglia** dal round 10. Battuto Fabio, la saracinesca del garage si apre |
+| 3 · Garage di Pika | ratti, **ratti fachiri**, Impossessati | con **E** liberi Leodessi, Castelluccio e Bulegato dalle gabbie; poi arriva **Pika**, che a metà vita scappa con l'ascensore |
+| 4 · Casa di Pika (ascensore in fondo al garage) | Impossessati, orchi | c'è **Loris Busato**: ha fatto lui il maleficio, e scappa dalla finestra. Poi **Pika** combatte: sconfitto, è libero e si sbloccano tutti i personaggi del Tribunale |
 
-**Boss e personaggi sbloccabili**
+### Nemici nuovi
 
-| Chi | Come nemico | Dopo |
-|---|---|---|
-| Fabio Regaglia | gigante di 2,50 m ai tavolini, round 10 | diventa giocabile |
-| Pika | colpisce anche da lontano (con una spada o simile) | liberato dal maleficio, diventa giocabile |
+| Nemico | Vita | Velocità | Danno | Monete | Note |
+|---|---|---|---|---|---|
+| Orco di Well (tubo) | 220 | 2,7 | 15 | 120 | mostro inventato, pelle grigio-verde, zanne, stracci |
+| Orco di Well (palo) | 340 | 2,15 | 22 | 160 | più grosso e lento |
+| Ratto fachiro | 120 | 4,2 | 10 | 70 | mezzo ratto e mezzo fachiro: scuro, pieno di denti, chiodi sulla schiena |
+| Mammutones Impossessato | 260 | 2,6 | 14 | 120 | persone possedute dai Mammutones: verdi, più alti, con le corna e gli occhi verdi |
 
-**Ordine di lavoro**: prima i personaggi e i nemici (foto e prompt in arrivo), poi le armi.
+### Boss
 
-- Loris compare solo nella scena della casa di Pika e scappa subito: non si combatte.
-- I Mammutones "speciali" del garage e della casa sono da definire.
+| Boss | Vita | Danno | Speciale |
+|---|---|---|---|
+| Fab La Rue (parcheggio) | 2000 | 16 | chiama i ratti |
+| Well | 6500 | 26 | ogni 9 s chiama 2 orchi col tubo e 1 col palo |
+| Fabio Regaglia | 11000 | 42 | gigante corazzato con la lancia, lento; chiama Impossessati e orchi |
+| Pika (garage) | 5000 | 24 | lancia pacchetti di sigarette da lontano (16 danni, si schivano spostandosi); a metà vita scappa |
+| Pika (casa) | 9000 | 24 | come sopra, fino alla fine |
+
+### Armi al muro del Tribunale
+
+Pistola (parcheggio), fucile a pompa (parcheggio), AK-47 (piazza), bazooka (garage). Le armi nuove arriveranno nel prossimo passo.
 
 ### Personaggi del Tribunale
 

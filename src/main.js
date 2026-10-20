@@ -5,14 +5,15 @@ import { ROSTER, POWERS, MIRKO_MODEL, DAMIANO_MODEL } from './characters/roster.
 import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 const SPR = SPRITES.map(c => c.fn());
-import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo } from './characters/styled.js';
+import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss } from './characters/styled.js';
+import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR } from './world/tribunale.js';
 import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
 import { gzBar, gzSolids } from './world/parking.js';
 import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
-import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS } from './config/balance.js';
+import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, BOSS_WELL, BOSS_FABIO, BOSS_PIKA } from './config/balance.js';
 import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoorSolid, OFFICE_DOOR, LORIS_SPOT, updateWare } from './world/warehouse.js';
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
@@ -27,10 +28,12 @@ let lastUnlock = null, mode = 'adv', quiet = false, sinceHit = 99, god = false, 
 let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead = false, power = false, packs = 0, bag = 0;
 /* world 1 = Tigros, world 2 = Happy Shopping */
 let world = 1, pickWorld = 1, capoDead = false, rings = [];
+/* mondo 3 = Tribunale */
+let wellDead = false, fabioDead = false, pikaFled = false, pikaDead = false, lorisScene = false, casaT = 0, hostile = [];
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
-const region = p => (world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
-const zoneIdx = () => (world === 2 ? HS_ZONE0 + zone : zone);
+const region = p => (world === 3 ? trRegion(p) : world === 2 ? (inHSStore(p) ? 'hsin' : 'hsout') : inBasement(p) ? 'base' : inWare(p) ? 'ware' : inStore(p) ? 'store' : 'out');
+const zoneIdx = () => (world === 3 ? TR_ZONE0 + zone : world === 2 ? HS_ZONE0 + zone : zone);
 let wave = 0, toSpawn = 0, spawnT = 0, breakT = 0, alive = 0, kills = 0, coins = ECONOMY.start, mirko = null, zone = 0, time = 0;
 const keys = {}; let yaw = Math.PI, pitch = -0.12, mouseDown = false, fireT = 0, locked = false, rDrag = false, everLocked = false;
 const SPAWN = {
@@ -72,8 +75,9 @@ function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; 
 
 /* ===================== NEMICI ===================== */
 /* in sandbox la difficolta' dipende da dove sei, in avventura dalla zona piu' avanzata aperta */
-function diffZone() { if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
+function diffZone() { if (world === 3) return TR_ZONE0 + (P ? TR_ORDER[trRegion(P.pos)] : zone); if (world === 2) return HS_ZONE0 + (mode === 'sandbox' && P ? (inHSStore(P.pos) ? 1 : 0) : zone); if (mode !== 'sandbox' || !P) return zone; const r = region(P.pos); return r === 'base' ? 3 : r === 'ware' ? (inOffice(P.pos) ? 5 : 4) : r === 'store' ? 2 : 1; }
 function spawnPoints() {
+  if (world === 3) return TR_SPAWNS[P ? trRegion(P.pos) : 'trpark'];
   if (world === 2) { if (mode === 'sandbox' && P) return inHSStore(P.pos) ? HS_SPAWNS_IN : HS_SPAWNS_OUT; return zone >= 1 ? HS_SPAWNS_OUT.concat(HS_SPAWNS_IN) : HS_SPAWNS_OUT; }
   if (mode === 'sandbox' && P && !inBasement(P.pos)) { const r = region(P.pos); return r === 'ware' ? WARE_SPAWNS : r === 'store' ? STORE_SPAWNS : SPAWN.parcheggio.concat(SPAWN.gazebo); } if (P && inBasement(P.pos)) return BASE_SPAWNS; let pts = SPAWN.parcheggio; if (gzOpen()) pts = pts.concat(SPAWN.gazebo); if (zone >= 2) pts = pts.concat(STORE_SPAWNS, STORE_SPAWNS); if (zone >= 4) pts = pts.concat(WARE_SPAWNS, WARE_SPAWNS, WARE_SPAWNS); return pts; }
 function spawnEnemy(forceType, at) {
@@ -85,17 +89,25 @@ function spawnEnemy(forceType, at) {
   m.userData.hit.body.userData.enemy = e; m.userData.hit.head.userData.enemy = e; m.userData.hit.head.userData.head = true;
   enemies.push(e); alive++; if (type !== 'ratto') bell(); return e;
 }
+/* tutti i boss: dati, modello, dove escono, nome sulla barra, chi chiamano */
+const BOSSK = {
+  fab: { B: BOSS_FAB, build: buildFabBoss, at: () => (world === 3 ? FAB_SPOT3 : LAIR), r: 0.55, name: 'Fab La Rue · Re dei ratti', minions: ['ratto', 'ratto', 'ratto'], call: 'Fab chiama i ratti!',
+         title: 'Fab La Rue!', sub: () => (world === 3 ? 'Ti aspettava: blocca la strada per il Tribunale' : 'Il re dei ratti esce dalla tana') },
+  loris: { B: BOSS_LORIS, build: buildLoris, at: () => LORIS_SPOT, r: 0.65, name: 'Loris Busato · Capo dei Mammutones', minions: ['furia', 'furia', 'base', 'base'], call: 'Loris chiama i Mammutones!', title: 'Loris Busato!', sub: () => 'Il capo dei Mammutones esce dall\'ufficio' },
+  capo: { B: BOSS_CAPO, build: buildCapo, at: () => CAPO_SPOT, r: 0.85, name: 'Il Capo · Padrone dell\'Happy Shopping', minions: ['cornuto', 'base', 'base'], call: 'Il Capo chiama i Mammutones dal magazzino!', title: 'Il Capo!', sub: () => 'Esce dal magazzino: occhio quando abbassa la testa e carica' },
+  well: { B: BOSS_WELL, build: buildWell, at: () => WELL_SPOT, r: 0.6, name: 'Well · Capo degli orchi', minions: ['orco', 'orco', 'orcone'], call: 'Well chiama i suoi orchi!', title: 'Well!', sub: () => 'Arriva ai tavolini con i suoi orchi' },
+  fabio: { B: BOSS_FABIO, build: buildFabio, at: () => FABIO_SPOT, r: 0.75, name: 'Fabio Regaglia · Il gigante maledetto', minions: ['impossessato', 'orco'], call: 'Fabio Regaglia chiama rinforzi!', title: 'Fabio Regaglia!', sub: () => 'Il gigante di 2 metri e mezzo, maledetto e corazzato' },
+  pika: { B: BOSS_PIKA, build: buildPikaBoss, at: () => (P && inCasa(P.pos) ? PIKA_SPOT_C : PIKA_SPOT_G), r: 0.5, name: 'Pika · Governatore del Tribunale (sotto maleficio)', minions: ['fachiro', 'impossessato'], call: 'Pika chiama i suoi!', title: 'Pika!', sub: () => (P && inCasa(P.pos) ? 'Il maleficio di Loris lo controlla: liberalo!' : 'Il governatore del Tribunale, impossessato. Ti lancia le sigarette da lontano') },
+};
 function spawnBoss(kind = 'fab') {
-  const capo = kind === 'capo';
-  const B = kind === 'loris' ? BOSS_LORIS : capo ? BOSS_CAPO : BOSS_FAB;
-  const m = kind === 'loris' ? buildLoris() : capo ? buildCapo() : buildFabBoss();
-  const at = kind === 'loris' ? LORIS_SPOT : capo ? CAPO_SPOT : LAIR; m.position.set(at.x, 0, at.z); scene.add(m);
-  const hp = Math.round(B.hp * (1 + (kind === 'fab' ? 0.04 : 0.03) * wave));
-  boss = { m, kind, capo, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: kind === 'loris' ? 0.65 : capo ? 0.85 : 0.55, kick: 0, summon: B.summonEvery, ch: null, chCd: 4 };
+  const K = BOSSK[kind], B = K.B, m = K.build(), at = K.at(); m.position.set(at.x, 0, at.z); scene.add(m);
+  const phase = kind === 'pika' ? (inCasa(P.pos) ? 2 : 1) : 0;
+  const base = kind === 'pika' && phase === 1 ? B.hpGarage : B.hp;
+  const hp = Math.round(base * (1 + (kind === 'fab' ? 0.04 : 0.03) * wave));
+  boss = { m, kind, capo: kind === 'capo', phase, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0, summon: B.summonEvery, ch: null, chCd: 4, throwT: 2 };
   m.userData.hit.body.userData.enemy = boss; m.userData.hit.head.userData.enemy = boss; m.userData.hit.head.userData.head = true;
-  enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = kind === 'loris' ? 'Loris Busato · Capo dei Mammutones' : capo ? 'Il Capo · Padrone dell\'Happy Shopping' : 'Fab La Rue · Re dei ratti';
-  if (capo) banner('Il Capo!', 'Esce dal magazzino: occhio quando abbassa la testa e carica');
-  else banner(kind === 'loris' ? 'Loris Busato!' : 'Fab La Rue!', kind === 'loris' ? 'Il capo dei Mammutones esce dall\'ufficio' : 'Il re dei ratti esce dalla tana'); tone(110, 0.8, 'sawtooth', 0.08, 60);
+  enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = K.name;
+  banner(K.title, K.sub()); tone(110, 0.8, 'sawtooth', 0.08, 60);
 }
 function goDown() {
   despawnOther(true); P.pos.set(BASE_START.x, 0, BASE_START.z); yaw = BASE_START.yaw;
@@ -107,7 +119,7 @@ function despawnOther(down) {
   enemies = enemies.filter(e => !e.gone);
 }
 function collide(pos, r, extra) {
-  const Bd = world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
+  const Bd = world === 3 ? (inCasa(pos) ? CASA : TRB) : world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
   pos.x = Math.max(Bd.x1 + r, Math.min(Bd.x2 - r, pos.x)); pos.z = Math.max(Bd.z1 + r, Math.min(Bd.z2 - r, pos.z));
   for (const s of solids) {
     if (s.off) continue;
@@ -178,12 +190,14 @@ function explode(p, R, dmg, small, skip) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), boomM.clone()); m.position.copy(p); scene.add(m); let t = 0;
   const step = () => { t += 0.016; m.scale.setScalar(0.5 + t * R * 6); m.material.opacity = Math.max(0, 0.85 - t * 2.6); if (t < 0.33) requestAnimationFrame(step); else { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } }; step();
   if (small) tone(140, 0.12, 'square', 0.03, 60); else { tone(70, 0.6, 'sawtooth', 0.12, 30); shake(0.4); }
-  for (const e of enemies) { if (e.dead || e === skip) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
+  if (dmg > 0) for (const e of enemies) { if (e.dead || e === skip) continue; const c = e.m.position.clone(); c.y = Math.min(Math.max(p.y, 0), 1.6); const d = c.distanceTo(p); if (d < R + (e.r || 0.4)) damageEnemy(e, dmg * (1 - 0.5 * Math.min(1, d / R)), false); }
 }
 function tracer(a, b) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const l = new THREE.Line(g, tracerM); scene.add(l); tracers.push({ l, t: 0.06 }); }
 function spark(p, blood) { const m = new THREE.Mesh(sparkG, blood ? bloodM : sparkM); m.position.copy(p); scene.add(m); sparks.push({ m, t: 0.18 }); }
 function earn(n) { coins += n * (P && P.pwT > 0 && P.pw.k === 'coins' ? 2 : 1); }
 function damageEnemy(e, d, head) {
+  if (e.flee) return;
+  if (e.boss && e.kind === 'pika' && e.phase === 1 && e.hp - d <= e.max * 0.5) { e.hp = e.max * 0.5; pikaFlee(e); return; }
   e.hp -= d; earn(ECONOMY.hit); e.kick = 0.18;
   if (e.hp <= 0 && !e.dead) {
     e.dead = 1; e.deadT = 0; earn(e.reward + (head ? ECONOMY.headKill : 0)); kills++; alive--;
@@ -194,6 +208,7 @@ function damageEnemy(e, d, head) {
 }
 function bossDown() {
   const kind = boss && boss.kind, bpos = boss && boss.m.position.clone(); boss = null; $('boss').hidden = true;
+  if (world === 3) { trBossDown(kind, bpos); return; }
   if (kind === 'loris' && mode === 'sandbox') { lorisDead = true; banner('Loris Busato è sconfitto!', 'Esci dall\'ufficio e rientra per sfidarlo di nuovo'); return; }
   if (kind === 'loris') { lorisDead = true; lastUnlock = unlockChar('loris'); banner('Loris Busato è sconfitto!', 'Il Tigros è salvo');
     setTimeout(() => rescue(4, 'Leo', 'Finalmente! Loris mi aveva chiuso in ufficio. Grazie raga, siete dei grandi!', bpos), 1800); setTimeout(victory, 7600); return; }
@@ -224,7 +239,7 @@ function pickup(d) {
 }
 
 /* ---------- armi al muro ---------- */
-const ALL_BUYS = WALL_BUYS.concat(HS_BUYS);
+const ALL_BUYS = WALL_BUYS.concat(HS_BUYS, TR_BUYS);
 const wallMeshes = ALL_BUYS.map(wb => {
   const G = new THREE.Group();
   const chalk = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.9), new THREE.MeshBasicMaterial({ map: sign(WEAPONS[wb.id].n.toUpperCase(), '700 30px Arial,sans-serif', '#f4f0e0', 190, 90), transparent: true, opacity: 0.9 }));
@@ -262,6 +277,9 @@ const INTER = [
   { x: 34, z: 17.2, r: 2.6, label: () => 'La rampa per il seminterrato è bloccata, per ora', cost: () => 0 },
   /* mondo 2 */
   { x: HS_DOOR.x, z: 1.7, r: 3, label: () => world !== 2 || zone >= 1 ? null : `<b>E</b> Apri l'Happy Shopping · <b>${ZONES[HS_ZONE0 + 1].cost}</b>`, cost: () => (zone < 1 ? ZONES[HS_ZONE0 + 1].cost : 0), act: () => openHS() },
+  ...CAGES.map(c => ({ x: c.x, z: c.z + 1.9, r: 2.3, label: () => world === 3 && !c.freed && (zone >= 2 || mode === 'sandbox') ? `<b>E</b> Libera ${c.name}` : null, cost: () => 0, free: () => true, act: () => freeCage(c) })),
+  { x: LIFT.x, z: LIFT.z + 1.8, r: 2.4, label: () => world === 3 && inGarage(P.pos) ? (zone >= 3 || mode === 'sandbox' ? '<b>E</b> Sali a casa di Pika' : 'L\'ascensore è bloccato') : null, cost: () => 0, free: () => zone >= 3 || mode === 'sandbox', act: goCasa },
+  { x: TX + 97.5, z: -1.4, r: 2.4, label: () => world === 3 && inCasa(P.pos) ? '<b>E</b> Torna giù nel garage' : null, cost: () => 0, free: () => true, act: goGarage },
   { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => banner('Damiano Ducaj', '«Bel casino qua a Busto, stasera cosa facciamo?»') },
 ];
 function openHS() {
@@ -294,22 +312,96 @@ function bubbleTex(name, txt) {
   const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding; return tx;
 }
 let rescues = [];
-function rescue(model, name, txt, at) {
+function rescue(model, name, txt, at, o = {}) {
   if (state !== 'play' || !P) return;
-  const m = buildHuman(model); let from = P.pos.clone().add(new V3(-Math.sin(yaw) * 4, 0, -Math.cos(yaw) * 4)); if (at) { const v = at.clone().sub(P.pos); v.y = 0; const L = v.length(); if (L > 0.5) from = P.pos.clone().addScaledVector(v.normalize(), Math.min(L, 5)); } from.y = 0; collide(from, 0.4, 1); m.position.copy(from); scene.add(m);
+  const m = o.build ? o.build() : buildHuman(model); let from = P.pos.clone().add(new V3(-Math.sin(yaw) * 4, 0, -Math.cos(yaw) * 4)); if (at) { const v = at.clone().sub(P.pos); v.y = 0; const L = v.length(); if (L > 0.5) from = P.pos.clone().addScaledVector(v.normalize(), Math.min(L, 5)); } from.y = 0; collide(from, 0.4, 1); m.position.copy(from); scene.add(m);
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(name, txt), depthTest: false, transparent: true, toneMapped: false })); sp.scale.set(2.6, 1.12, 1); sp.position.y = (m.userData.height || 1.8) + 0.9; sp.renderOrder = 20; m.add(sp);
-  rescues.push({ m, t: 0, life: 5.5 }); banner(name + ' è libero!', 'Ti viene a ringraziare'); bell();
+  if (o.build && at) { m.position.copy(at); }
+  rescues.push({ m, t: 0, life: o.life || 5.5, to: o.to || null, s0: m.scale.x }); banner(o.title || name + ' è libero!', o.sub || 'Ti viene a ringraziare'); bell();
 }
 function updRescues(dt) {
   for (const r of rescues) {
-    r.t += dt; const m = r.m; const to = P.pos.clone().sub(m.position); to.y = 0; const d = to.length();
+    r.t += dt; const m = r.m; const to = (r.to || P.pos).clone().sub(m.position); to.y = 0; const d = to.length(); const stop = r.to ? 0.2 : 2.4;
     m.rotation.y = Math.atan2(to.x, to.z);
-    if (r.t < r.life - 1 && d > 2.4) { m.position.addScaledVector(to.normalize(), Math.min(d - 2.4, 4 * dt)); collide(m.position, 0.4, 1); r.walk = (r.walk || 0) + dt * 9; animLimbs(m, r.walk, 0.55); }
+    if (r.t < r.life - 1 && d > stop) { m.position.addScaledVector(to.normalize(), Math.min(d - stop, 4 * dt)); collide(m.position, 0.4, 1); r.walk = (r.walk || 0) + dt * 9; animLimbs(m, r.walk, 0.55); }
     else if (r.t < r.life - 1) { m.userData.P.armR.rotation.x = -2.6 + Math.sin(r.t * 9) * 0.4; }
-    if (r.t > r.life - 1) { const k = Math.max(0.001, r.life - r.t); m.scale.setScalar(k); m.position.y += dt * 1.5; }
+    if (r.t > r.life - 1) { const k = Math.max(0.001, r.life - r.t); m.scale.setScalar(r.s0 * k); m.position.y += dt * 1.5; }
     if (r.t >= r.life) { scene.remove(m); r.gone = 1; }
   }
   rescues = rescues.filter(r => !r.gone);
+}
+
+/* ===================== MONDO 3: IL TRIBUNALE ===================== */
+function G3add(o) { if (!o.parent) { o.visible = true; } o.visible = true; }
+function openGate() { trGate.visible = false; trGateSolid.off = 1; }
+function openGarage() { trGDoor.visible = false; trGDoorSolid.off = 1; }
+function openLift() { liftLed.material.color.set('#3aff6a'); }
+function openTR() { openGate(); openGarage(); openLift(); zone = 3; }
+/* chi sta nella zona sbagliata sparisce quando prendi l'ascensore (come nel seminterrato) */
+function despawnTR(toCasa) { for (const e of enemies) { if (e.dead || e.boss) continue; if (inCasa(e.m.position) !== toCasa) { scene.remove(e.m); e.gone = 1; alive--; toSpawn++; } } enemies = enemies.filter(e => !e.gone); }
+function endFlee(msg) {
+  if (!boss || !boss.flee) return; scene.remove(boss.m); boss.gone = 1; boss.dead = 1; alive--; enemies = enemies.filter(e => e !== boss); boss = null; $('boss').hidden = true;
+  pikaFled = true; if (zone < 3) zone = 3; openLift(); if (msg) banner('Pika è salito in casa', 'Prendi l\'ascensore in fondo al garage');
+}
+function goCasa() { if (boss) boss.flee = 1; endFlee(false); despawnTR(true); P.pos.set(CASA_START.x, 0, CASA_START.z); yaw = CASA_START.yaw; banner('Casa di Pika', 'Qualcuno ti aspetta…'); }
+function goGarage() { despawnTR(false); P.pos.set(LIFT.x, 0, LIFT.z + 2.4); yaw = 0; }
+const CAGE_LINES = { Leodessi: 'Raga, finalmente! Pika ci teneva chiusi qui da giorni.', Castelluccio: 'Grazie! Pika non è cattivo, è il maleficio. Dobbiamo salvarlo.', Bulegato: 'Il re dei vampiri vi ringrazia. Andiamo a prendere Pika.' };
+function freeCage(c) {
+  c.freed = true; c.bars.visible = false; c.solid.off = 1; c.who.visible = false;
+  rescue(c.model, c.name, CAGE_LINES[c.name], new V3(c.x, 0, c.z));
+  if (CAGES.every(k => k.freed)) setTimeout(() => { if (state === 'play' && world === 3) banner('Tutti liberi!', 'Ma qualcuno sta scendendo dalle scale…'); }, 5200);
+}
+function pikaFlee(e) { e.flee = 1; e.fleeT = 5; banner('Pika scappa!', 'Sale in casa con l\'ascensore: seguilo'); tone(200, 0.5, 'triangle', 0.06, 600); }
+function trBossDown(kind, at) {
+  const rats = () => { for (const e of enemies) if (!e.dead && (e.type === 'ratto' || e.type === 'fachiro')) { e.dead = 1; e.deadT = 0; alive--; } };
+  if (kind === 'fab') { fabDead = true; rats(); if (mode === 'adv' && zone < 1) { zone = 1; openGate(); } banner('Fab La Rue è sconfitto per sempre!', 'La strada è libera: vai verso i tavolini del Tribunale'); return; }
+  if (kind === 'well') { wellDead = true; banner('Well scappa!', 'Gli orchi restano… e dai tavolini si alza un gigante'); return; }
+  if (kind === 'fabio') { fabioDead = true; if (mode === 'adv' && zone < 2) { zone = 2; openGarage(); } banner('Fabio Regaglia è a terra!', 'Il maleficio si indebolisce: la saracinesca del garage si apre'); return; }
+  if (kind === 'pika') { pikaDead = true;
+    for (const e of enemies) if (!e.dead) { e.dead = 1; e.deadT = 0; alive--; }
+    setTimeout(() => rescue(18, 'Pika', 'Raga… non ero io. Era il maleficio di Loris. Grazie per avermi liberato!', at), 1600);
+    if (mode === 'sandbox') { banner('Pika è libero!', 'Esci di casa e rientra per sfidarlo di nuovo'); return; }
+    unlocks.tr = 1; try { localStorage.setItem('mt_unlocks', JSON.stringify(unlocks)); } catch (_) {} renderPick();
+    lastUnlock = { name: 'Leodessi, Castelluccio, Bulegato, Libe il matto e Pika' };
+    banner('Pika è libero dal maleficio!', 'Il Tribunale è vostro'); setTimeout(victory, 7600);
+  }
+}
+/* scena nella casa di Pika: c'e' Loris che gli ha fatto il maleficio, poi scappa dalla finestra */
+function casaScene() {
+  if (lorisScene) return; lorisScene = true; casaT = 4.8;
+  rescue(null, 'Loris Busato', 'Il maleficio è fatto: ora Pika è mio. Ci rivediamo, ragazzi!', new V3(TX + 114, 0, -12), { build: buildLoris, to: new V3(TX + 116, 0, -15.2), life: 4.6, title: 'Loris Busato!', sub: 'Era lui dietro al maleficio' });
+}
+/* pacchetti di sigarette lanciati da Pika: atterrano dove eri, se ti sposti li schivi */
+function pikaThrow(e) {
+  const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.07), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.162, 0.08, 0.072), packM[1]); top.position.y = 0.08; g.add(top);
+  const from = e.m.position.clone(); from.y += 1.6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.4;
+  hostile.push({ m: g, from, to, t: 0, T: 0.55 + from.distanceTo(to) * 0.03 }); tone(500, 0.08, 'triangle', 0.04, 260);
+  const A = e.m.userData.P.armL; A.rotation.x = -2.6; setTimeout(() => { A.rotation.x = 0; }, 180);
+}
+function updTR(dt) {
+  const r = trRegion(P.pos);
+  if (mode === 'sandbox') {
+    if (r !== 'trpark') fabDead = false; if (r !== 'trpiazza') { wellDead = false; fabioDead = false; } if (r !== 'trgarage') pikaFled = false; if (r !== 'trcasa') { pikaDead = false; lorisScene = false; }
+    if (!boss) { if (r === 'trpark' && !fabDead) spawnBoss('fab'); else if (r === 'trpiazza' && !wellDead) spawnBoss('well'); else if (r === 'trpiazza' && !fabioDead) spawnBoss('fabio');
+      else if (r === 'trgarage' && !pikaFled) spawnBoss('pika'); else if (r === 'trcasa' && !pikaDead) casaScene(); }
+  } else if (!boss) {
+    if (!fabDead && r === 'trpark' && wave >= TR_FAB_WAVE) spawnBoss('fab');
+    else if (zone >= 1 && !wellDead && r === 'trpiazza' && wave >= BOSS_WELL.wave) spawnBoss('well');
+    else if (zone >= 1 && wellDead && !fabioDead && r === 'trpiazza' && wave >= BOSS_FABIO.wave) spawnBoss('fabio');
+    else if (zone >= 2 && !pikaFled && r === 'trgarage' && CAGES.every(c => c.freed) && !rescues.length) spawnBoss('pika');
+    else if (zone >= 3 && !pikaDead && r === 'trcasa') casaScene();
+  }
+  if (casaT > 0) { casaT -= dt; if (casaT <= 0 && !boss && !pikaDead && inCasa(P.pos)) spawnBoss('pika'); }
+  /* Pika: lancia le sigarette da lontano; nel garage a meta' vita scappa verso l'ascensore */
+  if (boss && boss.kind === 'pika' && !boss.dead) {
+    if (boss.flee) { boss.fleeT -= dt; if (boss.fleeT <= 0 || boss.m.position.distanceTo(new V3(LIFT.x, 0, LIFT.z)) < 1.6) endFlee(true); }
+    else { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d < 24 && d > 2.5) { boss.throwT = BOSS_PIKA.throwEvery * (0.8 + Math.random() * 0.4); pikaThrow(boss); } }
+  }
+  for (const h of hostile) {
+    h.t += dt; const k = Math.min(1, h.t / h.T); h.m.position.lerpVectors(h.from, h.to, k); h.m.position.y += Math.sin(k * Math.PI) * 1.6; h.m.rotation.x += dt * 12; h.m.rotation.z += dt * 8;
+    if (k >= 1) { explode(h.to, 1.3, 0, true); const dd = Math.hypot(P.pos.x - h.to.x, P.pos.z - h.to.z); if (dd < 1.4) hit(BOSS_PIKA.throwDmg * ZONES[diffZone()].dmg); scene.remove(h.m); h.gone = 1; }
+  }
+  hostile = hostile.filter(h => !h.gone);
 }
 
 /* ===================== PIPISTRELLI DI BULEGATO ===================== */
@@ -500,7 +592,7 @@ function invBuy(kind) {
 function feed(t) { const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); setTimeout(() => d.remove(), 2600); while ($('feed').children.length > 5) $('feed').lastChild.remove(); }
 let bannerT = 0; const bannerFn = (t, s) => banner(t, s); const feedFn = t => feed(t); function banner(t, s) { $('banner').innerHTML = t + (s ? `<small>${s}</small>` : ''); $('banner').hidden = false; bannerT = 2.6; }
 function hud() {
-  $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[zoneIdx()].n + '</small>'; $('coins').textContent = coins;
+  $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[world === 3 ? diffZone() : zoneIdx()].n + '</small>'; $('coins').textContent = coins;
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
   const w = P.weapons[P.cur]; const inf = P.pwT > 0 && P.pw.k === 'ammo'; $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
   $('ammo').innerHTML = w.melee ? '⚔' : inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
@@ -516,7 +608,7 @@ function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(window.__dtMax || 0.05, (t - last) / 1000); last = t;
   pollPad(); if (pad.connected) padMenus(dt);
   if (state === 'play') { time += dt; update(dt); }
-  else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
+  else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   renderer.render(scene, camera);
   if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
 }
@@ -560,7 +652,10 @@ function update(dt) {
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
-  if (world === 2) { if (inHSStore(P.pos)) { cam.x = Math.max(HSTORE.x1 + 0.4, Math.min(HSTORE.x2 - 0.4, cam.x)); cam.z = Math.max(HSTORE.z1 + 0.4, Math.min(HSTORE.z2 - 0.3, cam.z)); cam.y = Math.min(HSTORE.ceil - 0.4, cam.y); } else { cam.x = Math.max(HSB.x1 + 0.6, Math.min(HSB.x2 - 0.6, cam.x)); cam.z = Math.max(0.7, Math.min(HSB.z2 - 0.6, cam.z)); } }
+  if (world === 3) { const A = inCasa(P.pos) ? CASA : inGarage(P.pos) ? GARAGE : null;
+    if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
+    else { cam.x = Math.max(TRB.x1 + 0.6, Math.min(TRB.x2 - 0.6, cam.x)); cam.z = Math.max(-29.4, Math.min(TRB.z2 - 0.6, cam.z)); } }
+  else if (world === 2) { if (inHSStore(P.pos)) { cam.x = Math.max(HSTORE.x1 + 0.4, Math.min(HSTORE.x2 - 0.4, cam.x)); cam.z = Math.max(HSTORE.z1 + 0.4, Math.min(HSTORE.z2 - 0.3, cam.z)); cam.y = Math.min(HSTORE.ceil - 0.4, cam.y); } else { cam.x = Math.max(HSB.x1 + 0.6, Math.min(HSB.x2 - 0.6, cam.x)); cam.z = Math.max(0.7, Math.min(HSB.z2 - 0.6, cam.z)); } }
   else if (inBasement(P.pos)) { cam.x = Math.max(BASE.x1 + 0.4, Math.min(BASE.x2 - 0.4, cam.x)); cam.z = Math.max(BASE.z1 + 0.4, Math.min(BASE.z2 - 0.4, cam.z)); cam.y = Math.min(BASE.ceil - 0.3, cam.y); }
   else if (inWare(P.pos)) { cam.x = Math.max(WARE.x1 + 0.4, Math.min(WARE.x2 - 0.4, cam.x)); cam.z = Math.max(WARE.z1 + 0.4, cam.z); cam.y = Math.min(WARE.ceil - 0.4, cam.y); }
   else if (inStore(P.pos)) { cam.x = Math.max(STORE.x1 + 0.4, Math.min(STORE.x2 - 0.4, cam.x)); cam.z = Math.max(STORE.z1 + 0.4, Math.min(STORE.z2 - 0.3, cam.z)); cam.y = Math.min(STORE.ceil - 0.4, cam.y); }
@@ -585,7 +680,11 @@ function update(dt) {
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
     EP.bells.forEach((b, k) => { b.rotation.x = Math.sin(time * 6 + k + e.walk) * 0.3; });
     let goal = P.pos; const er = region(m.position), pr = region(P.pos);
-    if (world === 2) { if (er !== pr) { /* prima davanti alla porta dalla propria parte, poi dall'altra */ const ds = er === 'hsout' ? 1 : -1, gx = Math.max(HS_DOOR.x - 1.6, Math.min(HS_DOOR.x + 1.6, m.position.x)), aligned = Math.abs(m.position.x - HS_DOOR.x) < HS_DOOR.w / 2 - 0.7 && Math.abs(m.position.z) < 2.6; goal = new V3(gx, 0, aligned ? -ds * 2.4 : ds * 2.2); } }
+    if (e.flee) goal = new V3(LIFT.x, 0, LIFT.z);
+    else if (world === 3) { if (er !== pr && er !== 'trcasa' && pr !== 'trcasa') { const a = TR_ORDER[er], b = TR_ORDER[pr], D = (a < b ? a : a - 1) === 0 ? TR_GATE : TR_GDOOR;
+      const ds = Math.sign(m.position.z - D.z) || 1, gx = Math.max(D.x - D.w / 2 + 1, Math.min(D.x + D.w / 2 - 1, m.position.x)), aligned = Math.abs(m.position.x - D.x) < D.w / 2 - 0.7 && Math.abs(m.position.z - D.z) < 2.6;
+      goal = new V3(gx, 0, aligned ? D.z - ds * 2.4 : D.z + ds * 2.2); } }
+    else if (world === 2) { if (er !== pr) { /* prima davanti alla porta dalla propria parte, poi dall'altra */ const ds = er === 'hsout' ? 1 : -1, gx = Math.max(HS_DOOR.x - 1.6, Math.min(HS_DOOR.x + 1.6, m.position.x)), aligned = Math.abs(m.position.x - HS_DOOR.x) < HS_DOOR.w / 2 - 0.7 && Math.abs(m.position.z) < 2.6; goal = new V3(gx, 0, aligned ? -ds * 2.4 : ds * 2.2); } }
     else if (pr !== 'base' && er !== pr) {
       const viaShop = er === 'out' || (er === 'store' && pr === 'out');
       if (viaShop) goal = new V3(Math.max(DOOR.x - 2.6, Math.min(DOOR.x + 2.6, m.position.x)), 0, er === 'out' ? DOOR.z - 1.4 : DOOR.z + 1.4);
@@ -614,7 +713,8 @@ function update(dt) {
   updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
-  if (world === 2) { updateHS(time);
+  if (world === 3) { updateTR(time); updTR(dt); }
+  else if (world === 2) { updateHS(time);
     if (mode === 'sandbox') { if (!inHSStore(P.pos)) capoDead = false; if (!boss && !capoDead && inHSStore(P.pos)) spawnBoss('capo'); }
     else if (!boss && !capoDead && zone >= 1 && wave >= BOSS_CAPO.wave) spawnBoss('capo');
   } else { updateStore(time); updateBasement(time, power); updateWare(time);
@@ -628,8 +728,8 @@ function update(dt) {
   } }
   /* vita che si ricarica dopo qualche secondo senza colpi */
   sinceHit += dt; if (sinceHit > REGEN.delay && P.hp < 100) P.hp = Math.min(100, P.hp + REGEN.perSec * dt);
-  if (boss && !boss.dead) { boss.summon -= dt; if (boss.summon <= 0) { const L = boss.kind === 'loris', C = boss.capo; boss.summon = L ? BOSS_LORIS.summonEvery : C ? BOSS_CAPO.summonEvery : BOSS_FAB.summonEvery;
-      const list = L ? ['furia', 'furia', 'base', 'base'] : C ? ['cornuto', 'base', 'base'] : ['ratto', 'ratto', 'ratto']; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(L ? 'Loris chiama i Mammutones!' : C ? 'Il Capo chiama i Mammutones dal magazzino!' : 'Fab chiama i ratti!'); }
+  if (boss && !boss.dead && !boss.flee) { boss.summon -= dt; if (boss.summon <= 0) { const K = BOSSK[boss.kind]; boss.summon = K.B.summonEvery;
+      const list = boss.kind === 'pika' && boss.phase === 2 ? ['impossessato', 'orcone'] : K.minions; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(K.call); }
     $('bossb').style.width = Math.max(0, boss.hp / boss.max * 100) + '%'; }
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
@@ -684,20 +784,29 @@ function resetWorld() {
     if (zone >= 1) { scene.add(gzBar); gzSolids.forEach(s => (s.off = 0)); } if (zone >= 2) { scene.add(storeDoor); doorSolid.off = 0; } }
   if (hsDoorSolid.off) { scene.add(hsDoor); hsDoorSolid.off = 0; }
   capoDead = false; rings.forEach(r => scene.remove(r.m)); rings = [];
+  if (trGateSolid.off) { G3add(trGate); trGateSolid.off = 0; } if (trGDoorSolid.off) { G3add(trGDoor); trGDoorSolid.off = 0; } liftLed.material.color.set('#ff3030');
+  CAGES.forEach(c => { c.freed = false; c.bars.visible = true; c.who.visible = true; c.solid.off = 0; });
+  wellDead = fabioDead = pikaFled = pikaDead = lorisScene = false; casaT = 0; hostile.forEach(h => scene.remove(h.m)); hostile = [];
   zone = 0; shieldMesh.visible = false;
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
 addEventListener('keydown', e => { if (e.code === 'KeyF') { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else fullscreen(); } });
-let seenHS = false;
+let seenHS = false, seenTR = false;
 function startGame(i) {
+  if (pickWorld === 3 && mode === 'adv' && !seenTR) { seenTR = true; $('sel').hidden = true; showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Scendi dalla macchina', () => startGame(i))); return; }
   if (pickWorld === 2 && mode === 'adv' && !seenHS) { seenHS = true; $('sel').hidden = true; showTale('hsIntro', 'Entra nel parcheggio', () => startGame(i)); return; }
   fullscreen();
   charIdx = i; resetWorld(); world = pickWorld; applyWorldLook(world); newPlayer(i);
-  if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
+  if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; }
+  if (world === 3) { P.pos.set(TR_START.x, 0, TR_START.z); yaw = TR_START.yaw; coins = TR_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
   const wc = $('who'); const sp = SPR[ROSTER[i].sprite]; const g = wc.getContext('2d'); g.clearRect(0, 0, 17, 16);
   for (let y = 0; y < 16; y++) for (let x = 0; x < 17; x++) { const c = sp.g[sp.top - 3 + y] && sp.g[sp.top - 3 + y][14 + x]; if (c && !String(c).startsWith('rgba')) { g.fillStyle = c; g.fillRect(x, y, 1, 1); } }
   sinceHit = 99;
+  if (world === 3) {
+    if (mode === 'sandbox') { openTR(); coins = SANDBOX.coins; lock(); banner('Sandbox · Tribunale', 'Ogni zona ha il suo boss: entra e sfidalo'); audio(); return; }
+    lock(); banner('Il Tribunale di Busto', 'Fab La Rue blocca la strada: arriva al round ' + TR_FAB_WAVE); audio(); return;
+  }
   if (world === 2) {
     if (mode === 'sandbox') { quiet = true; openHS(); quiet = false; coins = SANDBOX.coins; lock(); banner('Sandbox · Happy Shopping', 'Tutto aperto: entra nel negozio per sfidare il Capo'); audio(); return; }
     lock(); banner('Happy Shopping', 'Tefalin e Diego sono qui · difendi il parcheggio, poi apri il negozio'); audio(); return;
@@ -714,7 +823,7 @@ function resume() { state = 'play'; $('pause').hidden = true; last = performance
 function gameOver(title, msg) {
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
   $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = title || 'Ti hanno <span>preso</span>';
-  $('deadmsg').textContent = msg || world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
+  $('deadmsg').textContent = msg ? msg : world === 3 ? `${ROSTER[charIdx].name} è caduto al Tribunale (${ZONES[diffZone()].n}). Pika ride dal balcone.` : world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
   $('deadstats').innerHTML = `<div>${wave}<small>Ondata raggiunta</small></div><div>${kills}<small>Mammutones abbattuti</small></div>`;
 }
 function victory() {
@@ -724,14 +833,19 @@ function victory() {
 /* finale: complimenti, i boss scappano, poi la mappa del mondo */
 function showEnding(real, wf) {
   if (!real) { const ww = wf || pickWorld; if (state !== 'play' && world !== ww) { world = ww; applyWorldLook(ww); } }
-  $('endNext').hidden = !(real && world === 1 && mode === 'adv'); $('endCont').hidden = !real; $('endCont').firstChild.textContent = world === 2 ? 'Resta all\'Happy Shopping' : 'Resta al Tigros';
+  $('endNext').hidden = !(real && world < 3 && mode === 'adv'); $('endNext').firstChild.textContent = world === 2 ? 'Vai al Tribunale' : 'Vai all\'Happy Shopping'; $('endNext').lastChild.textContent = world === 2 ? 'in macchina con Libe il matto' : 'ricomincia dal mondo 2';
+  $('endCont').hidden = !real; $('endCont').firstChild.textContent = world === 3 ? 'Resta al Tribunale' : world === 2 ? 'Resta all\'Happy Shopping' : 'Resta al Tigros';
   ['sel', 'dead', 'pause', 'world', 'tale'].forEach(id => ($(id).hidden = true));
   $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
   const who = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
-  const w2 = real ? world === 2 : wf ? wf === 2 : pickWorld === 2;
-  $('endkick').textContent = w2 ? 'Mappa 2 completata' : 'Mappa 1 completata';
-  $('endtitle').innerHTML = w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
-  $('endtext').innerHTML = w2
+  const ww = real ? world : wf || pickWorld, w2 = ww === 2;
+  $('endkick').textContent = 'Mappa ' + ww + ' completata';
+  $('endtitle').innerHTML = ww === 3 ? 'Pika è <span>libero</span>!' : w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
+  $('endtext').innerHTML = ww === 3
+    ? `<p><b>${who}</b> ha liberato il Tribunale. Fab La Rue è sconfitto per sempre, Well è scappato con quello che resta dei suoi orchi e Fabio Regaglia è tornato in sé.</p>
+       <p>Nel garage avete liberato <b>Leodessi</b>, <b>Castelluccio</b> e <b>Bulegato</b>. E sopra, a casa sua, il maleficio di Loris si è spezzato: <b>Pika</b> è di nuovo lui, e chiede scusa a tutti con un pacchetto di sigarette in mano.</p>
+       <p>Ma Loris Busato è scappato dalla finestra. Il gruppo adesso è al completo, e c'è un'ultima tappa: il <b>centro di Busto</b>.</p>`
+    : w2
     ? `<p><b>${who}</b> ha messo al tappeto il Capo in mezzo ai jeans piegati. Dietro le casse c'era <b>Debe</b>, costretto a lavorare lì giorno e notte: adesso è libero e si unisce al gruppo insieme a <b>Tefalin</b> e <b>Diego</b>.</p>
        <p>Nel cassetto della cassa principale, sotto una pila di scontrini, c'era una lettera:</p>
        <div class="letter">«Gli altri vostri amici non sono spariti. Sono tenuti in segreto nel <b>garage di Pika</b>, al <b>Tribunale</b>. Se volete liberare Busto Arsizio, dovete andare a prendere anche loro.»</div>
@@ -757,7 +871,7 @@ const PLACES = {
        t: 'Il supermercato di Busto preso da Loris Busato e dai Mammutones. Sei zone: parcheggio, gazebo Buongusto, negozio, seminterrato con Fab La Rue, magazzino e l\'ufficio di Loris.' },
   2: { n: 'Happy Shopping', open: () => hsOpen() || mode === 'sandbox', state: () => unlocks.hs ? 'Liberato · Debe è libero' : hsOpen() ? 'Disponibile · Mondo 2' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura batti prima Loris' : 'Bloccato · in Avventura batti prima Loris',
        t: 'Il bazar di Sant\'Edoardo. Parcheggio e negozio, Tefalin e Diego da ritrovare, il Capo da sconfiggere per liberare Debe.' },
-  3: { n: 'Tribunale di Busto', open: () => false, state: () => 'Bloccato · prossimamente',
+  3: { n: 'Tribunale di Busto', open: () => !!unlocks.hs || mode === 'sandbox', state: () => unlocks.tr ? 'Liberato · Pika è libero dal maleficio' : unlocks.hs ? 'Disponibile · Mondo 3' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima l\'Happy Shopping' : 'Bloccato · finisci prima l\'Happy Shopping',
        t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Well e Fabio Regaglia, i garage e la casa di Pika.' },
   4: { n: 'Il centro di Busto', open: () => false, state: () => 'Bloccato · prossimamente', t: 'L\'ultima tappa: liberare Busto Arsizio.' },
 };
@@ -766,7 +880,7 @@ function showPlace(k) {
   document.querySelectorAll('[data-place]').forEach(b => { const on = +b.dataset.place === k; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   document.querySelectorAll('[data-node]').forEach(n => n.classList.toggle('sel', +n.dataset.node === k));
   $('plName').textContent = Q.n; $('plState').textContent = Q.state(); $('plState').classList.toggle('lock', !Q.open()); $('plText').textContent = Q.t;
-  $('plPlay').hidden = !Q.open(); $('plIntro').hidden = k > 2; $('plEnd').hidden = k > 2;
+  $('plPlay').hidden = !Q.open(); $('plIntro').hidden = k > 3; $('plEnd').hidden = k > 3;
 }
 document.querySelectorAll('[data-place]').forEach(b => b.addEventListener('click', () => showPlace(+b.dataset.place)));
 document.querySelectorAll('[data-node]').forEach(n => n.addEventListener('click', () => showPlace(+n.dataset.node)));
@@ -820,18 +934,20 @@ let taleDone = null;
 function showTale(id, btn, done) { $('taleBody').innerHTML = $(id).innerHTML; $('taleGo').textContent = btn; taleDone = done; ['sel', 'world', 'ending'].forEach(k => ($(k).hidden = true)); $('tale').hidden = false; menuIdx = 0; }
 $('taleGo').onclick = () => { $('tale').hidden = true; const d = taleDone; taleDone = null; if (d) d(); };
 const backToMap = () => { $('world').hidden = false; menuIdx = 0; if (state === 'menu' && world !== pickWorld) { world = pickWorld; applyWorldLook(world); } };
-$('plIntro').onclick = () => { if (place === 2) showTale('hsIntro', 'Torna alla mappa', backToMap); else { $('world').hidden = true; $('story').hidden = false; storyBack = true; } };
+$('plIntro').onclick = () => { if (place === 3) showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Torna alla mappa', backToMap)); else if (place === 2) showTale('hsIntro', 'Torna alla mappa', backToMap); else { $('world').hidden = true; $('story').hidden = false; storyBack = true; } };
 $('plEnd').onclick = () => { showEnding(false, place); endBack = true; };
 $('plPlay').onclick = () => { const k = place; toMenu(); setWorld(k); };
 let storyBack = false, endBack = false;
 $('previewEnd').onclick = () => { place = pickWorld; showWorld(); }; $('toWorld').onclick = () => { endBack = false; showWorld(); };
 /* dopo il boss finale: continuare con le ondate infinite o passare al mondo dopo */
 $('endCont').onclick = () => { $('ending').hidden = true; state = 'play'; $('hud').hidden = false; last = performance.now(); lock(); banner('Ondate infinite', 'Resisti finché ce la fai'); };
-$('endNext').onclick = () => { const c = charIdx; toMenu(); setWorld(2); startGame(ROSTER[c] && !isLocked(ROSTER[c]) ? c : 0); }; $('worldBack').onclick = toMenu;
+$('endNext').onclick = () => { const c = charIdx, nw = world + 1; toMenu(); setWorld(nw); startGame(ROSTER[c] && !isLocked(ROSTER[c]) ? c : 0); }; $('worldBack').onclick = toMenu;
 function setWorld(w) {
   pickWorld = w; document.querySelectorAll('[data-world]').forEach(x => { const on = +x.dataset.world === w; x.setAttribute('aria-pressed', on ? 'true' : 'false'); x.classList.toggle('ghost', !on); });
   $('w2btn').classList.toggle('locked', !hsOpen()); $('w2sub').textContent = hsOpen() ? 'il Capo del bazar' : 'in Avventura: finisci il Tigros';
-  const wi = $('worldinfo'); wi.hidden = w !== 2;
+  const wi = $('worldinfo'); wi.hidden = w === 1;
+  if ($('w3btn')) { $('w3btn').classList.toggle('locked', !unlocks.hs); $('w3sub').textContent = unlocks.hs ? 'Pika e il maleficio' : 'in Avventura: finisci l\'Happy Shopping'; }
+  if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Well (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
   if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
   if (state === 'menu') { world = w; applyWorldLook(w); }
 }
@@ -845,7 +961,7 @@ const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finis
 let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
 /* Tefalin, Diego e Debe vengono dall'Happy Shopping: in Avventura servono Loris battuto (e Debe il Capo), in Sandbox sempre disponibili */
 const isLocked = c => { if (c.world >= 2 && mode === 'sandbox') return false; if (c.world === 3) return !unlocks.tr; if (c.world === 2 && !unlocks.loris) return true; return !!c.unlock && !unlocks[c.unlock]; };
-const lockTxt = c => c.world === 3 ? 'Prigioniero nel garage di Pika, al Tribunale (prossimamente). In Sandbox puoi già provarlo' : c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
+const lockTxt = c => c.world === 3 ? 'Si sblocca finendo il Tribunale (mondo 3). In Sandbox puoi già provarlo' : c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
 function unlockChar(k) {
   if (mode !== 'adv' || unlocks[k]) return null; unlocks[k] = 1; try { localStorage.setItem('mt_unlocks', JSON.stringify(unlocks)); } catch (_) {}
   renderPick(); const c = ROSTER.find(r => r.unlock === k); return c;
@@ -860,7 +976,7 @@ function renderPick() {
     b.insertAdjacentHTML('beforeend', `<b>${c.short}</b><span>${POWERS[c.power].n}</span>` + (lock ? LOCK_SVG + `<em>${lockTxt(c)}</em>` : ''));
     b.title = lock ? 'Bloccato: ' + lockTxt(c) : POWERS[c.power].d;
     b.onclick = () => {
-      const w2lock = pickWorld === 2 && mode === 'adv' && !hsOpen();
+      const w2lock = (pickWorld === 2 && mode === 'adv' && !hsOpen()) || (pickWorld === 3 && mode === 'adv' && !unlocks.hs);
       if (isLocked(c) || w2lock) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); tone(160, 0.12, 'square', 0.04); if (w2lock) $('worldinfo').hidden = false; return; } startGame(i); };
     $('pick').append(b);
   });
@@ -870,7 +986,7 @@ if (matchMedia('(pointer:coarse)').matches) $('touchwarn').hidden = false;
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, ...GENERATORS.map(g => g.led)]);
+bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
 applyWorldLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */

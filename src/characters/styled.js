@@ -569,6 +569,8 @@ const MAMM_LOOK = {
   cornuto: { fur: ['#e9e4da', '#d2cabd', '#f8f5ee', '#c4bbac'], mask: '#7a2e1c', maskHi: '#a8462c', kerch: '#efe9de', scale: 0.96, horns: 1 },
   grosso: { fur: ['#4a5568', '#39424f', '#5d6a7e', '#2f3642'], mask: '#141114', maskHi: '#2e282e', kerch: '#2f3640', scale: 1.4, eyes: 1 },
   furia: { fur: ['#3a1414', '#5a1e1a', '#2a0e0c', '#6a2a22'], mask: '#e8e0d0', maskHi: '#ffffff', kerch: '#8a1a1a', scale: 0.86, eyes: 1 },
+  /* impossessati: persone possedute dai Mammutones, piu' alte e grosse, verdi */
+  impossessato: { fur: ['#2e5a2a', '#3e7034', '#24461f', '#4e8a3e'], mask: '#0e1a0c', maskHi: '#1e3a18', kerch: '#5aa040', scale: 1.18, eyes: 1, eyeCol: '#7aff4a', horns: 1 },
 };
 const mammTemplates = {};
 function makeMammutones(type) {
@@ -621,7 +623,7 @@ function makeMammutones(type) {
   mesh(sph(0.15, 22, 16), wood, mk, [0, 0, 0], null, [0.95, 1.22, 0.55]);
   for (const sd of [-1, 1]) {
     mesh(sph(0.06, 12, 8), woodHi, mk, [sd * 0.055, 0.075, 0.055], [0, 0, sd * 0.2], [1.3, 0.45, 0.7]);
-    mesh(sph(0.03, 10, 8), L.eyes ? new THREE.MeshBasicMaterial({ color: '#ff2a2a' }) : hole, mk, [sd * 0.052, 0.035, 0.075], null, [1.2, 0.8, 0.5]);
+    mesh(sph(0.03, 10, 8), L.eyes ? new THREE.MeshBasicMaterial({ color: L.eyeCol || '#ff2a2a' }) : hole, mk, [sd * 0.052, 0.035, 0.075], null, [1.2, 0.8, 0.5]);
     mesh(sph(0.04, 10, 8), woodHi, mk, [sd * 0.07, -0.07, 0.06], null, [1, 0.8, 0.6]);
   }
   mesh(new THREE.ConeGeometry(0.035, 0.13, 10), woodHi, mk, [0, 0, 0.1], [Math.PI * 0.42, 0, 0]);
@@ -669,6 +671,8 @@ function makeRat() {
   finish(G); body.castShadow = head.castShadow = false; return G;
 }
 export function buildEnemy(type) {
+  if (type === 'orco' || type === 'orcone') return buildOrc(type);
+  if (type === 'fachiro') return buildFachiro();
   if (type !== 'ratto') return buildMammutones(type);
   if (!ratTemplate) ratTemplate = makeRat();
   const G = ratTemplate.clone(true); const P = { bells: [] };
@@ -724,5 +728,122 @@ export function buildCapo() {
   const body = mesh(new THREE.BoxGeometry(1.0, 1.65, 0.8), inv, G, [0, 0.85, 0]); body.name = 'hitBody';
   const head = mesh(new THREE.SphereGeometry(0.21, 8, 6), inv, G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
   G.userData.hit = { body, head }; G.userData.P.bells = []; G.userData.height = 1.95 * 1.55;
+  return G;
+}
+
+/* ===================== MONDO 3: IL TRIBUNALE ===================== */
+const invM = () => new THREE.MeshBasicMaterial({ visible: false });
+function addHits(G, bw, bh, bd, hr) {
+  const body = mesh(new THREE.BoxGeometry(bw, bh, bd), invM(), G, [0, bh / 2 + 0.05, 0]); body.name = 'hitBody';
+  const head = mesh(new THREE.SphereGeometry(hr, 8, 6), invM(), G.userData.P.head, [0, 0, 0]); head.name = 'hitHead';
+  body.castShadow = head.castShadow = false; G.userData.hit = { body, head }; G.userData.P.bells = G.userData.P.bells || [];
+}
+/* orchi di Well: mostri inventati, pelle grigio-verde, zanne, orecchie a punta, vestiti stracciati, armati di tubo o di palo */
+const orcTemplates = {};
+export function buildOrc(type) {
+  if (!orcTemplates[type]) {
+    const T0 = makeOrc(type); const P = T0.userData.P;
+    for (const k of ['legL', 'legR', 'armL', 'armR', 'head', 'torso']) P[k].name = k;
+    T0.traverse(o => { o.userData = {}; }); orcTemplates[type] = T0;
+  }
+  const G = orcTemplates[type].clone(true); const P = { bells: [] };
+  G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; });
+  G.userData.P = P; G.userData.height = type === 'orcone' ? 2.15 : 2.0; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  return G;
+}
+function makeOrc(type) {
+  const big = type === 'orcone';
+  const skin = big ? '#6a7a4a' : '#7a8a5a', rag = big ? '#3a3430' : '#2a2c34';
+  const G = human({
+    h: big ? 2.15 : 2.0, w: big ? 1.55 : 1.35, chest: big ? 1.2 : 1.1, arm: big ? 1.45 : 1.3, skin, top: rag, pants: big ? '#2a2620' : '#3a3e48', shoe: '#2a2420', sole: '#1a1612', sleeve: 'short', hair: '#141210', eye: '#e8c020', brow: 1, browTilt: 0.35, mouth: '#3a1a14',
+    hairFn: (H, mat) => { hairCap(H, mat, 0.14, big ? 0.22 : 0.3); if (!big) clumps(H, mat, 8, 311, 0.06); },
+    extra: (G, T, H, P, sk) => {
+      const tusk = M('#efe6cc', { roughness: 0.4 });
+      for (const sd of [-1, 1]) { mesh(new THREE.ConeGeometry(0.018, 0.07, 6), tusk, H, [sd * 0.04, -0.075, 0.115], [-0.25, 0, sd * 0.2]); mesh(new THREE.ConeGeometry(0.035, 0.12, 6), sk, H, [sd * 0.14, 0.03, -0.01], [0, 0, sd * -1.1]); }
+      mesh(sph(0.06, 10, 8), sk, H, [0, -0.04, 0.12], null, [1.3, 0.8, 0.8]);
+      const rg = M(rag, { roughness: 1 }), rg2 = M(big ? '#5a4a3a' : '#4a4e5a', { roughness: 1 }); seed = big ? 321 : 322;
+      for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; mesh(rbox(0.07, 0.12 + rnd() * 0.08, 0.02, 0.01), i % 2 ? rg : rg2, T, [Math.cos(a) * 0.15, -0.02, Math.sin(a) * 0.1], [0, -a + Math.PI / 2, (rnd() - 0.5) * 0.4]); }
+      mesh(rbox(0.1, 0.08, 0.02, 0.01), rg2, T, [0.06, 0.3, 0.12]); mesh(rbox(0.06, 0.1, 0.02, 0.01), rg2, T, [-0.08, 0.2, 0.12], [0, 0, 0.3]);
+      const wpn = M(big ? '#6a5a3a' : '#7a8086', { roughness: 0.5, metalness: big ? 0 : 0.6 });
+      const A = P.armR, hd = A.userData.hand.position;
+      const stick = mesh(new THREE.CylinderGeometry(big ? 0.05 : 0.035, big ? 0.06 : 0.035, big ? 1.5 : 1.0, 8), wpn, A, [hd.x, hd.y - 0.05, hd.z + 0.05], [Math.PI / 2 - 0.4, 0, 0]);
+      if (!big) mesh(new THREE.TorusGeometry(0.05, 0.02, 6, 10), wpn, A, [hd.x, hd.y - 0.25, hd.z + 0.5]);
+    },
+  });
+  G.scale.setScalar(1); addHits(G, big ? 0.9 : 0.75, big ? 2.1 : 1.95, 0.6, 0.2); G.userData.height = big ? 2.15 : 2.0;
+  return G;
+}
+/* ratto fachiro: mezzo ratto e mezzo fachiro, piu' grosso e scuro, pieno di denti, chiodi sulla schiena */
+let fachiroTemplate = null;
+export function buildFachiro() {
+  if (!fachiroTemplate) {
+    if (!ratTemplate) ratTemplate = makeRat();
+    const F = ratTemplate.clone(true); F.scale.setScalar(1.75);
+    F.traverse(o => { if (o.isMesh && o.material && o.material.color && o.name !== 'hitBody' && o.name !== 'hitHead') { o.material = o.material.clone(); o.material.color.multiplyScalar(0.45); } });
+    const head = F.getObjectByName('head'), torso = F.getObjectByName('torso');
+    const tooth = M('#f4f0e0', { roughness: 0.3 }), nail = M('#9aa0a6', { roughness: 0.3, metalness: 0.8 }), cloth = M('#e8dcc0', { roughness: 0.9 });
+    for (let k = 0; k < 6; k++) mesh(new THREE.ConeGeometry(0.012, 0.05, 5), tooth, head, [-0.05 + k * 0.02, -0.07, 0.22], [Math.PI, 0, 0]);
+    seed = 331; for (let k = 0; k < 18; k++) mesh(new THREE.ConeGeometry(0.012, 0.14, 5), nail, torso, [(rnd() - 0.5) * 0.3, 0.2 + rnd() * 0.04, -0.3 + rnd() * 0.5], [(rnd() - 0.5) * 0.4, 0, (rnd() - 0.5) * 0.4]);
+    mesh(new THREE.TorusGeometry(0.22, 0.05, 8, 18), cloth, torso, [0, -0.05, 0.05], [Math.PI / 2, 0, 0], [1, 1.3, 1]);
+    fachiroTemplate = F;
+  }
+  const G = fachiroTemplate.clone(true); const P = { bells: [] };
+  G.traverse(o => { if (['legL', 'legR', 'armL', 'armR', 'head', 'torso'].includes(o.name)) P[o.name] = o; });
+  G.userData.P = P; G.userData.height = 1.05; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
+  return G;
+}
+/* Well: il capo degli orchi. Cappello nero con la stampa bianca, felpa grigia col cappuccio, piumino marrone */
+export function buildWell() {
+  const G = human({
+    h: 1.78, w: 1.25, chest: 1.12, arm: 1.2, skin: '#e2b08c', top: '#4a3428', pants: '#26282e', shoe: '#e8e8e8', sole: '#bdbdbd', sleeve: 'long', cuff: '#3a2a20', hem: '#3a2a20', hair: '#1a1210', brow: 1, browTilt: 0.15,
+    hairFn: (H) => {
+      const blk = M('#16161a', { roughness: 0.9 }), wht = M('#e8e6e0', { roughness: 0.9 });
+      mesh(new THREE.SphereGeometry(0.152, 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.52), blk, H, [0, 0.01, -0.005], null, [1, 1.12, 1.05]);
+      mesh(new THREE.TorusGeometry(0.146, 0.022, 8, 24), blk, H, [0, 0.03, 0], [Math.PI / 2 + 0.08, 0, 0]);
+      seed = 341; for (let i = 0; i < 9; i++) { const a = rnd() * Math.PI * 2, y = 0.06 + rnd() * 0.09; mesh(rbox(0.06 + rnd() * 0.04, 0.03, 0.01, 0.005), wht, H, [Math.sin(a) * 0.15, y, Math.cos(a) * 0.15], [0, a, (rnd() - 0.5)]); }
+      for (let i = 0; i < 6; i++) mesh(sph(0.024, 8, 6), M('#1a1210', { roughness: 0.8 }), H, [-0.06 + i * 0.024, 0.04, 0.125]);
+    },
+    extra: (G, T, H) => {
+      const grey = M('#b4b6ba', { roughness: 0.9 });
+      mesh(new THREE.TorusGeometry(0.12, 0.05, 8, 20, Math.PI * 1.4), grey, T, [0, 0.58, -0.02], [Math.PI / 2 + 0.3, 0, Math.PI * 0.8]);
+      mesh(rbox(0.12, 0.42, 0.02, 0.01), grey, T, [0, 0.33, 0.12]);
+      for (const sd of [-1, 1]) limb([sd * 0.03, 0.55, 0.13], [sd * 0.035, 0.38, 0.14], 0.006, M('#d8dade'), T);
+      mesh(sph(0.22, 16, 12), M('#4a3428', { roughness: 0.8 }), T, [0, 0.3, 0.02], null, [1.1, 1.2, 0.85]);
+      for (let k = 0; k < 4; k++) mesh(new THREE.TorusGeometry(0.19 - k * 0.005, 0.012, 6, 20), M('#3a2a20', { roughness: 0.8 }), T, [0, 0.12 + k * 0.12, 0.01], [Math.PI / 2, 0, 0], [1.1, 0.85, 1]);
+    },
+  });
+  G.scale.setScalar(1.25); addHits(G, 0.8, 1.85, 0.6, 0.2); G.userData.height = 1.78 * 1.25;
+  return G;
+}
+/* Fabio Regaglia: gigante magro di 2,50 m, ricci, coperto da un'armatura stile Mammutones (pelli, corna) */
+function armorBits(T, H, P, horns, col) {
+  const fur = [M('#3a2e29', { roughness: 1 }), M('#2a2220', { roughness: 1 }), M('#4a3a32', { roughness: 1 })], steel = M(col || '#6a7078', { roughness: 0.35, metalness: 0.75 }), bone = M('#e8dcc0', { roughness: 0.5 });
+  mesh(sph(0.2, 14, 10), steel, T, [0, 0.36, 0.02], null, [1.05, 1.15, 0.8]);
+  for (const sd of [-1, 1]) { mesh(sph(0.11, 12, 8), steel, P[sd < 0 ? 'armL' : 'armR'], [0, 0.02, 0], null, [1.2, 0.8, 1.1]); seed = 351 + sd; for (let k = 0; k < 7; k++) mesh(sph(0.06, 8, 6), fur[k % 3], T, [sd * (0.12 + rnd() * 0.06), 0.55 + rnd() * 0.04, -0.06 + rnd() * 0.12], null, [1.2, 0.6, 1.2]); }
+  for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; mesh(rbox(0.08, 0.2, 0.025, 0.01), fur[k % 3], T, [Math.cos(a) * 0.16, -0.05, Math.sin(a) * 0.11], [0, -a + Math.PI / 2, 0]); }
+  for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) mesh(new THREE.ConeGeometry(0.02, 0.07, 6), bone, P[sd < 0 ? 'armL' : 'armR'], [sd * 0.05, -0.03 - k * 0.05, -0.04], [0, 0, sd * 1.4]);
+  if (horns) { const hn = M('#1d1a1a', { roughness: 0.5 }); for (const sd of [-1, 1]) { const c = new THREE.CatmullRomCurve3([new V3(sd * 0.1, 0.12, -0.02), new V3(sd * 0.24, 0.2, -0.05), new V3(sd * 0.3, 0.34, -0.02), new V3(sd * 0.26, 0.44, 0.04)]); mesh(new THREE.TubeGeometry(c, 10, 0.024, 6, false), hn, H); } }
+}
+export function buildFabio() {
+  const G = human({
+    h: 1.95, w: 0.95, arm: 1.0, skin: '#e8bc9c', top: '#3a3e44', pants: '#2a2e34', shoe: '#2a2a2e', sole: '#1a1a1e', sleeve: 'long', cuff: '#5a6068', hair: '#3a2618', eye: '#8a2a2a', brow: 1, browTilt: 0.25,
+    hairFn: (H) => { const c = [M('#3a2618', { roughness: 0.6 }), M('#4e3420', { roughness: 0.6 })]; hairCap(H, c[0], 0.142, 0.44); backHair(H, c[0]); seed = 361;
+      for (let i = 0; i < 80; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.15, f = Math.sin(a) * rr; mesh(sph(0.033 + rnd() * 0.013, 8, 6), c[i % 2], H, [Math.cos(a) * rr, 0.11 + Math.sqrt(Math.max(0, 0.024 - rr * rr)) * 0.5 + rnd() * 0.03, f]); } },
+    extra: (G, T, H, P) => { armorBits(T, H, P, false, '#7a8088'); const st = M('#7a8088', { roughness: 0.35, metalness: 0.75 });
+      for (const sd of [-1, 1]) { mesh(rbox(0.12, 0.3, 0.14, 0.03), st, P[sd < 0 ? 'legL' : 'legR'], [0, -0.55, 0.03]); mesh(rbox(0.1, 0.22, 0.1, 0.02), st, P[sd < 0 ? 'armL' : 'armR'], [sd * 0.03, -0.38, 0.04]); }
+      mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.2, 8), M('#4a3020', { roughness: 0.6 }), P.armR, [0.03, -0.5, 0.3], [Math.PI / 2 - 0.3, 0, 0]);
+      mesh(new THREE.ConeGeometry(0.08, 0.3, 6), st, P.armR, [0.03, -0.18, 1.35], [Math.PI / 2 - 0.3, 0, 0]); },
+  });
+  G.scale.setScalar(1.62); addHits(G, 0.7, 1.95, 0.55, 0.19); G.userData.height = 1.95 * 1.62;
+  return G;
+}
+/* Pika impossessato: lui sotto e' normale, ma porta un'armatura di pelli e corna e ha gli occhi viola del maleficio */
+export function buildPikaBoss() {
+  const G = buildHuman(18); const P = G.userData.P; const T = P.torso, H = P.head;
+  armorBits(T, H, P, true, '#4a3a5a');
+  const glow = new THREE.MeshBasicMaterial({ color: '#c060ff' });
+  for (const sd of [-1, 1]) mesh(sph(0.016, 8, 6), glow, H, [sd * 0.048, 0.012, 0.128]);
+  const aura = mesh(new THREE.SphereGeometry(0.6, 14, 10), new THREE.MeshBasicMaterial({ color: '#9a40ff', transparent: true, opacity: 0.12, depthWrite: false }), G, [0, 1.0, 0], null, [1, 1.7, 1]);
+  G.scale.setScalar(1.12); addHits(G, 0.65, 1.75, 0.5, 0.18); G.userData.height = 1.75 * 1.12; G.userData.aura = aura;
   return G;
 }

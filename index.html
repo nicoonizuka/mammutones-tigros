@@ -47,7 +47,7 @@
     <h1>Mammutones <span>al Tigros</span></h1>
     <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
     <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button><button class="btn ghost" type="button" id="previewEnd">Mappa del mondo<small>storie e luoghi</small></button></div>
-    <div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button></div>
+    <div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button><button class="btn ghost" type="button" data-world="3" aria-pressed="false" id="w3btn">Mondo 3 · Tribunale<small id="w3sub">Pika e il maleficio</small></button></div>
     <p id="worldinfo" class="modeinfo" hidden></p>
     <p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p>
     <div class="pick" id="pick"></div>
@@ -93,6 +93,35 @@
   <p>Lì dentro ci sono <b>Tefalin</b> e <b>Diego</b>. E c'è <b>Debe</b>: il Capo lo tiene dietro le casse a lavorare, sfruttato, giorno e notte.</p>
   <p class="kicker">Il piano</p>
   <ol class="plan"><li>Ripulire il parcheggio e ritrovare Tefalin e Diego</li><li>Aprire il negozio e farsi strada tra gli scaffali</li><li>Sconfiggere il Capo e liberare Debe</li><li>Radunare tutti e partire verso il Tribunale</li></ol>
+</template>
+<template id="trIntro1">
+  <p class="kicker">Mondo 3 · Sulla strada, di notte</p>
+  <h1>Verso il <span>Tribunale</span></h1>
+  <svg viewBox="0 0 640 260" class="tale-art" role="img" aria-label="Libe il matto alla guida, Damiano accanto, gli amici dietro, di notte verso il Tribunale">
+    <rect width="640" height="260" fill="#1a2030"/><rect y="170" width="640" height="90" fill="#2a2a2e"/>
+    <g fill="#e0c040"><rect x="10" y="212" width="40" height="6"/><rect x="90" y="212" width="40" height="6"/><rect x="170" y="212" width="40" height="6"/><rect x="250" y="212" width="40" height="6"/><rect x="330" y="212" width="40" height="6"/><rect x="410" y="212" width="40" height="6"/><rect x="490" y="212" width="40" height="6"/><rect x="570" y="212" width="40" height="6"/></g>
+    <g fill="#3a4050"><rect x="0" y="110" width="44" height="60"/><rect x="52" y="96" width="44" height="74"/><rect x="104" y="82" width="44" height="88"/><rect x="156" y="68" width="44" height="102"/><rect x="208" y="104" width="44" height="66"/><rect x="260" y="90" width="44" height="80"/><rect x="312" y="76" width="44" height="94"/><rect x="364" y="62" width="44" height="108"/><rect x="416" y="98" width="44" height="72"/><rect x="468" y="84" width="44" height="86"/><rect x="520" y="70" width="44" height="100"/><rect x="572" y="106" width="44" height="64"/><rect x="624" y="92" width="44" height="78"/></g>
+    <g fill="#ffd25e" opacity=".7"><rect x="10" y="125" width="6" height="6"/><rect x="62" y="111" width="6" height="6"/><rect x="114" y="97" width="6" height="6"/><rect x="166" y="83" width="6" height="6"/><rect x="218" y="119" width="6" height="6"/><rect x="270" y="105" width="6" height="6"/><rect x="322" y="91" width="6" height="6"/><rect x="374" y="77" width="6" height="6"/><rect x="426" y="113" width="6" height="6"/><rect x="478" y="99" width="6" height="6"/><rect x="530" y="85" width="6" height="6"/><rect x="582" y="121" width="6" height="6"/><rect x="634" y="107" width="6" height="6"/></g>
+    <rect x="150" y="120" width="340" height="70" rx="14" fill="#c8b060"/><path d="M200 120 L240 80 H400 L450 120 Z" fill="#c8b060"/>
+    <path d="M214 120 L246 90 H316 V120 Z M326 120 V90 H396 L432 120 Z" fill="#9ac0d0" opacity=".85"/>
+    <circle cx="220" cy="192" r="24" fill="#121214"/><circle cx="220" cy="192" r="10" fill="#9aa3ad"/><circle cx="420" cy="192" r="24" fill="#121214"/><circle cx="420" cy="192" r="10" fill="#9aa3ad"/>
+    <rect x="470" y="140" width="22" height="12" fill="#ffe8a0"/><rect x="148" y="142" width="14" height="10" fill="#c0302a"/>
+    <circle cx="372" cy="104" r="11" fill="#e6b896"/><path d="M360 100 q12 -16 24 0 q-4 -6 -12 -6 q-8 0 -12 6z" fill="#2e2016"/>
+    <circle cx="290" cy="104" r="11" fill="#e4b896"/><path d="M279 100 q11 -15 22 0" fill="#21160f"/>
+    <circle cx="258" cy="106" r="9" fill="#ecc3a2"/><circle cx="306" cy="106" r="9" fill="#efc4a6" opacity=".9"/>
+    <rect x="372" y="60" width="150" height="34" rx="10" fill="#fffdf4"/><path d="M392 94 l-10 12 l20 -12z" fill="#fffdf4"/><text x="447" y="82" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700" fill="#12161c">Allacciatevi!</text>
+  </svg>
+  <p>Il gruppo esce dall'Happy Shopping e sale in macchina: alla guida c'è <b>Libe il matto</b>, accanto a lui <b>Damiano</b>, dietro tutti gli altri stretti come sardine. Libe prende le rotonde di Busto come se fossero curve di un rally.</p>
+  <p>E mentre guida, Libe racconta quello che ha visto al Tribunale.</p>
+</template>
+<template id="trIntro2">
+  <p class="kicker">Il racconto di Libe il matto</p>
+  <h1>Al Tribunale è successo <span>un bel casino</span></h1>
+  <p>«<b>Pika</b>, il governatore del Tribunale, quello che vendeva le sigarette di contrabbando… si è fatto corrompere. I Mammutones gli hanno portato <b>Well</b> e il suo esercito di <b>orchi</b>, e adesso il Tribunale è roba loro.»</p>
+  <p>«Ma Pika non lo fa apposta: c'è sotto un <b>maleficio</b>. Fa quello che gli dicono. E nel suo garage tiene chiusi <b>Leodessi</b>, <b>Castelluccio</b> e <b>Bulegato</b>.»</p>
+  <p>«Anche <b>Fabio Regaglia</b> è stato maledetto: due metri e mezzo di armatura. E all'ingresso c'è ancora <b>Fab La Rue</b> che blocca la strada.»</p>
+  <p class="kicker">Il piano</p>
+  <ol class="plan"><li>Battere Fab La Rue nel parcheggio, una volta per tutte (round 5)</li><li>Superare la strada e resistere ai tavolini: Well e i suoi orchi, poi Fabio Regaglia</li><li>Entrare nel garage e liberare Leodessi, Castelluccio e Bulegato</li><li>Salire con l'ascensore a casa di Pika e liberarlo dal maleficio</li></ol>
 </template>
 <div class="over" id="world" hidden>
   <div class="box">
