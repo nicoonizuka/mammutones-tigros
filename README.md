@@ -1,4 +1,4 @@
-# Mammutones al Tigros · v1.0
+# Mammutones al Tigros · v1.1
 
 Gioca qui: **https://mammutones-tigros.vercel.app**
 
@@ -118,6 +118,10 @@ Dopo l'Happy Shopping (prossimamente, già oscurati nella mappa del mondo): Trib
 ## Bilanciamento
 
 La legenda completa di armi, monete, nemici e zone è in [docs/legenda.md](docs/legenda.md).
+
+## Novità della 1.1
+
+Salto sugli oggetti, cassa delle armi in ogni mappa (con la minigun), bottiglie misteriose con poteri a tempo, stamina per la corsa, Loris che lancia campane, cielo nuovo. Tutti i dettagli in `docs/legenda.md`.
 
 ## Note
 

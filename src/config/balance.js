@@ -17,6 +17,7 @@ export const WEAPONS = {
   pistauto: { n: 'Pistola automatica', dmg: 15, rate: 0.075, mag: 20, res: 160, spread: 0.032, auto: true, pel: 1, reload: 1.5, sound: 0 },
   pompauto: { n: 'Fucile a pompa automatico', dmg: 22, rate: 0.26, mag: 12, res: 120, spread: 0.07, auto: true, pel: 7, reload: 2.8, sound: 1 },
   mitragliatore: { n: 'Mitragliatore', dmg: 38, rate: 0.072, mag: 80, res: 560, spread: 0.028, auto: true, pel: 1, reload: 3.4, sound: 0 },
+  minigun: { n: 'Minigun', dmg: 46, rate: 0.042, mag: 200, res: 800, spread: 0.04, auto: true, pel: 1, reload: 4.5, sound: 0 },
   mitra:   { n: 'Mitra',   dmg: 22, rate: 0.1,  mag: 30, res: 150, spread: 0.03, auto: true, pel: 1, reload: 2.0, sound: 0 },
 };
 export const HEADSHOT = 2;
@@ -93,11 +94,12 @@ export const DROPS = {
   maxArmor: 50,
 };
 
+export const ENEMY_DMG = 1.2;   // tutti i nemici fanno il 20% di danno in piu'
 export function enemyStats(type, wave, zoneIdx) {
   const E = ENEMIES[type], Z = ZONES[Math.min(zoneIdx, ZONES.length - 1)];
   return {
     hp: Math.round(E.hp * (1 + WAVES.hpGrowth * (wave - 1)) * Z.hp),
-    dmg: E.dmg * Z.dmg,
+    dmg: E.dmg * Z.dmg * ENEMY_DMG,
     spd: E.spd * (1 + Math.min(0.3, WAVES.speedGrowth * (wave - 1))),
     reward: Math.round(E.reward * Z.coins),
   };
@@ -110,7 +112,7 @@ export function pickType(zoneIdx) {
 
 /* ---------- BOSS ---------- */
 export const BOSS_FAB = { n: 'Fab La Rue', hp: 2000, spd: 2.4, dmg: 16, atkCd: 1.4, reward: 1500, summonEvery: 9, summonCount: 2, wave: 8 };
-export const BOSS_LORIS = { n: 'Loris Busato', hp: 12000, spd: 2.6, dmg: 26, atkCd: 1.25, reward: 5000, summonEvery: 10, wave: 15 };
+export const BOSS_LORIS = { n: 'Loris Busato', hp: 12000, spd: 3.3, dmg: 26, atkCd: 1.25, reward: 5000, summonEvery: 10, wave: 15 };
 /* il Capo dell'Happy Shopping: lento, tantissima vita, botte pesanti e ogni tanto carica a testa bassa */
 export const BOSS_CAPO = { n: "Il Capo dell'Happy Shopping", hp: 6000, spd: 1.9, dmg: 30, atkCd: 1.5, reward: 3000, summonEvery: 12, wave: 7,
   charge: { every: 7, wind: 0.9, dur: 1.2, mult: 4.2, dmg: 45 } };
@@ -136,3 +138,15 @@ export const TR_POWER_COST = 9000;   // riattivare la corrente per l'ascensore  
 export const BOSS_WELL = { n: 'Pierre', hp: 6500, spd: 2.5, dmg: 26, atkCd: 1.2, reward: 3500, summonEvery: 9, wave: 6 };
 export const BOSS_FABIO = { n: 'Fabio Regaglia', hp: 11000, spd: 1.9, dmg: 42, atkCd: 1.8, reward: 5000, summonEvery: 14, wave: 10 };
 export const BOSS_PIKA = { n: 'Pika', hp: 9000, hpGarage: 5000, spd: 2.7, dmg: 24, atkCd: 1.1, reward: 7000, summonEvery: 11, throwEvery: 2.2, throwDmg: 16 };
+
+/* ---------- CASSA DELLE ARMI (una per mappa, in una zona avanzata) ---------- */
+export const BOX_COST = 6500;
+export const BOX_POOL = [ { id: 'fucile', w: 10 }, { id: 'pompa', w: 10 }, { id: 'mitra', w: 10 }, { id: 'pistauto', w: 10 }, { id: 'ak47', w: 9 }, { id: 'deagle', w: 6 },
+  { id: 'pompauto', w: 8 }, { id: 'bazooka', w: 6 }, { id: 'mitragliatore', w: 5 }, { id: 'katana', w: 5 }, { id: 'minigun', w: 3 } ];
+/* ---------- BOTTIGLIE: ogni tanto ne compare una, bevendola perdi un po' di vita ma hai un potere per poco ---------- */
+export const BOTTLE = { every: [45, 75], hpCost: 15, dur: 15 };
+export const BOTTLE_FX = [
+  { k: 'ammo', n: 'Munizioni infinite', w: 25 }, { k: 'head', n: 'Solo colpi in testa', w: 22 }, { k: 'saldi', n: 'Saldi: tutto a metà prezzo', w: 20 },
+  { k: 'coins', n: 'Soldi doppi', w: 20 }, { k: 'spada', n: 'Ottieni la spada', w: 9 }, { k: 'insta', n: 'Un colpo, un morto (tranne i boss)', w: 4 } ];
+/* ---------- STAMINA ---------- */
+export const STAMINA = { drain: 0.24, regen: 0.18, min: 0.25 };   // circa 4 secondi di corsa, poi devi riprendere fiato

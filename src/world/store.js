@@ -69,7 +69,7 @@ const fruitG = new THREE.SphereGeometry(0.075, 8, 6), fruitM = new THREE.MeshSta
 const fruits = new THREE.InstancedMesh(fruitG, fruitM, 4 * 220 + 60); let fi = 0; const d3 = new THREE.Object3D(), col = new THREE.Color();
 setSeed(12);
 for (const [x, z] of [[-7.5, -19.5], [-1.8, -19.5], [-7.5, -24.5], [-1.8, -24.5]]) {
-  mesh(rbox(4.6, 0.85, 1.9, 0.08), wood, scene, [x, 0.43, z]); mesh(rbox(4.8, 0.08, 2.1, 0.03), woodD, scene, [x, 0.88, z]); solid(x, z, 4.7, 2);
+  mesh(rbox(4.6, 0.85, 1.9, 0.08), wood, scene, [x, 0.43, z]); mesh(rbox(4.8, 0.08, 2.1, 0.03), woodD, scene, [x, 0.88, z]); solid(x, z, 4.7, 2, null, 0, 0.95);
   for (let k = 0; k < 220; k++) {
     if (rnd() < 0.25) continue; const zone = Math.floor(k / 28); const c = FRUIT[zone % FRUIT.length];
     d3.position.set(x - 2.15 + (k % 28) * 0.155 + (rnd() - 0.5) * 0.04, 0.98 + (rnd() * 0.08), z - 0.8 + Math.floor(k / 28) * 0.21); d3.scale.setScalar(0.8 + rnd() * 0.5); d3.updateMatrix();
@@ -100,8 +100,8 @@ function shelfUnit(x, fallen) {
   for (const sz of [-L / 2, L / 2]) mesh(rbox(1.1, Hh, 0.08, 0.02), shelfD, G, [0, Hh / 2, sz]);
   G.position.set(x, 0, -29); scene.add(G);
   G.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
-  if (fallen) { G.rotation.z = -Math.PI / 2 + 0.06; G.position.y = 0.55; G.position.x = x + 1.1; solid(x + 2.25, -29, 2.5, 14.2, G.children[0], 1.2);
-    solid(x + 3.9, -29, 2.6, 14, null); /* prodotti rovesciati a terra */
+  if (fallen) { G.rotation.z = -Math.PI / 2 + 0.06; G.position.y = 0.55; G.position.x = x + 1.1; solid(x + 2.25, -29, 2.5, 14.2, G.children[0], 1.2, 1.15);
+    solid(x + 3.9, -29, 2.6, 14, null, 0, 0.45); /* prodotti rovesciati a terra */
     for (let k = 0; k < 120; k++) addProd(x + 2.6 + rnd() * 2.4, 0.11, -36 + rnd() * 14, rnd() * 3, 0.9, PROD[k % PROD.length]); return; }
   solid(x, -29, 1.15, 14.2, G.children[0]);
   const prodColor = PROD[Math.floor(rnd() * PROD.length)];

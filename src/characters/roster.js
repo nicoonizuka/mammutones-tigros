@@ -3,7 +3,7 @@
 export const POWERS = {
   aim:    { k: 'aim',    n: 'Precisione',          d: 'Mira assistita, danno ×1,5 e spari più veloce', dur: 6,  cd: 22 },
   heal:   { k: 'heal',   n: 'Cura',                d: 'Recuperi 60 di vita',                           dur: 0,  cd: 28 },
-  speed:  { k: 'speed',  n: 'Velocità',            d: 'Corri quasi il doppio',                         dur: 6,  cd: 18 },
+  speed:  { k: 'speed',  n: 'Velocità e forza',    d: 'Corri quasi il doppio e fai quasi il doppio dei danni',                         dur: 6,  cd: 18 },
   shield: { k: 'shield', n: 'Scudo',               d: 'Non subisci danni',                             dur: 6,  cd: 24 },
   ammo:   { k: 'ammo',   n: 'Munizioni infinite',  d: 'Spari senza ricaricare',                        dur: 8,  cd: 24 },
   call:   { k: 'call',   n: 'Chiama Mirko',        d: 'Mirko arriva e combatte al tuo fianco',          dur: 12, cd: 35 },
@@ -11,7 +11,7 @@ export const POWERS = {
   double: { k: 'double', n: 'Doppio colpo',        d: 'Ogni colpo ne spara due',                       dur: 8,  cd: 24 },
   blast:  { k: 'blast',  n: "Onda d'urto",         d: 'Respinge e ferisce tutti i nemici vicini',      dur: 0,  cd: 20 },
   rage:   { k: 'rage',   n: 'Furia',               d: 'Ogni colpo fa il doppio dei danni',             dur: 9,  cd: 22 },
-  albanesi: { k: 'albanesi', n: 'Amici albanesi',  d: 'Arrivano due amici albanesi con l\'AK-47: sparano a raffica ai Mammutones (non al boss)', dur: 8, cd: 32 },
+  albanesi: { k: 'albanesi', n: 'Amici albanesi',  d: 'Arrivano due amici albanesi con l\'AK-47: sparano a raffica ai Mammutones (non al boss)', dur: 6, cd: 34 },
   fischio:  { k: 'fischio',  n: 'Fischio',         d: 'Fischia con le dita: tutti i nemici vicini restano congelati per qualche secondo', dur: 0, cd: 24 },
   lenti:    { k: 'lenti',    n: 'Proiettili lenti', d: 'Per qualche secondo ogni nemico che colpisci rallenta tantissimo', dur: 9, cd: 22 },
   matto:       { k: 'matto',       n: 'Da matto',        d: 'Il potere più inutile del gioco: Libe fa una cavolata da matto e perdi la partita', dur: 0, cd: 5 },

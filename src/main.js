@@ -9,13 +9,14 @@ const SPR = SPRITES.map(c => c.fn());
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
+import { makeSky, setSky, updateSky } from './render/sky.js';
 import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic } from './render/engine.js';
 import { gzBar, gzSolids } from './world/parking.js';
 import { STORE, DOOR, inStore, STORE_SPAWNS, storeDoor, doorSolid, updateStore, ESCALATOR, WAREHOUSE_DOOR, wareDoor, wareDoorSolid } from './world/store.js';
 import { audio, tone, shotSound, click, reloadSound, bell, pickS, buy, denied, hurt } from './audio.js';
-import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, TR_GARAGE_COST, TR_POWER_COST, BOSS_WELL, BOSS_FABIO, BOSS_PIKA } from './config/balance.js';
+import { WEAPONS, HEADSHOT, WALL_BUYS, ZONES, ECONOMY, WAVES, DROPS, enemyStats, pickType, ENEMIES, BOSS_FAB, RAT_SHARE, BOSS_LORIS, GENERATOR_COST, INVENTORY, REGEN, SANDBOX, BOSS_CAPO, HS_ZONE0, HS_START_COINS, TR_ZONE0, TR_START_COINS, TR_FAB_WAVE, BOX_COST, BOX_POOL, BOTTLE, BOTTLE_FX, STAMINA, TR_GARAGE_COST, TR_POWER_COST, BOSS_WELL, BOSS_FABIO, BOSS_PIKA } from './config/balance.js';
 import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoorSolid, OFFICE_DOOR, LORIS_SPOT, updateWare } from './world/warehouse.js';
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
@@ -70,7 +71,7 @@ function equip() {
 function newPlayer(i) {
   if (pModel) scene.remove(pModel);
   pModel = buildHuman(ROSTER[i].model); scene.add(pModel);
-  P = { pos: new V3(4, 0, -2), vy: 0, hp: 100, ar: 0, weapons: [newWeapon('pistola')], cur: 0, reloadT: 0, pw: POWERS[ROSTER[i].power], pwT: 0, pwCd: 0, hurtT: 0, walk: 0 };
+  P = { pos: new V3(4, 0, -2), vy: 0, hp: 100, ar: 0, weapons: [newWeapon('pistola')], cur: 0, reloadT: 0, pw: POWERS[ROSTER[i].power], pwT: 0, pwCd: 0, hurtT: 0, walk: 0, stam: 1, tired: false };
   yaw = 0; pitch = -0.1; equip();
 }
 function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; P.reloadT = 0; equip(); }
@@ -121,11 +122,14 @@ function despawnOther(down) {
   for (const e of enemies) { if (e.dead || e.boss) continue; if (inBasement(e.m.position) !== down) { scene.remove(e.m); e.gone = 1; alive--; toSpawn++; } }
   enemies = enemies.filter(e => !e.gone);
 }
-function collide(pos, r, extra) {
+/* oggetti bassi: se ci sei sopra non ti spingono via, ci stai in piedi */
+function groundY(pos) { let g = 0; for (const s of solids) { if (s.off || !s.top) continue; if (pos.x > s.x1 - 0.15 && pos.x < s.x2 + 0.15 && pos.z > s.z1 - 0.15 && pos.z < s.z2 + 0.15 && pos.y >= s.top - 0.35 && s.top > g) g = s.top; } return g; }
+const onGround = () => P.vy === 0 && P.pos.y <= groundY(P.pos) + 0.02;
+function collide(pos, r, extra, y) {
   const Bd = world === 3 ? (inCasa(pos) ? CASA : TRB) : world === 2 ? HSB : inBasement(pos) ? BASE : BOUNDS;
   pos.x = Math.max(Bd.x1 + r, Math.min(Bd.x2 - r, pos.x)); pos.z = Math.max(Bd.z1 + r, Math.min(Bd.z2 - r, pos.z));
   for (const s of solids) {
-    if (s.off) continue;
+    if (s.off) continue; if (y !== undefined && s.top && y >= s.top - 0.1) continue;
     if (pos.x + r > s.x1 && pos.x - r < s.x2 && pos.z + r > s.z1 && pos.z - r < s.z2) {
       const dx1 = s.x2 - (pos.x - r), dx2 = (pos.x + r) - s.x1, dz1 = s.z2 - (pos.z - r), dz2 = (pos.z + r) - s.z1; const m = Math.min(dx1, dx2, dz1, dz2);
       if (m === dx1) pos.x += dx1; else if (m === dx2) pos.x -= dx2; else if (m === dz1) pos.z += dz1; else pos.z -= dz2;
@@ -143,7 +147,7 @@ function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.de
 function shoot() {
   const w = P.weapons[P.cur]; if (P.reloadT > 0) return;
   if (w.melee) { slash(w); return; }
-  const inf = P.pwT > 0 && P.pw.k === 'ammo';
+  const inf = infAmmo();
   if (w.ammo <= 0 && !inf) { if (w.res > 0) startReload(); else click(); return; }
   if (!inf) w.ammo--;
   const aimPow = P.pwT > 0 && P.pw.k === 'aim';
@@ -167,7 +171,7 @@ function shoot() {
     for (const h of hits) {
       const e = h.object.userData.enemy; if (!e) { end = h.point; spark(h.point, false); break; }
       if (e.dead || hitE.has(e)) continue; hitE.add(e);
-      const head = !!h.object.userData.head; const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1) * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1);
+      const head = !!h.object.userData.head || buffK('head'); const mult = (head ? HEADSHOT : 1) * (aimPow ? 1.5 : 1) * (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1) * (P.pwT > 0 && P.pw.k === 'speed' ? 1.8 : 1);
       if (P.pwT > 0 && P.pw.k === 'lenti') e.slowT = 3.5;
       const boom = P.pwT > 0 && P.pw.k === 'esplosivi';
       if (!w.explode) damageEnemy(e, w.dmg * mult * (boom ? 1.5 : 1), head); if (boom) explode(h.point, 1.7, w.dmg * 1.5, true, e); anyHit = true; end = h.point; spark(h.point, true); if (!w.pierce) break;
@@ -182,7 +186,7 @@ function shoot() {
 /* katana: colpisce tutti i nemici davanti a te entro pochi metri */
 function slash(w) {
   fireT = w.rate; tone(900, 0.07, 'sawtooth', 0.05, 200); shake(0.06);
-  const pf = new V3(-Math.sin(yaw), 0, -Math.cos(yaw)); let n = 0; const mult = P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1;
+  const pf = new V3(-Math.sin(yaw), 0, -Math.cos(yaw)); let n = 0; const mult = (P.pwT > 0 && P.pw.k === 'rage' ? 2 : 1) * (P.pwT > 0 && P.pw.k === 'speed' ? 1.8 : 1);
   for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length();
     if (d < w.range + (e.r || 0.4) && (d < 0.8 || to.normalize().dot(pf) > 0.3)) { damageEnemy(e, w.dmg * mult, false); spark(e.m.userData.hit.body.getWorldPosition(new V3()), true); n++; } }
   if (n) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
@@ -198,9 +202,10 @@ function explode(p, R, dmg, small, skip) {
 }
 function tracer(a, b) { const g = new THREE.BufferGeometry().setFromPoints([a, b]); const l = new THREE.Line(g, tracerM); scene.add(l); tracers.push({ l, t: 0.06 }); }
 function spark(p, blood) { const m = new THREE.Mesh(sparkG, blood ? bloodM : sparkM); m.position.copy(p); scene.add(m); sparks.push({ m, t: 0.18 }); }
-function earn(n) { coins += n * (P && P.pwT > 0 && P.pw.k === 'coins' ? 2 : 1); }
+function earn(n) { coins += n * (P && P.pwT > 0 && P.pw.k === 'coins' ? 2 : 1) * (buffK('coins') ? 2 : 1); }
 function damageEnemy(e, d, head) {
   if (e.flee) return;
+  if (buffK('insta') && !e.boss) d = Math.max(d, e.hp + 1);
   if (e.boss && e.kind === 'pika' && e.phase === 1 && e.hp - d <= e.max * 0.5) { e.hp = e.max * 0.5; pikaFlee(e); return; }
   e.hp -= d; earn(ECONOMY.hit); e.kick = 0.18;
   if (e.hp <= 0 && !e.dead) {
@@ -228,11 +233,23 @@ function bossDown() {
 function startReload() { const w = P.weapons[P.cur]; if (P.reloadT > 0 || w.ammo >= w.mag || w.res <= 0) return; P.reloadT = w.reload; reloadSound(); }
 
 /* ===================== OGGETTI ===================== */
-const DROPLOOK = { cura: { c: '#6fd14f', n: 'Cura' }, munizioni: { c: '#f2c14e', n: 'Munizioni' }, armatura: { c: '#5ab0ff', n: 'Armatura' } };
+const DROPLOOK = { cura: { c: '#ff4a5a', n: 'Cura' }, munizioni: { c: '#f2c14e', n: 'Munizioni' }, armatura: { c: '#5ab0ff', n: 'Armatura' } };
+/* oggetti lasciati dai nemici: cuore per la vita, munizioni vere, scudo per l'armatura */
+const heartShape = (() => { const s = new THREE.Shape(); s.moveTo(0, -0.22); s.bezierCurveTo(-0.05, -0.12, -0.26, -0.02, -0.24, 0.1); s.bezierCurveTo(-0.22, 0.24, -0.04, 0.26, 0, 0.13); s.bezierCurveTo(0.04, 0.26, 0.22, 0.24, 0.24, 0.1); s.bezierCurveTo(0.26, -0.02, 0.05, -0.12, 0, -0.22); return s; })();
+const shieldShape = (() => { const s = new THREE.Shape(); s.moveTo(0, 0.24); s.lineTo(0.2, 0.17); s.lineTo(0.18, -0.04); s.quadraticCurveTo(0.12, -0.18, 0, -0.26); s.quadraticCurveTo(-0.12, -0.18, -0.18, -0.04); s.lineTo(-0.2, 0.17); s.closePath(); return s; })();
+function dropMesh(k) {
+  const g = new THREE.Group();
+  if (k === 'cura') { const m = new THREE.Mesh(new THREE.ExtrudeGeometry(heartShape, { depth: 0.1, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2 }), new THREE.MeshStandardMaterial({ color: '#e8283a', emissive: '#a01020', emissiveIntensity: 0.6, roughness: 0.35 })); m.position.z = -0.05; g.add(m); }
+  else if (k === 'armatura') { const m = new THREE.Mesh(new THREE.ExtrudeGeometry(shieldShape, { depth: 0.07, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 }), new THREE.MeshStandardMaterial({ color: '#3a7ad8', emissive: '#1a3a8a', emissiveIntensity: 0.5, roughness: 0.3, metalness: 0.5 })); m.position.z = -0.035; g.add(m);
+    const st = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.32, 0.12), new THREE.MeshStandardMaterial({ color: '#e8eef8', roughness: 0.4 })); g.add(st); const st2 = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.12), st.material); st2.position.y = 0.05; g.add(st2); }
+  else { const brass = new THREE.MeshStandardMaterial({ color: '#d8a83a', emissive: '#6a4a00', emissiveIntensity: 0.4, roughness: 0.25, metalness: 0.9 }), tip = new THREE.MeshStandardMaterial({ color: '#c8703a', roughness: 0.3, metalness: 0.8 });
+    for (let i = -1; i <= 1; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.26, 12), brass); c.position.set(i * 0.11, 0, 0); g.add(c); const t = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.12, 12), tip); t.position.set(i * 0.11, 0.19, 0); g.add(t); } }
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 8), new THREE.MeshBasicMaterial({ color: DROPLOOK[k].c, transparent: true, opacity: 0.14, depthWrite: false })); g.add(halo);
+  g.scale.setScalar(1.25); return g;
+}
 function dropItem(pos) {
   let r = Math.random(), it = DROPS.table[0]; for (const x of DROPS.table) { r -= x.w; if (r <= 0) { it = x; break; } }
-  const c = DROPLOOK[it.k].c; const m = box(0.45, 0.45, 0.45, new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.35 }));
-  m.position.set(pos.x, 0.5, pos.z); scene.add(m); drops.push({ m, it, t: 25 });
+  const m = dropMesh(it.k); m.position.set(pos.x, 0.6, pos.z); scene.add(m); drops.push({ m, it, t: 25 });
 }
 function pickup(d) {
   const it = d.it;
@@ -287,6 +304,8 @@ const INTER = [
   { x: TR_GDOOR.x, z: TR_GDOOR.z + 1.8, r: 3, label: () => world === 3 && zone < 2 && P.pos.z > TR_GDOOR.z ? (hasKey ? `<b>E</b> Apri il garage di Pika · <b>${TR_GARAGE_COST}</b>` : 'Il garage è chiuso a chiave: la chiave ce l\'ha Fabio Regaglia') : null, cost: () => (hasKey ? TR_GARAGE_COST : 0), act: () => { zone = 2; openGarage(); banner('Garage di Pika', 'Gli amici sono nelle gabbie in fondo… e Pika ti aspetta'); } },
   { x: TX + 97.5, z: -1.4, r: 2.4, label: () => world === 3 && inCasa(P.pos) ? '<b>E</b> Torna giù nel garage' : null, cost: () => 0, free: () => true, act: goGarage },
   { x: PAUL.x - 1.4, z: PAUL.z, r: 2.6, label: () => world === 3 ? '<b>E</b> Parla con Paul' : null, cost: () => 0, free: () => true, act: () => { const L = PAUL_LINES; let k; do { k = Math.floor(Math.random() * L.length); } while (k === paulLast); paulLast = k; banner('Paul', '«' + L[k] + '»'); tone(600, 0.08, 'triangle', 0.04, 760); } },
+  ...[1, 2, 3].map(w => ({ get x() { return BOX_SPOTS[w].x; }, get z() { return BOX_SPOTS[w].z + 1.2; }, r: 2.2, label: () => world === w && !(boxes3d[w] && boxes3d[w].busy > 0) ? `<b>E</b> Cassa delle armi · arma a caso · <b>${BOX_COST}</b>` : null, cost: () => BOX_COST, act: openBox })),
+  { get x() { return bottle ? bottle.x : 1e5; }, get z() { return bottle ? bottle.z : 1e5; }, r: 1.8, label: () => bottle ? '<b>E</b> Bevi la bottiglia misteriosa <small>(-' + BOTTLE.hpCost + ' vita)</small>' : null, cost: () => 0, free: () => true, act: drinkBottle },
   { x: DAMIANO.x, z: DAMIANO.z, r: 2.4, label: () => world === 2 ? '<b>E</b> Parla con Damiano' : null, cost: () => 0, free: () => true, act: () => { const L = DAMIANO_LINES; let k; do { k = Math.floor(Math.random() * L.length); } while (L.length > 1 && k === damLast); damLast = k; banner('Damiano Ducaj', '«' + L[k] + '»'); tone(520, 0.08, 'triangle', 0.04, 700); } },
 ];
 function openHS() {
@@ -303,7 +322,7 @@ function openZone(i) {
 }
 let nearI = null;
 function useInter() {
-  if (!nearI || !nearI.label()) return; if (nearI.free && nearI.free()) { nearI.act(); buy(); return; } const c = nearI.cost(); if (!c) return;
+  if (!nearI || !nearI.label()) return; if (nearI.free && nearI.free()) { nearI.act(); buy(); return; } let c = nearI.cost(); if (!c) return; if (buffK('saldi')) c = Math.ceil(c / 2);
   if (coins < c) { feed('Ti servono ' + c + ' monete'); denied(); return; }
   coins -= c; nearI.act(); buy();
 }
@@ -398,6 +417,26 @@ function pikaThrow(e) {
   hostile.push({ m: g, from, to, t: 0, T: 0.55 + from.distanceTo(to) * 0.03 }); tone(500, 0.08, 'triangle', 0.04, 260);
   const A = e.m.userData.P.armL; A.rotation.x = -2.6; setTimeout(() => { A.rotation.x = 0; }, 180);
 }
+/* proiettili dei boss: i pacchetti di Pika (piccola esplosione) e le campane di Loris (solo chi viene preso) */
+const bellM = new THREE.MeshStandardMaterial({ color: '#c8a03a', roughness: 0.3, metalness: 0.85 });
+function lorisThrow(e) {
+  const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 0.22, 12, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bellM); top.position.y = 0.11; g.add(top);
+  const from = e.m.position.clone(); from.y += 2.2; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.7;
+  hostile.push({ m: g, from, to, t: 0, T: 0.5 + from.distanceTo(to) * 0.025, bell: 1, arc: 1.2 }); bell(); const A = e.m.userData.P.armR; A.rotation.x = -2.8; setTimeout(() => { A.rotation.x = 0; }, 180);
+}
+function updHostile(dt) {
+  if (boss && boss.kind === 'loris' && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 4 && d < 26) { boss.throwT = 2.4 + Math.random() * 1.2; lorisThrow(boss); } }
+  for (const h of hostile) {
+    h.t += dt; const k = Math.min(1, h.t / h.T); h.m.position.lerpVectors(h.from, h.to, k); h.m.position.y += Math.sin(k * Math.PI) * (h.arc || 1.6); h.m.rotation.x += dt * 12; h.m.rotation.z += dt * 8;
+    if (k >= 1) {
+      const dd = Math.hypot(P.pos.x - h.to.x, P.pos.z - h.to.z);
+      if (h.bell) { if (dd < 1.0) { hit(18 * ZONES[diffZone()].dmg); spark(h.to, false); } tone(900, 0.15, 'triangle', 0.05, 400); }
+      else { explode(h.to, 1.3, 0, true); if (dd < 1.4) hit(BOSS_PIKA.throwDmg * ZONES[diffZone()].dmg); }
+      scene.remove(h.m); h.gone = 1;
+    }
+  }
+  hostile = hostile.filter(h => !h.gone);
+}
 function updTR(dt) {
   const r = trRegion(P.pos);
   /* il parcheggio coperto e' buio */
@@ -420,11 +459,76 @@ function updTR(dt) {
     if (boss.flee) { boss.fleeT -= dt; if (boss.fleeT <= 0 || boss.m.position.distanceTo(new V3(LIFT.x, 0, LIFT.z)) < 1.6) endFlee(true); }
     else { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d < 24 && d > 2.5) { boss.throwT = BOSS_PIKA.throwEvery * (0.8 + Math.random() * 0.4); pikaThrow(boss); } }
   }
-  for (const h of hostile) {
-    h.t += dt; const k = Math.min(1, h.t / h.T); h.m.position.lerpVectors(h.from, h.to, k); h.m.position.y += Math.sin(k * Math.PI) * 1.6; h.m.rotation.x += dt * 12; h.m.rotation.z += dt * 8;
-    if (k >= 1) { explode(h.to, 1.3, 0, true); const dd = Math.hypot(P.pos.x - h.to.x, P.pos.z - h.to.z); if (dd < 1.4) hit(BOSS_PIKA.throwDmg * ZONES[diffZone()].dmg); scene.remove(h.m); h.gone = 1; }
-  }
-  hostile = hostile.filter(h => !h.gone);
+}
+
+/* ===================== BOTTIGLIE MISTERIOSE ===================== */
+let skyRef = null;
+let buff = null, bottle = null, bottleT = 30;
+const buffK = k => !!(buff && buff.k === k);
+const infAmmo = () => (P && P.pwT > 0 && P.pw.k === 'ammo') || buffK('ammo');
+const BOTTLE_SPOTS = {
+  1: [[-20, 15], [10, 18], [25, 2], [-4, -26], [22, -36], [80, -15], [96, -4], [0, -52], [20, -62]],
+  2: [[-20, 20], [10, 15], [22, 28], [-14, -16], [16, -22], [-4, -27]].map(([x, z]) => [OX + x, z]),
+  3: [[-20, 20], [16, 28], [-10, -10], [18, -16], [-20, -26], [22, -44], [110, -6]].map(([x, z]) => [TX + x, z]),
+};
+const bottleGlass = new THREE.MeshStandardMaterial({ color: '#9ae0c0', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.55 });
+const bottleLiq = new THREE.MeshStandardMaterial({ color: '#b04aff', emissive: '#7a20d0', emissiveIntensity: 0.9, roughness: 0.2 });
+function spawnBottle() {
+  const reg = region(P.pos), spots = (BOTTLE_SPOTS[world] || []).filter(([x, z]) => region(new V3(x, 0, z)) === reg && Math.hypot(x - P.pos.x, z - P.pos.z) > 6);
+  if (!spots.length) return; const [x, z] = spots[Math.floor(Math.random() * spots.length)];
+  const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.34, 14), bottleGlass)); const liq = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.105, 0.24, 14), bottleLiq); liq.position.y = -0.04; g.add(liq);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.08, 0.16, 12), bottleGlass); neck.position.y = 0.25; g.add(neck); const cork = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.06, 10), new THREE.MeshStandardMaterial({ color: '#8a5a30' })); cork.position.y = 0.35; g.add(cork);
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), new THREE.MeshBasicMaterial({ color: '#c070ff', transparent: true, opacity: 0.16, depthWrite: false })));
+  g.scale.setScalar(1.4); g.position.set(x, 0.75, z); scene.add(g); bottle = { m: g, x, z, t: 40 }; feed('È comparsa una bottiglia misteriosa…');
+}
+function drinkBottle() {
+  if (!bottle) return; scene.remove(bottle.m); bottle = null; bottleT = BOTTLE.every[0] + Math.random() * (BOTTLE.every[1] - BOTTLE.every[0]);
+  P.hp = Math.max(1, P.hp - BOTTLE.hpCost); hurt();
+  let r = Math.random() * BOTTLE_FX.reduce((a, f) => a + f.w, 0), fx = BOTTLE_FX[0]; for (const f of BOTTLE_FX) { r -= f.w; if (r <= 0) { fx = f; break; } }
+  if (fx.k === 'spada') { giveWeapon('katana'); banner('Hai bevuto la bottiglia…', 'Ti è comparsa in mano la spada!'); return; }
+  buff = { k: fx.k, n: fx.n, t: BOTTLE.dur }; banner('Hai bevuto la bottiglia…', fx.n + ' per ' + BOTTLE.dur + ' secondi'); tone(700, 0.4, 'sine', 0.06, 1400);
+}
+function updBottle(dt) {
+  if (buff) { buff.t -= dt; if (buff.t <= 0) { feed('L\'effetto della bottiglia è finito'); buff = null; } }
+  if (bottle) { bottle.t -= dt; bottle.m.rotation.y += dt * 1.5; bottle.m.position.y = 0.75 + Math.sin(time * 3) * 0.1; if (bottle.t <= 0) { scene.remove(bottle.m); bottle = null; bottleT = 20; } }
+  else { bottleT -= dt; if (bottleT <= 0) { bottleT = 15; spawnBottle(); } }
+}
+function giveWeapon(id) {
+  const have = P.weapons.findIndex(w => w.id === id);
+  if (have >= 0) { const w = P.weapons[have]; w.res = maxRes(w); w.ammo = w.mag; switchWeapon(have); return; }
+  if (P.weapons.length < 2) { P.weapons.push(newWeapon(id)); switchWeapon(1); } else { P.weapons[P.cur] = newWeapon(id); equip(); }
+}
+/* ===================== CASSA DELLE ARMI (una per mappa) ===================== */
+const BOX_SPOTS = { 1: { x: 33, z: -51.5 }, 2: { x: OX + 14, z: -24 }, 3: { x: TX + 28, z: -46 } };
+const boxes3d = {};
+function makeBoxModel(w) {
+  const at = BOX_SPOTS[w], g = new THREE.Group(); g.position.set(at.x, 0, at.z);
+  const wood = new THREE.MeshStandardMaterial({ color: '#6a4426', roughness: 0.75 }), band = new THREE.MeshStandardMaterial({ color: '#c8a03a', roughness: 0.3, metalness: 0.85 });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.75, 0.9), wood); base.position.y = 0.38; g.add(base);
+  for (const x of [-0.75, 0, 0.75]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.78, 0.94), band); b.position.set(x, 0.38, 0); g.add(b); }
+  const lid = new THREE.Group(); lid.position.set(0, 0.76, -0.45); g.add(lid); const lm = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.16, 0.9), wood); lm.position.set(0, 0.08, 0.45); lid.add(lm);
+  const qt = document.createElement('canvas'); qt.width = 256; qt.height = 128; const q = qt.getContext('2d'); q.fillStyle = '#2a1a0e'; q.fillRect(0, 0, 256, 128); q.fillStyle = '#ffd25e'; q.font = '900 96px Arial Black,Arial'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.fillText('? ? ?', 128, 66);
+  const qtex = new THREE.CanvasTexture(qt); qtex.encoding = THREE.sRGBEncoding;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.5), new THREE.MeshStandardMaterial({ map: qtex, emissive: '#ffffff', emissiveMap: qtex, emissiveIntensity: 0.5 })); face.position.set(0, 0.4, 0.46); g.add(face);
+  const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 3.5, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#ffd25e', transparent: true, opacity: 0.09, depthWrite: false, side: THREE.DoubleSide })); glow.position.y = 1.8; g.add(glow);
+  const show = new THREE.Group(); show.position.y = 1.35; g.add(show);
+  scene.add(g); solid(at.x, at.z, 1.9, 1.0, null, 0, 0.92);
+  return { g, lid, show, glow, busy: 0, cycle: 0, pick: null };
+}
+for (const w of [1, 2, 3]) boxes3d[w] = makeBoxModel(w);
+function openBox() {
+  const B = boxes3d[world]; if (!B || B.busy > 0) return;
+  let r = Math.random() * BOX_POOL.reduce((a, x) => a + x.w, 0), pick = BOX_POOL[0].id; for (const x of BOX_POOL) { r -= x.w; if (r <= 0) { pick = x.id; break; } }
+  B.busy = 2.2; B.pick = pick; B.cycle = 0; tone(300, 0.6, 'triangle', 0.05, 900);
+}
+function updBox(dt) {
+  const B = boxes3d[world]; if (!B) return; B.glow.material.opacity = 0.07 + Math.sin(time * 3) * 0.03;
+  if (B.busy > 0) {
+    B.busy -= dt; B.lid.rotation.x = Math.max(-1.6, B.lid.rotation.x - dt * 5); B.cycle -= dt; B.show.rotation.y += dt * 4;
+    if (B.cycle <= 0 && B.busy > 0.5) { B.cycle = 0.12; while (B.show.children.length) B.show.remove(B.show.children[0]); const id = BOX_POOL[Math.floor(Math.random() * BOX_POOL.length)].id; const gm = buildWeapon(id); gm.scale.setScalar(2.2); B.show.add(gm); click(); }
+    if (B.busy <= 0.5 && B.pick) { while (B.show.children.length) B.show.remove(B.show.children[0]); const gm = buildWeapon(B.pick); gm.scale.setScalar(2.4); B.show.add(gm); giveWeapon(B.pick); banner('Cassa delle armi', 'Ti è uscito: ' + WEAPONS[B.pick].n + (B.pick === 'minigun' ? ' · l\'arma più forte del gioco!' : '')); buy(); B.pick = null; }
+    if (B.busy <= 0) { while (B.show.children.length) B.show.remove(B.show.children[0]); }
+  } else B.lid.rotation.x = Math.min(0, B.lid.rotation.x + dt * 3);
 }
 
 /* ===================== PIPISTRELLI DI BULEGATO ===================== */
@@ -506,7 +610,7 @@ function updAlbanesi(dt) {
     if (target) {
       const d = target.m.position.clone().sub(m.position); m.rotation.y = Math.atan2(d.x, d.z); m.userData.P.armR.rotation.x = -1.5;
       a.fire -= dt;
-      if (a.fire <= 0) { a.fire = 0.11; const s = m.position.clone(); s.y = 1.35; const b = target.m.userData.hit.body.getWorldPosition(new V3()); tracer(s, b); spark(b, true); damageEnemy(target, 26, false); shotSound(0, 0.25); }
+      if (a.fire <= 0) { a.fire = 0.11; const s = m.position.clone(); s.y = 1.35; const b = target.m.userData.hit.body.getWorldPosition(new V3()); tracer(s, b); spark(b, true); damageEnemy(target, 18, false); shotSound(0, 0.25); }
     }
   }
   if (albanesi.length && albanesi.every(a => a.gone)) { albanesi = []; feed('Gli albanesi se ne vanno'); }
@@ -554,7 +658,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Digit1') switchWeapon(0); if (e.code === 'Digit2') switchWeapon(1);
   if (e.code === 'KeyP') pauseGame();
   if (e.code === 'KeyV') setFP(!fp);
-  if (e.code === 'Space' && P.pos.y <= 0.001) P.vy = 6.2;
+  if (e.code === 'Space' && onGround()) P.vy = 6.9;
   if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
@@ -617,12 +721,14 @@ let bannerT = 0; const bannerFn = (t, s) => banner(t, s); const feedFn = t => fe
 function hud() {
   $('wave').innerHTML = wave + '<small>Ondata · ' + ZONES[world === 3 ? diffZone() : zoneIdx()].n + '</small>'; $('coins').textContent = coins;
   $('hpb').style.width = P.hp + '%'; $('hpt').textContent = Math.ceil(P.hp); $('arb').style.width = (P.ar / DROPS.maxArmor * 100) + '%';
-  const w = P.weapons[P.cur]; const inf = P.pwT > 0 && P.pw.k === 'ammo'; $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
+  const w = P.weapons[P.cur]; const inf = infAmmo(); $('wname').textContent = w.n + (P.reloadT > 0 ? ' · ricarica…' : '');
   $('ammo').innerHTML = w.melee ? '⚔' : inf ? '∞' : `${w.ammo}<small> / ${w.res}</small>`;
   $('slots').innerHTML = P.weapons.map((x, i) => `<span class="${i === P.cur ? 'on' : ''}">${i + 1} ${x.n}</span>`).join('') + `<span>Pacchi ${packs} · H</span>`;
   const on = P.pwT > 0 || (P.pw.k === 'call' && mirko); $('pw').classList.toggle('on', !!on);
   $('pwb').style.width = (on ? (P.pw.k === 'call' && mirko ? mirko.t : P.pwT) / P.pw.dur * 100 : (1 - P.pwCd / P.pw.cd) * 100) + '%';
-  const lbl = nearI && nearI.label(); $('prompt').hidden = !lbl; if (lbl) $('prompt').innerHTML = lbl;
+  const lbl = nearI && nearI.label(); $('prompt').hidden = !lbl; if (lbl) $('prompt').innerHTML = lbl + (buffK('saldi') && /<b>\d/.test(lbl) ? ' <small style="color:#7aff8a">· SALDI -50%</small>' : '');
+  $('stb').style.width = (P.stam * 100) + '%'; $('stb').parentNode.classList.toggle('tired', P.tired);
+  $('buff').hidden = !buff; if (buff) $('buff').innerHTML = '🍾 ' + buff.n + ' <b>' + Math.ceil(buff.t) + 's</b>';
 }
 
 /* ===================== LOOP ===================== */
@@ -633,7 +739,7 @@ function loop(t) {
   if (touchUI) { const show = state === 'play'; if (touchUI.hidden === show) touchUI.hidden = !show; if (!show) { touch.fire = false; touch.mx = touch.my = 0; } }
   if (state === 'play') { time += dt; update(dt); }
   else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
-  renderer.render(scene, camera);
+  updateSky(sky, camera, dt); renderer.render(scene, camera);
   if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
 }
 function update(dt) {
@@ -661,13 +767,17 @@ function update(dt) {
     if (pad.pressed[BTN.UP]) usePack(); if (pad.pressed[8] || pad.pressed[16] || pad.pressed[17]) { openInv(); return; }
     if (pad.pressed[BTN.SQUARE]) startReload(); if (pad.pressed[BTN.CIRCLE]) useInter(); if (pad.pressed[BTN.L1] || pad.pressed[BTN.R1]) usePower();
     if (pad.pressed[BTN.TRIANGLE] && P.weapons.length > 1) switchWeapon(1 - P.cur);
-    if (pad.pressed[BTN.X] && P.pos.y <= 0.001) P.vy = 6.2; if (pad.pressed[BTN.OPTIONS]) { pauseGame(); return; }
+    if (pad.pressed[BTN.X] && onGround()) P.vy = 6.9; if (pad.pressed[BTN.OPTIONS]) { pauseGame(); return; }
     if (pad.pressed[BTN.R2] && fireT <= 0) shoot();
   }
-  const moving = mv.lengthSq() > 0.0001; let spd = keys.ShiftLeft || keys.ShiftRight || padSprint ? 7.2 : 4.8; if (P.pwT > 0 && P.pw.k === 'speed') spd *= 1.9;
+  const moving = mv.lengthSq() > 0.0001; const wantRun = (keys.ShiftLeft || keys.ShiftRight || padSprint) && moving;
+  if (P.tired && P.stam >= STAMINA.min) P.tired = false;
+  const running = wantRun && !P.tired && P.stam > 0;
+  if (running) { P.stam = Math.max(0, P.stam - STAMINA.drain * dt); if (P.stam <= 0) { P.tired = true; feed('Sei senza fiato!'); } } else P.stam = Math.min(1, P.stam + STAMINA.regen * dt * (moving ? 0.7 : 1));
+  let spd = running ? 7.2 : 4.8; if (P.pwT > 0 && P.pw.k === 'speed') spd *= 1.9;
   if (moving) { if (mv.lengthSq() > 1) mv.normalize(); mv.multiplyScalar(spd * dt); P.pos.add(mv); P.walk += dt * spd * 1.9; }
-  P.vy -= 18 * dt; P.pos.y = Math.max(0, P.pos.y + P.vy * dt); if (P.pos.y === 0) P.vy = 0;
-  collide(P.pos, 0.4);
+  collide(P.pos, 0.4, false, P.pos.y); const gY = groundY(P.pos);
+  P.vy -= 18 * dt; P.pos.y = Math.max(gY, P.pos.y + P.vy * dt); if (P.pos.y <= gY + 0.0001) { P.pos.y = gY; if (P.vy < 0) P.vy = 0; }
   pModel.position.copy(P.pos); pModel.rotation.y = yaw + Math.PI; animLimbs(pModel, P.walk, moving ? 0.6 : 0);
   const PP = pModel.userData.P;
   PP.armR.rotation.x += (-1.45 - pitch * 0.9 + (moving ? Math.sin(P.walk * 2) * 0.05 : 0) - PP.armR.rotation.x) * Math.min(1, dt * 14); PP.armR.rotation.z = 0.05;
@@ -694,7 +804,7 @@ function update(dt) {
   /* sparo */
   fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire || touch.fire) && w.auto && fireT <= 0) shoot();
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
-  else if (w.ammo === 0 && w.res > 0 && !(P.pwT > 0 && P.pw.k === 'ammo')) startReload();
+  else if (w.ammo === 0 && w.res > 0 && !infAmmo()) startReload();
   /* nemici */
   const slow0 = P.pwT > 0 && P.pw.k === 'freeze' ? 0.15 : 1;
   for (const e of enemies) {
@@ -718,7 +828,7 @@ function update(dt) {
       else goal = new V3(Math.max(36.3, Math.min(38.7, m.position.x)), 0, er === 'ware' ? WAREHOUSE_DOOR.z + 1.4 : WAREHOUSE_DOOR.z - 1.4);
     }
     const to = goal.clone().sub(m.position); to.y = 0; const dist = goal === P.pos ? to.length() : 99; m.rotation.y = Math.atan2(to.x, to.z);
-    if (dist > 1.15 * m.scale.x) {
+    if (dist > 1.15 * m.scale.x + (P.pos.y > 0.25 ? 1.75 : 0)) {
       to.normalize();
       if (e.side) { const s = new V3(to.z, 0, -to.x).multiplyScalar(e.side); to.add(s).normalize(); e.sideT -= dt; if (e.sideT <= 0) e.side = 0; }
       const before = m.position.clone(); m.position.add(to.multiplyScalar(e.spd * dt * slow * (e.kick > 0 ? 0.3 : 1)));
@@ -733,11 +843,11 @@ function update(dt) {
   }
   enemies = enemies.filter(e => !e.gone);
   /* oggetti ed effetti */
-  for (const dr of drops) { dr.t -= dt; dr.m.rotation.y += dt * 2; dr.m.position.y = 0.5 + Math.sin(time * 4) * 0.1; if (dr.m.position.distanceTo(new V3(P.pos.x, 0.5, P.pos.z)) < 1.3) { pickup(dr); dr.t = 0; } if (dr.t <= 0) scene.remove(dr.m); }
+  for (const dr of drops) { dr.t -= dt; dr.m.rotation.y += dt * 2; dr.m.position.y = 0.6 + Math.sin(time * 4) * 0.1; if (dr.m.position.distanceTo(new V3(P.pos.x, 0.5, P.pos.z)) < 1.3) { pickup(dr); dr.t = 0; } if (dr.t <= 0) scene.remove(dr.m); }
   drops = drops.filter(dr => dr.t > 0);
   tracers.forEach(x => { x.t -= dt; if (x.t <= 0) { scene.remove(x.l); x.l.geometry.dispose(); } }); tracers = tracers.filter(x => x.t > 0);
   sparks.forEach(x => { x.t -= dt; x.m.scale.setScalar(1 + (0.18 - x.t) * 6); if (x.t <= 0) scene.remove(x.m); }); sparks = sparks.filter(x => x.t > 0);
-  updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt);
+  updMirko(dt); updAlbanesi(dt); updRescues(dt); updBats(dt); updCigs(dt); updHostile(dt); updBox(dt); updBottle(dt);
   for (const r of rings) { r.t += dt; const k = 1 + r.t * 26; r.m.scale.set(k, k, 1); r.m.material.opacity = Math.max(0, 0.85 - r.t * 2.6); if (r.t > 0.33) { scene.remove(r.m); r.m.geometry.dispose(); r.gone = 1; } }
   rings = rings.filter(r => !r.gone);
   if (world === 3) { updateTR(time); updTR(dt); }
@@ -813,7 +923,7 @@ function resetWorld() {
   capoDead = false; rings.forEach(r => scene.remove(r.m)); rings = [];
   if (trGateSolid.off) { G3add(trGate); trGateSolid.off = 0; } if (trGDoorSolid.off) { G3add(trGDoor); trGDoorSolid.off = 0; } liftLed.material.color.set('#ff3030');
   CAGES.forEach(c => { c.freed = false; c.bars.visible = true; c.who.visible = true; c.solid.off = 0; });
-  wellDead = fabioDead = pikaFled = pikaDead = lorisScene = hasKey = trPower = false; if (trKey) { scene.remove(trKey); trKey = null; } trPanelLed.material.color.set('#ff3030'); casaT = 0; hostile.forEach(h => scene.remove(h.m)); hostile = [];
+  wellDead = fabioDead = pikaFled = pikaDead = lorisScene = hasKey = trPower = false; if (trKey) { scene.remove(trKey); trKey = null; } trPanelLed.material.color.set('#ff3030'); casaT = 0; hostile.forEach(h => scene.remove(h.m)); hostile = []; buff = null; if (bottle) { scene.remove(bottle.m); bottle = null; } bottleT = 35;
   zone = 0; shieldMesh.visible = false;
 }
 function fullscreen() { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(() => {}); }
@@ -823,7 +933,7 @@ function startGame(i) {
   if (pickWorld === 3 && mode === 'adv' && !seenTR) { seenTR = true; $('sel').hidden = true; showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Scendi dalla macchina', () => startGame(i))); return; }
   if (pickWorld === 2 && mode === 'adv' && !seenHS) { seenHS = true; $('sel').hidden = true; showTale('hsIntro', 'Entra nel parcheggio', () => startGame(i)); return; }
   fullscreen();
-  charIdx = i; resetWorld(); world = pickWorld; applyWorldLook(world); newPlayer(i);
+  charIdx = i; resetWorld(); world = pickWorld; applyLook(world); newPlayer(i);
   if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; }
   if (world === 3) { P.pos.set(TR_START.x, 0, TR_START.z); yaw = TR_START.yaw; coins = TR_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;
   $('pname').textContent = ROSTER[i].name; $('pwn').textContent = P.pw.n;
@@ -859,7 +969,7 @@ function victory() {
 }
 /* finale: complimenti, i boss scappano, poi la mappa del mondo */
 function showEnding(real, wf) {
-  if (!real) { const ww = wf || pickWorld; if (state !== 'play' && world !== ww) { world = ww; applyWorldLook(ww); } }
+  if (!real) { const ww = wf || pickWorld; if (state !== 'play' && world !== ww) { world = ww; applyLook(ww); } }
   $('endNext').hidden = !(real && world < 3 && mode === 'adv'); $('endNext').firstChild.textContent = world === 2 ? 'Vai al Tribunale' : 'Vai all\'Happy Shopping'; $('endNext').lastChild.textContent = world === 2 ? 'in macchina con Libe il matto' : 'ricomincia dal mondo 2';
   $('endCont').hidden = !real; $('endCont').firstChild.textContent = world === 3 ? 'Resta al Tribunale' : world === 2 ? 'Resta all\'Happy Shopping' : 'Resta al Tigros';
   ['sel', 'dead', 'pause', 'world', 'tale'].forEach(id => ($(id).hidden = true));
@@ -883,6 +993,7 @@ function showEnding(real, wf) {
   $('endunlock').hidden = !(real && lastUnlock); if (real && lastUnlock) $('endunlock').textContent = 'Hai sbloccato ' + lastUnlock.name + '!' + (world === 1 ? ' E da adesso puoi giocare anche con Tefalin e Diego.' : ''); lastUnlock = null;
   $('ending').hidden = false; menuIdx = 0;
 }
+function applyLook(w) { applyWorldLook(w); if (skyRef) setSky(skyRef, w); }
 function showWorld() {
   $('ending').hidden = true; $('sel').hidden = true; $('world').hidden = false; menuIdx = 0;
   const open = hsOpen(), done = !!unlocks.hs;
@@ -912,7 +1023,7 @@ function showPlace(k) {
 document.querySelectorAll('[data-place]').forEach(b => b.addEventListener('click', () => showPlace(+b.dataset.place)));
 document.querySelectorAll('[data-node]').forEach(n => n.addEventListener('click', () => showPlace(+n.dataset.node)));
 const hsOpen = () => !!unlocks.loris || !!unlocks.hs;
-function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyWorldLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
+function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
@@ -960,7 +1071,7 @@ $('godBtn').onclick = () => { god = !god; $('godBtn').setAttribute('aria-pressed
 let taleDone = null;
 function showTale(id, btn, done) { $('taleBody').innerHTML = $(id).innerHTML; $('taleGo').textContent = btn; taleDone = done; ['sel', 'world', 'ending'].forEach(k => ($(k).hidden = true)); $('tale').hidden = false; menuIdx = 0; }
 $('taleGo').onclick = () => { $('tale').hidden = true; const d = taleDone; taleDone = null; if (d) d(); };
-const backToMap = () => { $('world').hidden = false; menuIdx = 0; if (state === 'menu' && world !== pickWorld) { world = pickWorld; applyWorldLook(world); } };
+const backToMap = () => { $('world').hidden = false; menuIdx = 0; if (state === 'menu' && world !== pickWorld) { world = pickWorld; applyLook(world); } };
 $('plIntro').onclick = () => { if (place === 3) showTale('trIntro1', 'Avanti', () => showTale('trIntro2', 'Torna alla mappa', backToMap)); else if (place === 2) showTale('hsIntro', 'Torna alla mappa', backToMap); else { $('world').hidden = true; $('story').hidden = false; storyBack = true; } };
 $('plEnd').onclick = () => { showEnding(false, place); endBack = true; };
 $('plPlay').onclick = () => { const k = place; toMenu(); setWorld(k); };
@@ -976,7 +1087,7 @@ function setWorld(w) {
   if ($('w3btn')) { $('w3btn').classList.toggle('locked', !unlocks.hs); $('w3sub').textContent = unlocks.hs ? 'Pika e il maleficio' : 'in Avventura: finisci l\'Happy Shopping'; }
   if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Pierre (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
   if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
-  if (state === 'menu') { world = w; applyWorldLook(w); }
+  if (state === 'menu') { world = w; applyLook(w); }
 }
 document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => setWorld(+b.dataset.world)));
 $('storyGo').onclick = () => { $('story').hidden = true; if (storyBack) { storyBack = false; backToMap(); return; } $('sel').hidden = false; menuIdx = 0; };
@@ -1019,7 +1130,7 @@ function renderPick() {
 renderPick();
 /* telefono: comandi touch, grafica piu' leggera */
 const touchUI = initTouch({
-  fire: () => { if (state === 'play' && fireT <= 0) shoot(); }, jump: () => { if (state === 'play' && P.pos.y <= 0.001) P.vy = 6.2; },
+  fire: () => { if (state === 'play' && fireT <= 0) shoot(); }, jump: () => { if (state === 'play' && onGround()) P.vy = 6.9; },
   reload: () => state === 'play' && startReload(), power: () => state === 'play' && usePower(), use: () => state === 'play' && useInter(),
   swap: () => { if (state === 'play' && P.weapons.length > 1) switchWeapon(1 - P.cur); }, inv: () => state === 'play' && openInv(),
   view: () => setFP(!fp), pause: () => pauseGame(),
@@ -1033,9 +1144,10 @@ if (isTouch) {
 
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
+const sky = makeSky(scene); setSky(sky, 1); skyRef = sky;
 bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led)]);
-applyWorldLook(1); setWorld(1);
+applyLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { cam: camera, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
+window.__game = { cam: camera, scene, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; } };
 requestAnimationFrame(loop);

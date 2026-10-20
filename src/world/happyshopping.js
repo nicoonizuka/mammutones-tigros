@@ -9,7 +9,7 @@ import { DAMIANO_MODEL } from '../characters/roster.js';
 
 export const OX = -400;
 const G = new THREE.Group(); G.position.x = OX; scene.add(G);
-const S = (x, z, w, d, m, h) => solid(OX + x, z, w, d, m, h);
+const S = (x, z, w, d, m, h, top) => solid(OX + x, z, w, d, m, h, top || (h && h <= 1.25 ? h : 0));
 const flat = m => { m.castShadow = false; m.receiveShadow = true; return m; };
 
 /* confini: il parcheggio davanti (z da 0 a 34) e il negozio dietro (z da -32 a 0) */
@@ -135,15 +135,15 @@ hsDoor.position.set(HS_DOOR.x, 0, HS_DOOR.z); scene.add(hsDoor);
 export const hsDoorSolid = solid(HS_DOOR.x, HS_DOOR.z, HS_DOOR.w, 0.5, hsDoor.children[0]);
 /* cassetta arancione, cestini, fioriere di cemento */
 mesh(rbox(1.2, 1.9, 0.9, 0.05), M('#e8a020', { roughness: 0.6 }), G, [24.4, 0.95, 1.1]); S(24.4, 1.1, 1.2, 0.9);
-for (const x of [-15, -1]) { mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.9, 12), M('#5a5e64', { roughness: 0.6, metalness: 0.3 }), G, [x, 0.45, 3.9]); S(x, 3.9, 0.6, 0.6); }
-mesh(rbox(2.4, 0.9, 0.9, 0.05), M('#d4d0c8', { roughness: 0.95 }), G, [6, 0.45, 3.6]); S(6, 3.6, 2.4, 0.9);
+for (const x of [-15, -1]) { mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.9, 12), M('#5a5e64', { roughness: 0.6, metalness: 0.3 }), G, [x, 0.45, 3.9]); S(x, 3.9, 0.6, 0.6, null, 0, 0.92); }
+mesh(rbox(2.4, 0.9, 0.9, 0.05), M('#d4d0c8', { roughness: 0.95 }), G, [6, 0.45, 3.6]); S(6, 3.6, 2.4, 0.9, null, 0, 0.92);
 
 /* ---------- casetta dei carrelli e macchine ---------- */
 mesh(rbox(6.4, 0.18, 3.2, 0.06), M('#2f55b0', { roughness: 0.6 }), G, [14, 2.6, 32]);
 for (const x of [11.1, 16.9]) mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.5, 8), M('#8a929a', { metalness: 0.6, roughness: 0.4 }), G, [x, 1.3, 33.2]);
 mesh(rbox(6.2, 2.4, 0.06, 0.02), M('#bfd6e2', { roughness: 0.05, transparent: true, opacity: 0.4 }), G, [14, 1.3, 33.6]);
 for (let i = 0; i < 5; i++) cart(G, 11.8 + i * 1.1, 32.2, 0, false, true); S(14, 32.2, 6, 2);
-cart(G, -8, 12, 0.9, true, true); S(-8, 12, 1.15, 1.15); cart(G, 20, 9, 2.2, false, true); S(20, 9, 1, 1); cart(G, -22, 4, 1.4, true, true); S(-22, 4, 1.15, 1.15);
+cart(G, -8, 12, 0.9, true, true); S(-8, 12, 1.15, 1.15, null, 0, 0.75); cart(G, 20, 9, 2.2, false, true); S(20, 9, 1, 1, null, 0, 1.1); cart(G, -22, 4, 1.4, true, true); S(-22, 4, 1.15, 1.15, null, 0, 0.75);
 const CARC = ['#d23a4a', '#bfc4ca', '#34343e', '#3f7fc0', '#6a6e72'];
 setSeed(96);
 [[-27, 14], [-12, 14], [-3, 14], [9, 14], [24, 14], [-27, 28.5], [-6, 28.5], [3, 28.5], [24, 28.5], [30, 28.5]].forEach(([x, z], k) => {
@@ -255,6 +255,7 @@ const tblM = M('#1c1c1f', { roughness: 0.6 });
 for (const [x, z] of [[-18, -8], [-10, -9], [-18, -18], [-10, -20]]) {
   mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.08, 28), tblM, G, [x, 0.8, z]); for (const a of [0, 2.1, 4.2]) mesh(rbox(0.08, 0.8, 0.08, 0.02), tblM, G, [x + Math.cos(a) * 0.9, 0.4, z + Math.sin(a) * 0.9]); S(x, z, 2.4, 2.4, true, 1.2);
   for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; for (let j = 0; j < 4; j++) itemBox(x + Math.cos(a) * 0.8, 0.88 + j * 0.06, z + Math.sin(a) * 0.8, 0.45, 0.05, 0.35, rnd() < 0.6 ? ['#3a5a8a', '#2a3a5a', '#5a7aa8'][j % 3] : CLOTH[Math.floor(rnd() * 10)], a); }
+  S(x, z, 2.5, 2.5, null, 0, 0.9);
 }
 function rack(x, z, len, along) {
   const pipe = M('#c8ccd2', { roughness: 0.3, metalness: 0.8 });
@@ -281,7 +282,7 @@ plane(3.2, 0.7, new THREE.MeshStandardMaterial({ map: label('MAGAZZINO', { font:
 setSeed(101);
 for (let i = 0; i < 70; i++) itemBox(-24 + rnd() * 48, 0.03, -2 - rnd() * 28, 0.3 + rnd() * 0.4, 0.04, 0.25 + rnd() * 0.4, CLOTH[Math.floor(rnd() * 10)], rnd() * 3);
 { const f = mesh(rbox(5, 0.2, 1.3, 0.03), shelfD, G, [18, 0.25, -13], [0, 0.4, 0.05]); for (let k = 0; k < 14; k++) itemBox(16 + rnd() * 4, 0.1, -14.5 + rnd() * 3, 0.42, 0.2, 0.26, SCHOOL[k % 8], rnd() * 3); S(18, -13, 4.8, 2.4, f, 0.6); }
-cart(G, 15, -6, 0.6, true, true); S(15, -6, 1.15, 1.15); cart(G, -2, -12, 2.4, false, true); S(-2, -12, 1, 1);
+cart(G, 15, -6, 0.6, true, true); S(15, -6, 1.15, 1.15, null, 0, 0.75); cart(G, -2, -12, 2.4, false, true); S(-2, -12, 1, 1, null, 0, 1.1);
 
 /* costruzione dell'unica mesh istanziata */
 {

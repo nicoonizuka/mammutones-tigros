@@ -10,7 +10,7 @@ import { buildHuman } from '../characters/styled.js';
 
 export const TX = 400;
 const G = new THREE.Group(); G.position.x = TX; scene.add(G);
-const S = (x, z, w, d, m, h) => solid(TX + x, z, w, d, m, h);
+const S = (x, z, w, d, m, h, top) => solid(TX + x, z, w, d, m, h, top);
 const flat = m => { m.castShadow = false; m.receiveShadow = true; return m; };
 
 /* ---------- confini e zone ---------- */
@@ -151,7 +151,7 @@ const grassM = texMat(ctex(64, 64, (g, w, h) => { g.fillStyle = '#4a8a3a'; g.fil
 for (const sd of [-1, 1]) {
   flat(plane(26, 12, grassM, G, [sd * 22, 0.02, -7.5], [-Math.PI / 2, 0, 0]));
   /* muretto con la cancellata verso la strada */
-  const wall = mesh(rbox(26, 0.5, 0.35, 0.03), M('#9a9890', { roughness: 0.95 }), G, [sd * 22, 0.25, -1.3]); S(sd * 22, -1.3, 26, 0.5);
+  const wall = mesh(rbox(26, 0.5, 0.35, 0.03), M('#9a9890', { roughness: 0.95 }), G, [sd * 22, 0.25, -1.3]); S(sd * 22, -1.3, 26, 0.5, null, 0, 1.7);
   const fenceM = M('#3a3e44', { roughness: 0.4, metalness: 0.6 }); mesh(rbox(26, 0.05, 0.05, 0.01), fenceM, G, [sd * 22, 1.7, -1.3]); for (let x = 9.2; x <= 35; x += 0.22) mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 4), fenceM, G, [sd * x, 1.1, -1.3]);
 }
 const pathT = ctex(128, 128, (g, w, h) => { g.fillStyle = '#9a6a56'; g.fillRect(0, 0, w, h); setSeed(309); for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 16) { g.fillStyle = rnd() < 0.5 ? '#a8786a' : '#8e5e4c'; g.fillRect(x + ((y / 8) % 2) * 8 + 1, y + 1, 14, 6); } g.strokeStyle = 'rgba(240,235,225,.8)'; g.lineWidth = 3; for (let y = 16; y < h; y += 32) { g.beginPath(); for (let x = 0; x <= w; x += 4) g.lineTo(x, y + Math.sin(x / 10) * 5); g.stroke(); } }, 2, 4);
@@ -202,7 +202,7 @@ for (const [x, z, u] of [[-31, -26, 0], [-24, -24, 0], [-17, -27, 0], [-9, -24, 
     for (const sx of [-0.16, 0.16]) for (const sz of [-0.16, 0.16]) mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 6), tblM, c, [sx, 0.22, sz]);
     c.position.set(x + Math.cos(a) * 1.0, 0, z + Math.sin(a) * 1.0); c.rotation.y = -a + Math.PI / 2; if (rnd() < 0.25) { c.rotation.z = 1.4; c.position.y = 0.22; } G.add(c); }
   if (u) { mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.4, 8), tblM, G, [x, 1.2, z]); mesh(new THREE.ConeGeometry(1.6, 0.6, 8, 1, true), umb[Math.floor(rnd() * 2)], G, [x, 2.5, z]); }
-  S(x, z, 1.3, 1.3);
+  S(x, z, 1.3, 1.3, null, 0, 0.82);
 }
 /* blocco del garage: muri, tetto, insegna */
 const gWall = M('#6e4c38', { roughness: 0.85 });
@@ -225,7 +225,7 @@ const crateM = M('#8a6a40', { roughness: 0.85 }), cartonM = [M('#f2f2ee', { roug
 setSeed(307);
 for (const [x, z] of [[8, -36], [8, -40], [32, -38], [32, -42], [26, -34]]) {
   mesh(rbox(1.4, 1.0, 1.4, 0.05), crateM, G, [x, 0.5, z]); for (let k = 0; k < 6; k++) mesh(rbox(0.5, 0.12, 0.25, 0.02), cartonM[k % 2], G, [x - 0.3 + (k % 2) * 0.5, 1.06 + Math.floor(k / 2) * 0.12, z + (rnd() - 0.5) * 0.6]);
-  S(x, z, 1.5, 1.5);
+  S(x, z, 1.5, 1.5, null, 0, 1.15);
 }
 mesh(rbox(4.4, 1.5, 2.2, 0.4), M('#3a4a3a', { roughness: 0.95 }), G, [16, 0.75, -38]); S(16, -38, 4.4, 2.2);
 /* gabbie degli amici prigionieri sul muro in fondo */
@@ -265,7 +265,7 @@ export const liftLed = mesh(sph(0.08, 8, 6), new THREE.MeshBasicMaterial({ color
   flat(mesh(new THREE.CircleGeometry(3, 28), M('#8a2a3a', { roughness: 0.95 }), G, [110, 0.02, -8], [-Math.PI / 2, 0, 0]));
   const gold = M('#c8a03a', { roughness: 0.3, metalness: 0.8 });
   mesh(rbox(1.4, 0.6, 1.2, 0.1), M('#4a1a2a', { roughness: 0.7 }), G, [119, 0.3, -12]); mesh(rbox(1.4, 2.2, 0.3, 0.1), gold, G, [119, 1.3, -12.7]); S(119, -12.2, 1.5, 1.6);
-  for (const [x, z] of [[122, -3], [122, -5], [98.5, -12]]) { mesh(rbox(1.2, 1, 1.2, 0.05), crateM, G, [x, 0.5, z]); for (let k = 0; k < 4; k++) mesh(rbox(0.5, 0.12, 0.25, 0.02), cartonM[k % 2], G, [x - 0.25 + (k % 2) * 0.5, 1.06 + Math.floor(k / 2) * 0.12, z]); S(x, z, 1.3, 1.3); }
+  for (const [x, z] of [[122, -3], [122, -5], [98.5, -12]]) { mesh(rbox(1.2, 1, 1.2, 0.05), crateM, G, [x, 0.5, z]); for (let k = 0; k < 4; k++) mesh(rbox(0.5, 0.12, 0.25, 0.02), cartonM[k % 2], G, [x - 0.25 + (k % 2) * 0.5, 1.06 + Math.floor(k / 2) * 0.12, z]); S(x, z, 1.3, 1.3, null, 0, 1.1); }
   mesh(rbox(2.6, 3.0, 0.3, 0.05), M('#8a9098', { roughness: 0.3, metalness: 0.7 }), G, [97.5, 1.5, 0.0]);
   const l1 = new THREE.PointLight('#ffb070', 0.9, 22, 1.5); l1.position.set(TX + 106, 3, -8); l1.userData.tr = 1; scene.add(l1);
   const l2 = new THREE.PointLight('#c060ff', 0.8, 18, 1.5); l2.position.set(TX + 118, 2.6, -11); l2.userData.tr = 1; scene.add(l2);

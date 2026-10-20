@@ -178,3 +178,6 @@ body.touch .help{display:none}
 body.touch .prompt{bottom:auto;top:38%}
 @media (max-height:520px){.box h1{font-size:30px}.pc canvas{max-width:90px}.hcard{padding:8px 10px}}
 @media (max-height:520px){.hhead .tag{display:none}.hver{padding:3px 10px}.hver b{font-size:18px}.hver small{display:none}.home{gap:8px}.hcard .btn{padding:4px 10px;font-size:15px}}
+.bar.st{height:8px;border-width:2px}.bar.st i{background:#9ad06a}.bar.st.tired i{background:#d0a03a}
+.buff{position:absolute;left:50%;top:calc(110px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:rgba(60,20,90,.8);border:2px solid #c070ff;color:#fff;border-radius:10px;padding:4px 12px;font-size:15px}
+.buff b{color:#ffd25e}

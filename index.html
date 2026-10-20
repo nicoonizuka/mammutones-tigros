@@ -6,7 +6,7 @@
 <title>Mammutones al Tigros</title>
 <meta name="description" content="Lo sparatutto di Busto Arsizio: tu e i tuoi amici contro i Mammutones, al Tigros, all'Happy Shopping e al Tribunale. Si gioca dal computer (anche col controller della Play) o dal telefono, in orizzontale.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Mammutones al Tigros · v1.0">
+<meta property="og:title" content="Mammutones al Tigros · v1.1">
 <meta property="og:description" content="Busto Arsizio è nel caos. Scegli il tuo personaggio e riprenditi il Tigros, l'Happy Shopping e il Tribunale. Dal computer, col controller della Play o dal telefono.">
 <meta property="og:url" content="https://mammutones-tigros.vercel.app/">
 <meta property="og:image" content="https://mammutones-tigros.vercel.app/og.png">
@@ -22,7 +22,7 @@
 <div class="dmg" id="dmg"></div>
 <div class="hud" id="hud" hidden>
   <div class="tl"><div class="wave" id="wave">1<small>Ondata</small></div><div class="coins"><i></i><span id="coins">500</span></div></div>
-  <div class="feed" id="feed"></div>
+  <div class="feed" id="feed"></div><div class="buff" id="buff" hidden></div>
   <div class="cross" id="cross"></div>
   <div class="prompt" id="prompt" hidden></div>
   <div class="banner" id="banner" hidden></div>
@@ -32,7 +32,7 @@
     <div class="bars">
       <div class="nm" id="pname"></div>
       <div class="bar"><i id="hpb"></i><span id="hpt"></span></div>
-      <div class="bar ar"><i id="arb"></i></div>
+      <div class="bar ar"><i id="arb"></i></div><div class="bar st"><i id="stb"></i></div>
       <div class="power" id="pw"><span class="k">Q</span><span id="pwn"></span><span class="pb"><i id="pwb"></i></span></div>
     </div>
   </div>
@@ -56,7 +56,7 @@
   <div class="box home">
     <header class="hhead">
       <div><h1>Mammutones <span>al Tigros</span></h1><p class="tag">Busto Arsizio è nel caos. Riprenditela con i tuoi amici, un posto alla volta: Tigros, Happy Shopping, Tribunale.</p></div>
-      <div class="hver"><b>v1.0</b><small>versione completa</small></div>
+      <div class="hver"><b>v1.1</b><small>cassa e bottiglie</small></div>
     </header>
     <div class="hgrid">
       <section class="hcard"><h3><i>1</i>Modalità</h3><div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button></div><p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p></section>
@@ -71,7 +71,7 @@
       <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
     </details>
     <div class="warn" id="touchwarn" hidden></div>
-    <p class="credits">Mammutones al Tigros · v1.0 · un gioco di Nico e del gruppo, fatto a Busto Arsizio</p>
+    <p class="credits">Mammutones al Tigros · v1.1 · un gioco di Nico e del gruppo, fatto a Busto Arsizio</p>
   </div>
 </div>
 <div class="over" id="inv" hidden>

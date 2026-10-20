@@ -19,7 +19,8 @@ addEventListener("resize",resize);resize();
 /* ostacoli: rettangoli per le collisioni + una scatola invisibile per fermare i proiettili */
 export const solids=[];
 const proxyMat=new THREE.MeshBasicMaterial({visible:false});
-export function solid(x,z,w,d,mesh,h){const s={x1:x-w/2,z1:z-d/2,x2:x+w/2,z2:z+d/2};
+/* top: altezza degli oggetti bassi su cui si puo' saltare sopra */
+export function solid(x,z,w,d,mesh,h,top){const s={x1:x-w/2,z1:z-d/2,x2:x+w/2,z2:z+d/2};if(top)s.top=top;
   if(mesh){const hh=h||(mesh.geometry&&mesh.geometry.parameters&&mesh.geometry.parameters.height>3?7:2.6);s.proxy=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),proxyMat);s.proxy.position.set(x,hh/2,z);scene.add(s.proxy);}
   solids.push(s);return s;}
 export function blockers(){const out=[];for(const s of solids)if(s.proxy&&!s.off)out.push(s.proxy);return out;}

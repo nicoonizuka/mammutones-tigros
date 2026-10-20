@@ -294,3 +294,40 @@ In Avventura si sbloccano al Tribunale (prossimamente); in **Sandbox** sono già
 | Pika | 1,75 m | ricci biondo scuro voluminosi, canottiera bianca, sorriso largo | **Sigarette**: per 9 s, mentre spari, lanci pacchetti di sigarette di contrabbando al nemico più vicino (80 danni + piccola esplosione). Da boss li lancerà contro di te |
 
 Il bazooka ora fa **260** danni al centro (prima 600), con lo stesso raggio di 4,5 m.
+
+## Aggiornamento 1.1: cassa, bottiglie, stamina
+
+### Saltare sugli oggetti
+Carrelli, tavolini, cestoni, bancali, cassette e scaffali caduti si possono scavalcare con un salto e ci si può stare sopra. Non sono posti sicuri: da lassù i mob ti colpiscono lo stesso, anzi arrivano un po' più lontano.
+
+### Cassa delle armi (una per mappa)
+| Mappa | Dove |
+|---|---|
+| Tigros | in fondo al magazzino, vicino all'ufficio di Loris |
+| Happy Shopping | in fondo al negozio |
+| Tribunale | dentro il garage |
+
+Costa **6500** monete, si può usare quante volte vuoi. Dà un'arma a caso fra tutte quelle dei tre mondi, katana compresa. Se hai già quell'arma, te la ricarica tutta.
+
+**Minigun**: l'arma più forte del gioco, esce solo dalla cassa ed è la più rara. 200 colpi per caricatore, 46 danni a colpo, ricarica lunga (4,5 s).
+
+### Bottiglie misteriose
+Ogni 45-75 secondi può comparire una bottiglia viola luminosa nella zona in cui ti trovi. Sparisce dopo 40 secondi. Berla costa **15 di vita** e attiva per 15 secondi un potere a caso:
+
+| Potere | Quanto è raro |
+|---|---|
+| Munizioni infinite | comune |
+| Solo headshot (ogni colpo vale come alla testa) | comune |
+| Saldi: armi, porte e acquisti a metà prezzo | comune |
+| Soldi doppi | comune |
+| La spada (ti dà la katana) | raro |
+| Insta-kill su tutti tranne i boss | rarissimo |
+
+### Altre modifiche
+- **Stamina**: la corsa consuma la barra verde sotto l'armatura. Se la svuoti diventa gialla e devi aspettare che si ricarichi un po' prima di correre di nuovo.
+- **Mob**: fanno il 20% di danno in più.
+- **Loris**: più veloce, e ogni 2-3 secondi ti lancia una campana da lontano (18 danni se ti prende, nessun danno ad area).
+- **Nico**: il potere ora è "Velocità e forza": corri più veloce e fai quasi il doppio del danno (x1,8).
+- **Tefalin**: gli albanesi durano 6 secondi e fanno meno danno.
+- **Oggetti dei nemici**: la vita è un cuore rosso, le munizioni sono proiettili veri, l'armatura è uno scudo blu.
+- **Cielo** nuovo in tutti e tre i mondi: tramonto sul Tigros, giorno con nuvole all'Happy Shopping, cielo coperto al Tribunale.
