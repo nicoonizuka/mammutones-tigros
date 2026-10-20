@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mammutones al Tigros</title>
+<meta name="description" content="Lo sparatutto di Busto Arsizio: tu e i tuoi amici contro i Mammutones, al Tigros, all'Happy Shopping e al Tribunale. Si gioca dal computer, anche col controller della Play.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mammutones al Tigros · v1.0">
+<meta property="og:description" content="Busto Arsizio è nel caos. Scegli il tuo personaggio e riprenditi il Tigros, l'Happy Shopping e il Tribunale. Dal computer, anche col controller della Play.">
+<meta property="og:url" content="https://mammutones-tigros.vercel.app/">
+<meta property="og:image" content="https://mammutones-tigros.vercel.app/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0d1117">
+<link rel="icon" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Fredoka:wght@500;600;700&display=swap">
 </head>
@@ -43,18 +53,25 @@
   </div>
 </div>
 <div class="over" id="sel" hidden>
-  <div class="box">
-    <h1>Mammutones <span>al Tigros</span></h1>
-    <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
-    <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button><button class="btn ghost" type="button" id="previewEnd">Mappa del mondo<small>storie e luoghi</small></button></div>
-    <div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button><button class="btn ghost" type="button" data-world="3" aria-pressed="false" id="w3btn">Mondo 3 · Tribunale<small id="w3sub">Pika e il maleficio</small></button></div>
-    <p id="worldinfo" class="modeinfo" hidden></p>
-    <p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p>
-    <div class="pick" id="pick"></div>
-    <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>V</kbd>prima / terza persona</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span><span><kbd>Tab</kbd>inventario</span><span><kbd>H</kbd>usa pacco munizioni</span></div>
-    <div class="keys"><span><kbd>Controller</kbd>levetta sinistra muovi, destra mira, <kbd>R2</kbd> spara, <kbd>L1</kbd> potere, <kbd>□</kbd> ricarica, <kbd>○</kbd> compra / apri, <kbd>△</kbd> cambia arma, <kbd>X</kbd> salta, <kbd>L3</kbd> corri, <kbd>R3</kbd> prima / terza persona, <kbd>Options</kbd> pausa</span></div>
-    <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
-    <div class="warn" id="touchwarn" hidden>Per giocare servono tastiera e mouse: aprilo dal computer.</div>
+  <div class="box home">
+    <header class="hhead">
+      <div><h1>Mammutones <span>al Tigros</span></h1><p class="tag">Busto Arsizio è nel caos. Riprenditela con i tuoi amici, un posto alla volta: Tigros, Happy Shopping, Tribunale.</p></div>
+      <div class="hver"><b>v1.0</b><small>versione completa</small></div>
+    </header>
+    <div class="hgrid">
+      <section class="hcard"><h3><i>1</i>Modalità</h3><div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button></div><p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p></section>
+      <section class="hcard"><h3><i>2</i>Mondo</h3><div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button><button class="btn ghost" type="button" data-world="3" aria-pressed="false" id="w3btn">Mondo 3 · Tribunale<small id="w3sub">Pika e il maleficio</small></button></div><p id="worldinfo" class="modeinfo" hidden></p></section>
+    </div>
+    <section class="hcard"><h3><i>3</i>Scegli chi sei</h3><div class="pick" id="pick"></div></section>
+    <div class="hbar"><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="previewEnd">Mappa del mondo<small>storie e luoghi</small></button><button class="btn ghost" type="button" id="invite">Invita gli amici<small>manda il link del gioco</small></button></div>
+    <p class="toast" id="toast" hidden></p>
+    <details class="help"><summary>Comandi: tastiera e controller</summary>
+      <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>V</kbd>prima / terza persona</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span><span><kbd>Tab</kbd>inventario</span><span><kbd>H</kbd>usa pacco munizioni</span></div>
+      <div class="keys"><span><kbd>Controller</kbd>levetta sinistra muovi, destra mira, <kbd>R2</kbd> spara, <kbd>L1</kbd> potere, <kbd>□</kbd> ricarica, <kbd>○</kbd> compra / apri, <kbd>△</kbd> cambia arma, <kbd>X</kbd> salta, <kbd>L3</kbd> corri, <kbd>R3</kbd> prima / terza persona, <kbd>Options</kbd> pausa</span></div>
+      <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
+    </details>
+    <div class="warn" id="touchwarn" hidden>Per giocare servono tastiera e mouse (o il controller): aprilo dal computer.</div>
+    <p class="credits">Mammutones al Tigros · v1.0 · un gioco di Nico e del gruppo, fatto a Busto Arsizio</p>
   </div>
 </div>
 <div class="over" id="inv" hidden>

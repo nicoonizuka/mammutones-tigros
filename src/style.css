@@ -128,3 +128,22 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .places .btn[aria-pressed="false"]{background:#1b222c;color:var(--ink)}
 .map [data-node]{cursor:pointer}.map [data-node].sel{outline:none;filter:drop-shadow(0 0 6px #ffd25e)}
 .tale-art{width:100%;max-width:640px;border-radius:10px;border:3px solid #12161c;display:block}
+
+/* ---------- home v1.0 ---------- */
+.home{gap:14px}
+.hhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.hhead .tag{margin-top:8px;color:var(--ink);font-size:16px}
+.hver{display:flex;flex-direction:column;align-items:center;background:var(--gold);color:var(--o);border:3px solid var(--o);border-radius:12px;box-shadow:0 4px 0 var(--o);padding:6px 14px;transform:rotate(3deg)}
+.hver b{font-family:var(--pix);font-size:26px;line-height:1}.hver small{font-size:11px;font-weight:700}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+.hcard{background:rgba(18,22,28,.72);border:2px solid #2a303a;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.hcard h3{margin:0;font-family:var(--pix);font-size:18px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.hcard h3 i{font-style:normal;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ff8a6a;color:var(--o);font-size:15px}
+.hcard .modes .btn{flex:1 1 150px}
+.hbar{display:flex;gap:10px;flex-wrap:wrap}.hbar .btn{flex:1 1 200px}
+#invite{background:#2a6a3a;color:#fff}
+.toast{margin:0;background:#2a6a3a;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;max-width:none}
+.help{background:rgba(18,22,28,.6);border:2px solid #2a303a;border-radius:12px;padding:8px 12px;color:var(--muted)}
+.help summary{cursor:pointer;font-family:var(--pix);font-size:16px;color:var(--ink)}
+.help[open]{display:flex;flex-direction:column;gap:8px}
+.credits{font-size:12px;opacity:.7;text-align:center;max-width:none!important}

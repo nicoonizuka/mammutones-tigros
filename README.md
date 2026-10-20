@@ -1,4 +1,6 @@
-# Mammutones al Tigros
+# Mammutones al Tigros · v1.0
+
+Gioca qui: **https://mammutones-tigros.vercel.app**
 
 Sparatutto 3D a blocchi in stile COD Zombies, ambientato al Tigros di Busto Arsizio.
 Loris Busato e la sua armata di Mammutones hanno invaso il supermercato: scegli uno degli amici e riprenditi il supermercato.

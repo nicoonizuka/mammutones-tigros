@@ -967,6 +967,14 @@ function setWorld(w) {
 }
 document.querySelectorAll('[data-world]').forEach(b => b.addEventListener('click', () => setWorld(+b.dataset.world)));
 $('storyGo').onclick = () => { $('story').hidden = true; if (storyBack) { storyBack = false; backToMap(); return; } $('sel').hidden = false; menuIdx = 0; };
+/* invito: condivide il link del gioco (su telefono si apre la condivisione, su PC si copia) */
+const GAME_URL = 'https://mammutones-tigros.vercel.app';
+const INVITE_TXT = 'Gioca con me a Mammutones al Tigros! Busto è nel caos: scegli il tuo personaggio e riprenditi il Tigros. Si gioca dal computer, anche col controller della Play.';
+function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 4000); }
+$('invite').onclick = async () => {
+  try { if (navigator.share) { await navigator.share({ title: 'Mammutones al Tigros', text: INVITE_TXT, url: GAME_URL }); return; } } catch (_) {}
+  try { await navigator.clipboard.writeText(INVITE_TXT + ' ' + GAME_URL); toast('Link copiato! Incollalo su WhatsApp: ' + GAME_URL); } catch (_) { toast('Manda questo link ai tuoi amici: ' + GAME_URL); }
+};
 $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = false; };
 
 /* schermata di scelta: ritratti in pixel art */
