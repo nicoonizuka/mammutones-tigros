@@ -269,3 +269,12 @@ Appunti della storia, da sviluppare quando arrivano le foto (Libe il matto, Well
 
 - Loris compare solo nella scena della casa di Pika e scappa subito: non si combatte.
 - I Mammutones "speciali" del garage e della casa sono da definire.
+
+### Personaggi del Tribunale (modelli pronti)
+
+| Personaggio | Aspetto | Potere (provvisorio) | Come si sblocca |
+|---|---|---|---|
+| Leodessi | ricci scuri morbidi con la frangia, felpa grigia con la zip | Furia (danno doppio) | liberato nel garage di Pika · in Sandbox già giocabile |
+| Bulegato | ricci alti, occhi azzurri, maglietta bianca larga, jeans scuri | Onda d'urto | liberato nel garage di Pika · in Sandbox già giocabile |
+| Castelluccio | ricci castani sopra e lati rasati, giacca grigio-verde | Rallentatore | liberato nel garage di Pika · in Sandbox già giocabile |
+| Libe il matto | capelli spettinati, camicia beige aperta sulla maglietta bianca | — | alleato: guida la macchina verso il Tribunale con Damiano |

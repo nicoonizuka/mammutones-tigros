@@ -698,7 +698,7 @@ const PLACES = {
   2: { n: 'Happy Shopping', open: () => hsOpen() || mode === 'sandbox', state: () => unlocks.hs ? 'Liberato · Debe è libero' : hsOpen() ? 'Disponibile · Mondo 2' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura batti prima Loris' : 'Bloccato · in Avventura batti prima Loris',
        t: 'Il bazar di Sant\'Edoardo. Parcheggio e negozio, Tefalin e Diego da ritrovare, il Capo da sconfiggere per liberare Debe.' },
   3: { n: 'Tribunale di Busto', open: () => false, state: () => 'Bloccato · prossimamente',
-       t: 'Gli altri amici sono tenuti in segreto nel garage di Pika. Nuovi nemici, nuove armi e un boss nuovo.' },
+       t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Well e Fabio Regaglia, i garage e la casa di Pika.' },
   4: { n: 'Il centro di Busto', open: () => false, state: () => 'Bloccato · prossimamente', t: 'L\'ultima tappa: liberare Busto Arsizio.' },
 };
 function showPlace(k) {
@@ -784,8 +784,8 @@ $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = fa
 const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo' };
 let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
 /* Tefalin, Diego e Debe vengono dall'Happy Shopping: in Avventura servono Loris battuto (e Debe il Capo), in Sandbox sempre disponibili */
-const isLocked = c => { if (c.world === 2) { if (mode === 'sandbox') return false; if (!unlocks.loris) return true; } return !!c.unlock && !unlocks[c.unlock]; };
-const lockTxt = c => c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
+const isLocked = c => { if (c.world >= 2 && mode === 'sandbox') return false; if (c.world === 3) return !unlocks.tr; if (c.world === 2 && !unlocks.loris) return true; return !!c.unlock && !unlocks[c.unlock]; };
+const lockTxt = c => c.world === 3 ? 'Prigioniero nel garage di Pika, al Tribunale (prossimamente). In Sandbox puoi già provarlo' : c.world === 2 && !unlocks.loris ? 'Viene dall\'Happy Shopping: sconfiggi prima Loris Busato' : UNLOCK_TXT[c.unlock];
 function unlockChar(k) {
   if (mode !== 'adv' || unlocks[k]) return null; unlocks[k] = 1; try { localStorage.setItem('mt_unlocks', JSON.stringify(unlocks)); } catch (_) {}
   renderPick(); const c = ROSTER.find(r => r.unlock === k); return c;
@@ -814,5 +814,5 @@ bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor,
 applyWorldLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
+window.__game = { cam: camera, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; } };
 requestAnimationFrame(loop);

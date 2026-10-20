@@ -119,7 +119,7 @@ const CH=[
      s.rect(cx-4,t+13,8,2,"#a9acb2");s.rect(cx-2,t+15,1,4,"#e8e8e8");s.rect(cx+1,t+15,1,4,"#e8e8e8");
      s.rect(cx-4,t+21,8,4,"#a9acb2");s.px(cx+3,t+16,"#ffffff");s.px(cx+4,t+16,"#ffffff");
      for(let y=lt+4;y<57;y+=3){s.px(cx-6,y,"#1d1e22");s.px(cx+5,y,"#1d1e22");}}})},
- {name:"Tefalin",role:"Capelli spettinati, occhiali rossi, piumino grigio",h:"1,70 m",c:"#ff6a7a",tag:"GIOCABILE",pw:"Onda d'urto",pd:"Respinge e ferisce i nemici vicini.",ic:"aim",
+ {name:"Tefalin",role:"Capelli spettinati, occhiali rossi, piumino grigio",h:"1,70 m",c:"#ff6a7a",tag:"GIOCABILE",pw:"Amici albanesi",pd:"Due amici albanesi con l'AK-47 smitragliano i Mammutones.",ic:"aim",
   fn:()=>human({seed:31,H:47,bw:7,aw:4,skin:"#efc9ae",top:"#d3d6d9",topFn:(x,y)=>y%4===0?"#bfc2c6":"#d3d6d9",hem:"#c2c5c9",pants:"#2c3444",shoe:"#f0f0f0",nose:"#dcae90",brow:"#3a281c",
    extra:(s,cx,t,T)=>{const H="#3a281c",L="#4e3626";
      s.rect(cx-6,t,12,4,H);s.rect(cx-6,t+4,1,3,H);s.rect(cx+5,t+4,1,3,H);
@@ -129,7 +129,7 @@ const CH=[
      s.px(cx-5,t+6,R);s.px(cx+4,t+6,R);s.rect(cx-5,t+7,4,1,"#e8b8bc");s.rect(cx+1,t+7,4,1,"#e8b8bc");
      s.rect(cx-1,t+14,3,T,"#22305a");s.rect(cx-2,t+14,1,T,"#121316");s.rect(cx+2,t+14,1,T,"#121316");
      s.rect(cx-4,t+12,8,2,"#d3d6d9");}})},
- {name:"Debe",role:"Ricci neri, sempre con l'occhiolino",h:"1,75 m",c:"#7ad0ff",tag:"GIOCABILE",pw:"Occhiolino",pd:"I nemici rallentano quasi fino a fermarsi.",ic:"aim",
+ {name:"Debe",role:"Ricci neri, sempre con l'occhiolino",h:"1,75 m",c:"#7ad0ff",tag:"GIOCABILE",pw:"Proiettili lenti",pd:"I nemici colpiti rallentano tantissimo.",ic:"aim",
   fn:()=>human({seed:37,H:49,bw:7,aw:4,skin:"#e2b48e",top:"#1d2028",pants:"#2b2f38",shoe:"#1c1c20",sole:"#e8e8e8",nose:"#cf9c78",brow:"#16110e",mouth:"#ffffff",
    extra:(s,cx,t)=>{const C=["#16110e","#241a15"];
      [[-4,1],[-2,0],[0,0],[2,0],[4,1],[-5,3],[5,3],[-3,2],[1,2],[3,2],[-1,1]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,1.9,1.7,C[k%2]));
@@ -138,13 +138,39 @@ const CH=[
      s.rect(cx-1,t+9,3,1,"#ffffff");s.px(cx+2,t+8,"#a8564a");
      s.px(cx-4,t+10,"#8a6a54");s.px(cx-2,t+11,"#8a6a54");s.px(cx+2,t+11,"#8a6a54");s.px(cx+3,t+10,"#8a6a54");
      s.rect(cx-3,t+12,6,2,"#f2f0ea");s.rect(cx-1,t+14,2,6,"#f2f0ea");}})},
- {name:"Diego Margarito",role:"Il più alto, ricci neri folti",h:"1,85 m",c:"#f2a63b",tag:"GIOCABILE",pw:"Furia",pd:"Per qualche secondo ogni colpo fa il doppio dei danni.",ic:"aim",
+ {name:"Diego Margarito",role:"Il più alto, ricci neri folti",h:"1,85 m",c:"#f2a63b",tag:"GIOCABILE",pw:"Fischio",pd:"Congela tutti i nemici vicini.",ic:"aim",
   fn:()=>human({seed:41,H:52,bw:6,skin:"#ddab86",top:"#1a1a1d",sleeve:5,pants:"#383b43",shoe:"#f0f0f0",nose:"#c9946e",brow:"#120d0b",
    extra:(s,cx,t)=>{const C=["#120d0b","#21170f","#2c2016"];
      [[-5,1],[-3,0],[-1,-1],[1,-1],[3,0],[5,1],[-6,3],[6,3],[-4,-1],[2,-2],[0,-2],[-2,-2],[4,-1],[-6,5],[6,5]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.9,C[k%3]));
      [[-4,4],[-2,4],[0,4],[2,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%3]));
      s.rect(cx-4,t+5,3,1,"#120d0b");s.rect(cx+1,t+5,3,1,"#120d0b");
      s.rect(cx-1,t+8,3,1,"#8a6a54");}})},
+ {name:"Leodessi",role:"Ricci scuri morbidi, sempre sorridente, felpa grigia",h:"1,76 m",c:"#9aa0ff",tag:"DAL TRIBUNALE",pw:"Furia",pd:"Per qualche secondo ogni colpo fa il doppio dei danni.",ic:"aim",
+  fn:()=>human({seed:43,H:49,bw:6,skin:"#ecc3a2",top:"#8e9196",topFn:(x,y)=>x===22?"#c8ccd2":"#8e9196",hem:"#7f8287",pants:"#2f333c",shoe:"#f0f0f0",nose:"#d8a888",brow:"#150f0c",mouth:"#ffffff",
+   extra:(s,cx,t)=>{const C=["#150f0c","#22180f"];
+     [[-5,1],[-3,0],[-1,-1],[1,-1],[3,0],[5,1],[-6,3],[6,3],[-2,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2,1.8,C[k%2]));
+     [[-5,5],[-3,6],[-1,6],[1,5],[3,5]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%2]));s.rect(cx-6,t+3,1,4,C[0]);s.rect(cx+5,t+3,1,4,C[0]);
+     s.rect(cx-2,t+9,5,1,"#ffffff");s.rect(cx-4,t+12,8,2,"#7f8287");}})},
+ {name:"Libe il matto",role:"Capelli spettinati, camicia beige aperta",h:"1,78 m",c:"#d8c08a",tag:"ALLEATO",pw:"Velocità",pd:"Guida come un matto.",ic:"aim",
+  fn:()=>human({seed:47,H:50,bw:6,skin:"#e6b896",top:"#b9ad94",topFn:(x,y)=>Math.abs(x-22)<2?"#f2f2ee":"#b9ad94",pants:"#2c3038",shoe:"#e8e8e8",nose:"#d0a07e",brow:"#2e2016",
+   extra:(s,cx,t)=>{const C=["#2e2016","#3c2a1c"];
+     [[-5,1],[-3,-1],[0,-1],[3,-1],[5,1],[-6,3],[6,3],[-1,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.6,C[k%2]));
+     [[-4,4],[-1,5],[2,4]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%2]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
+     s.px(cx-3,t+10,"#9a7a62");s.px(cx-1,t+11,"#9a7a62");s.px(cx+1,t+11,"#9a7a62");s.px(cx+3,t+10,"#9a7a62");
+     s.rect(cx-4,t+12,2,2,"#a89c84");s.rect(cx+2,t+12,2,2,"#a89c84");}})},
+ {name:"Bulegato",role:"Ricci alti, occhi azzurri, maglietta bianca larga",h:"1,80 m",c:"#7ac0ff",tag:"DAL TRIBUNALE",pw:"Onda d'urto",pd:"Respinge e ferisce i nemici vicini.",ic:"aim",
+  fn:()=>human({seed:53,H:51,bw:7,aw:4,skin:"#eec3a4",top:"#f4f4f0",sleeve:6,pants:"#2a3348",shoe:"#8f8a84",sole:"#e4e0d8",nose:"#d8a888",brow:"#2a1a12",
+   extra:(s,cx,t)=>{const C=["#2a1a12","#3a2618","#1e130d"];
+     [[-5,0],[-3,-1],[-1,-2],[1,-2],[3,-1],[5,0],[-6,2],[6,2],[-4,-2],[0,-3],[4,-2],[-2,-3],[2,-3]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.9,C[k%3]));
+     [[-4,4],[-2,4],[0,4],[2,4]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%3]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
+     s.px(cx-3,t+6,"#3a6a9a");s.px(cx+2,t+6,"#3a6a9a");s.px(cx-3,t+10,"#a88a74");s.px(cx+2,t+10,"#a88a74");}})},
+ {name:"Castelluccio",role:"Ricci castani sopra, lati rasati, giacca grigio-verde",h:"1,78 m",c:"#8ad0a0",tag:"DAL TRIBUNALE",pw:"Rallentatore",pd:"Tutti i nemici rallentano quasi fino a fermarsi.",ic:"aim",
+  fn:()=>human({seed:59,H:50,bw:7,aw:4,skin:"#ebbf9e",top:"#7d8a84",topFn:(x,y)=>x===22?"#c8ccd2":"#7d8a84",hem:"#6c7872",pants:"#2b2f38",shoe:"#f0f0f0",nose:"#d6a684",brow:"#4a3020",
+   extra:(s,cx,t)=>{const C=["#4a3020","#5c3c28"];
+     s.rect(cx-6,t+2,1,4,"#8a6a54");s.rect(cx+5,t+2,1,4,"#8a6a54");
+     [[-3,0],[-1,-1],[1,-1],[3,0],[-4,2],[4,2],[0,-2],[-2,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,1.9,1.7,C[k%2]));
+     [[-3,3],[-1,3],[1,3]].forEach(([dx,dy],k)=>s.rect(cx+dx,t+dy,2,1,C[k%2]));
+     s.px(cx-3,t+10,"#9a7a62");s.px(cx+2,t+10,"#9a7a62");s.rect(cx-3,t+12,6,2,"#f2f2ee");}})},
 ];
 
 export {Sprite,human,CH,OUT};
