@@ -18,7 +18,8 @@ export const HEADSHOT = 2;
 
 /* armi da comprare al muro: la prima volta compri l'arma, dopo compri le munizioni */
 export const WALL_BUYS = [
-  { id: 'fucile', cost: 500, ammoCost: 250, x: -4.5, z: -13.9, rot: 0, zone: 'parcheggio' },
+  { id: 'pistola', cost: 300, ammoCost: 150, x: -4.5, z: -13.9, rot: 0, zone: 'parcheggio' },
+  { id: 'fucile', cost: 500, ammoCost: 250, x: -25.5, z: -13.9, rot: 0, zone: 'gazebo' },
   { id: 'mitra', cost: 1200, ammoCost: 600, x: -11.9, z: -31, rot: Math.PI / 2, zone: 'negozio' },
   { id: 'pompa', cost: 1500, ammoCost: 750, x: 60.0, z: -8, rot: Math.PI / 2, zone: 'seminterrato' },
   { id: 'ak47', cost: 3000, ammoCost: 1500, x: -12.0, z: -58.2, rot: Math.PI / 2, zone: 'magazzino' },
@@ -89,8 +90,8 @@ export function pickType(zoneIdx) {
 }
 
 /* ---------- BOSS ---------- */
-export const BOSS_FAB = { n: 'Fab La Rue', hp: 3000, spd: 2.5, dmg: 22, atkCd: 1.3, reward: 1500, summonEvery: 7, summonCount: 3, wave: 8 };
-export const BOSS_LORIS = { n: 'Loris Busato', hp: 12000, spd: 2.6, dmg: 32, atkCd: 1.2, reward: 5000, summonEvery: 9, wave: 15 };
+export const BOSS_FAB = { n: 'Fab La Rue', hp: 2000, spd: 2.4, dmg: 16, atkCd: 1.4, reward: 1500, summonEvery: 9, summonCount: 2, wave: 8 };
+export const BOSS_LORIS = { n: 'Loris Busato', hp: 8000, spd: 2.5, dmg: 24, atkCd: 1.3, reward: 5000, summonEvery: 11, wave: 15 };
 export const GENERATOR_COST = 1000;
 /* inventario: pacchi di munizioni da portare con se' e zaino per alzare il massimo di munizioni */
 export const INVENTORY = { packCost: 400, packMax: 3, bags: [{ cost: 800, mult: 1.5 }, { cost: 2000, mult: 2 }] };

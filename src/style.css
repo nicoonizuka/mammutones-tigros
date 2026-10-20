@@ -86,3 +86,17 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);overflow:hidden
 .modes .btn[aria-pressed="true"]{background:var(--gold);color:var(--o)}
 .modes .btn[aria-pressed="false"]{background:#1b222c;color:var(--ink)}
 .modeinfo{font-size:14px}
+.ending p{color:var(--ink);font-size:16px;line-height:1.55}
+.ending .kicker,.box .kicker{color:#ffd25e;font-family:var(--pix);font-size:18px}
+.map{border:3px solid #12161c;border-radius:8px;overflow:hidden;background:#1d241c}
+.map svg{display:block;width:100%;height:auto;image-rendering:pixelated;shape-rendering:crispEdges}
+.map .locked{filter:grayscale(.85) brightness(.32)}
+.map .tg{font:700 12px var(--pix),monospace;fill:#b8302a}
+.map .t1{font:700 15px var(--pix),monospace;fill:#ffd25e}
+.map .t2{font:12px system-ui,sans-serif;fill:#c9ced6}
+.map .dim .t1{fill:#8a909a}.map .dim .t2{fill:#6a707a}
+.map .blur{filter:blur(2.4px)}
+.map .lock text{font:700 46px var(--pix),monospace;fill:#ffffff;opacity:.55}
+.legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.sw{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border-radius:2px}
+.sw.on{background:#ffd25e}.sw.off{background:#2a2f38;border:1px solid #4a505a}

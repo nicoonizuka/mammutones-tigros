@@ -8,8 +8,8 @@ L'idea di fondo: il gioco è **facile all'inizio** e diventa più difficile **ma
 
 | Arma | Dove si trova | Danno corpo | Danno testa | Caricatore | Riserva | Cadenza | Ricarica |
 |---|---|---|---|---|---|---|---|
-| Pistola | arma di partenza | 25 | 50 | 8 | 64 | 1 colpo ogni 0,24 s | 1,3 s |
-| Fucile | appeso al muro del Tigros, parcheggio | 60 | 120 | 5 | 35 | 1 colpo ogni 0,6 s, niente raffica | 2,0 s |
+| Pistola | arma di partenza (munizioni al muro del Tigros, parcheggio) | 25 | 50 | 8 | 64 | 1 colpo ogni 0,24 s | 1,3 s |
+| Fucile | appeso al muro sotto la tettoia del gazebo Buongusto | 60 | 120 | 5 | 35 | 1 colpo ogni 0,6 s, niente raffica | 2,0 s |
 | Fucile a pompa | al muro del seminterrato | 30 × 8 pallini | 60 × 8 | 6 | 36 | 1 colpo ogni 0,85 s | 2,6 s |
 | Mitra | al muro dell'ortofrutta, negozio | 22 | 44 | 30 | 150 | raffica, 10 colpi al secondo | 2,0 s |
 | AK-47 | al muro del magazzino | 40 | 80 | 30 | 210 | raffica, circa 10 colpi al secondo | 2,2 s |
@@ -21,6 +21,7 @@ La Desert Eagle ha un colpo solo che attraversa i nemici e abbatte chiunque tran
 
 | Arma | Prima volta (compri l'arma) | Volte dopo (munizioni piene) |
 |---|---|---|
+| Pistola | 300 (se l'avevi cambiata) | 150 |
 | Fucile | 500 | 250 |
 | Mitra | 1200 | 600 |
 | Fucile a pompa | 1500 | 750 |
@@ -111,9 +112,9 @@ La zona più avanzata che hai aperto decide quanto sono forti i nemici e quanto 
 |---|---|
 | Dove | tana dei ratti, in fondo al seminterrato |
 | Quando | dall'ondata 8, quando sei nel seminterrato |
-| Vita | 3000, +4% per ogni ondata già passata |
-| Danno | 22 ogni 1,3 s |
-| Speciale | ogni 7 secondi chiama 3 ratti |
+| Vita | 2000, +4% per ogni ondata già passata |
+| Danno | 16 ogni 1,4 s |
+| Speciale | ogni 11 secondi chiama 2 ratti |
 | Ricompensa | 1500 monete |
 
 Quando lo sconfiggi i ratti scappano e puoi riaccendere la corrente dal quadro elettrico nel locale tecnico. La corrente servirà ad aprire il magazzino.
@@ -125,10 +126,10 @@ Quando lo sconfiggi i ratti scappano e puoi riaccendere la corrente dal quadro e
 | Dove | l'ufficio della zona controllo, in fondo al magazzino |
 | Come ci arrivi | apri il magazzino (3000, serve la corrente), poi accendi i 3 generatori (1000 l'uno) |
 | Quando | dall'ondata 15, con l'ufficio aperto |
-| Vita | 12000, +3% per ogni ondata già passata |
-| Danno | 32 ogni 1,2 s |
-| Speciale | ogni 9 secondi chiama 2 Mammutones Furia e 2 normali |
-| Ricompensa | 5000 monete e la vittoria |
+| Vita | 8000, +3% per ogni ondata già passata |
+| Danno | 24 ogni 1,3 s |
+| Speciale | ogni 11 secondi chiama 2 Mammutones Furia e 2 normali |
+| Ricompensa | 5000 monete e il finale: Loris e Fab scappano e si apre la mappa del mondo |
 
 ## Inventario
 
@@ -146,3 +147,9 @@ Si apre con **Tab** o **I** (sul controller: tasto Share o touchpad).
 |---|---|
 | Avventura | il percorso normale: apri le zone una alla volta, Fab La Rue arriva dall'ondata 8 nel seminterrato, Loris Busato dall'ondata 15; sconfiggere Loris è la vittoria |
 | Sandbox | tutte le zone aperte, corrente e generatori già accesi, 25000 monete. I nemici e la loro forza dipendono da dove ti trovi. Fab esce appena scendi nel seminterrato, Loris appena entri nel suo ufficio; se esci e rientri, il boss torna. Non c'è una fine |
+
+## Finale e mappa del mondo
+
+Quando sconfiggi Loris Busato compare la schermata "Complimenti, hai liberato il Tigros!". Loris e Fab La Rue in realtà scappano e torneranno più avanti. Poi si apre la mappa di Busto Arsizio: il Tigros è la prima mappa, le altre sono oscurate (Tribunale di Busto, Happy Shopping, il centro col Mac) e arriveranno con nuovi nemici e nuovi boss.
+
+Nella versione di prova il finale e la mappa si vedono anche senza giocare, col pulsante **Finale e mappa** nella schermata dei personaggi.

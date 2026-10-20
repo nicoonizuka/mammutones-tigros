@@ -46,7 +46,7 @@
   <div class="box">
     <h1>Mammutones <span>al Tigros</span></h1>
     <p>Loris Busato e la sua armata di Mammutones hanno invaso il Tigros di Busto. Scegli chi sei e resisti il più a lungo possibile. La vita è una sola.</p>
-    <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button></div>
+    <div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="previewEnd">Finale e mappa<small>anteprima, senza giocare</small></button></div>
     <p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p>
     <div class="pick" id="pick"></div>
     <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span><span><kbd>Tab</kbd>inventario</span><span><kbd>H</kbd>usa pacco munizioni</span></div>
@@ -68,6 +68,71 @@
     <h1>Pausa</h1>
     <p>Clicca per tornare a giocare. Il mouse viene catturato dal gioco: premi Esc per liberarlo.</p>
     <div class="btns"><button class="btn" id="resume" type="button">Continua</button><button class="btn ghost" id="quit" type="button">Cambia personaggio</button></div>
+  </div>
+</div>
+<div class="over" id="ending" hidden>
+  <div class="box ending">
+    <p class="kicker">Mappa 1 completata</p>
+    <h1>Complimenti, hai liberato <span>il Tigros</span>!</h1>
+    <p><b id="endwho">Il gruppo</b> ha ripreso il supermercato: la corrente è tornata, i generatori ronzano e stasera i tavolini del Buongusto sono di nuovo vostri.</p>
+    <p>Ma quando il fumo si è diradato, nell'ufficio della zona controllo non c'era nessuno. La maschera nera di <b>Loris Busato</b> era a terra, spaccata a metà. Dal tombino del seminterrato si sentiva solo uno squittio che si allontanava: <b>Fab La Rue</b> è scappato con i suoi ratti.</p>
+    <p>Non sono stati sconfitti davvero. I campanacci adesso suonano dall'altra parte di Busto Arsizio. <b>Torneranno.</b></p>
+    <div class="stats" id="endstats"></div>
+    <div class="btns"><button class="btn" id="toWorld" type="button">Apri la mappa del mondo</button></div>
+  </div>
+</div>
+<div class="over" id="world" hidden>
+  <div class="box">
+    <h1>Busto Arsizio <span>in apocalisse</span></h1>
+    <p>Il Tigros è solo la prima mappa. Le altre zone sono ancora in mano ai Mammutones: si sbloccheranno nei prossimi aggiornamenti.</p>
+    <div class="map" id="map">
+      <svg viewBox="0 0 960 520" role="img" aria-label="Mappa di Busto Arsizio con il Tigros liberato e tre zone ancora oscurate">
+        <defs>
+          <pattern id="grass" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#2c3a2a"/><rect x="2" y="3" width="2" height="2" fill="#35472f"/><rect x="10" y="11" width="2" height="2" fill="#35472f"/></pattern>
+          <filter id="fog"><feGaussianBlur stdDeviation="3.2"/></filter>
+          <radialGradient id="glow"><stop offset="0" stop-color="#ffd25e" stop-opacity=".55"/><stop offset="1" stop-color="#ffd25e" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="960" height="520" fill="url(#grass)"/>
+        <!-- strade e ferrovia -->
+        <g fill="none" stroke-linecap="square">
+          <path d="M0 300 H960" stroke="#4a4a4e" stroke-width="26"/><path d="M0 300 H960" stroke="#c9b86a" stroke-width="2" stroke-dasharray="14 12"/>
+          <path d="M470 0 V520" stroke="#4a4a4e" stroke-width="22"/><path d="M470 0 V520" stroke="#c9b86a" stroke-width="2" stroke-dasharray="14 12"/>
+          <path d="M120 520 L330 300 M640 300 L860 60" stroke="#444448" stroke-width="16"/>
+          <path d="M0 140 C260 160 520 110 960 170" stroke="#2a2422" stroke-width="10"/><path d="M0 140 C260 160 520 110 960 170" stroke="#8a7a6a" stroke-width="2" stroke-dasharray="4 8"/>
+        </g>
+        <!-- 1 Tigros: liberato -->
+        <g class="node free" transform="translate(150 360)">
+          <circle cx="60" cy="40" r="110" fill="url(#glow)"/>
+          <rect x="0" y="10" width="130" height="62" fill="#8c3a2e"/><rect x="0" y="4" width="130" height="10" fill="#b84a38"/>
+          <rect x="30" y="22" width="70" height="16" fill="#f1ede2"/><text x="65" y="35" text-anchor="middle" class="tg">TIGROS</text>
+          <rect x="52" y="46" width="26" height="26" fill="#2a3440"/><rect x="-46" y="40" width="40" height="32" fill="#e6e2d8"/><rect x="-50" y="34" width="48" height="6" fill="#f4f2ec"/>
+          <rect x="140" y="30" width="44" height="42" fill="#6a5a4c"/><rect x="144" y="36" width="10" height="10" fill="#ffd25e"/>
+        </g>
+        <!-- 2 Tribunale: oscurato -->
+        <g class="node locked" transform="translate(560 330)"><g filter="url(#fog)">
+          <rect x="0" y="34" width="150" height="70" fill="#d8d0c0"/><polygon points="-6,36 75,0 156,36" fill="#e8e0d0"/>
+          <rect x="14" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="44" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="96" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="126" y="44" width="10" height="60" fill="#bfb6a6"/>
+        </g></g>
+        <!-- 3 Happy Shopping: oscurato -->
+        <g class="node locked" transform="translate(640 60)"><g filter="url(#fog)">
+          <rect x="0" y="20" width="200" height="60" fill="#3a6aa8"/><rect x="0" y="12" width="200" height="12" fill="#f0b030"/><rect x="60" y="34" width="80" height="20" fill="#f6f2e8"/>
+          <rect x="20" y="88" width="40" height="22" fill="#555"/><rect x="140" y="88" width="40" height="22" fill="#555"/>
+        </g></g>
+        <!-- 4 Centro con il Mac: oscurato -->
+        <g class="node locked" transform="translate(150 40)"><g filter="url(#fog)">
+          <rect x="0" y="30" width="70" height="60" fill="#a8463a"/><rect x="80" y="10" width="40" height="80" fill="#cfc4ae"/><polygon points="80,10 100,-12 120,10" fill="#8a7a64"/>
+          <rect x="130" y="40" width="110" height="50" fill="#c8302a"/><rect x="160" y="48" width="50" height="20" fill="#f6c83a"/>
+        </g></g>
+        <!-- etichette -->
+        <g class="lbl"><rect x="130" y="448" width="230" height="44" rx="4" fill="#12161c" stroke="#ffd25e" stroke-width="2"/><text x="145" y="468" class="t1">1 · TIGROS</text><text x="145" y="484" class="t2">Liberato · Fab e Loris sono scappati</text></g>
+        <g class="lbl dim"><rect x="555" y="446" width="210" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="570" y="466" class="t1 blur">2 · TRIBUNALE DI BUSTO</text><text x="570" y="482" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lbl dim"><rect x="640" y="176" width="210" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="655" y="196" class="t1 blur">3 · HAPPY SHOPPING</text><text x="655" y="212" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lbl dim"><rect x="150" y="152" width="230" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="165" y="172" class="t1 blur">4 · IL CENTRO COL MAC</text><text x="165" y="188" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lock"><text x="635" y="400">?</text><text x="740" y="128">?</text><text x="265" y="110">?</text></g>
+      </svg>
+    </div>
+    <div class="legend"><span><i class="sw on"></i>Disponibile</span><span><i class="sw off"></i>Oscurato: nuovi nemici e nuovi boss in arrivo</span></div>
+    <div class="btns"><button class="btn" id="worldBack" type="button">Torna al menu</button></div>
   </div>
 </div>
 <div class="over" id="dead" hidden>

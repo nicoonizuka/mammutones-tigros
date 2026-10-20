@@ -86,11 +86,13 @@ src/
 ## Percorso previsto
 
 1. Parcheggio (fatto)
-2. Gazebo Buongusto (fatto, si apre a 750)
+2. Gazebo Buongusto (fatto, si apre a 750): fucile al muro sotto la tettoia
 3. Negozio (fatto, si apre a 1250 dopo il gazebo): corsie, ortofrutta, sushi, casse, mitra al muro
 4. Seminterrato (fatto, 2000 dalla scala mobile): ratti, boss Fab La Rue, fucile a pompa, corrente da riaccendere
 5. Magazzino (fatto, 3000 dopo la corrente): scaffali alti, celle frigo, muletto, Mammutones Furia, AK-47
 6. Zona controllo (fatto, 3 generatori): Desert Eagle e boss finale Loris Busato all'ondata 15
+
+Dopo il Tigros (prossimamente, già oscurate nella mappa del mondo): Tribunale di Busto, Happy Shopping, il centro col Mac.
 
 ## Bilanciamento
 

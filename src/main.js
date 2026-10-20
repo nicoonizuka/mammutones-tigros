@@ -212,7 +212,7 @@ const INTER = [
 ];
 function openZone(i) {
   if (zone >= i) return; zone = i; const banner = quiet ? () => {} : bannerFn; const feed = quiet ? () => {} : feedFn;
-  if (i === 1) { scene.remove(gzBar); gzSolids.forEach(s => (s.off = 1)); banner('Gazebo aperto', 'I Mammutones ora escono anche da qui'); }
+  if (i === 1) { scene.remove(gzBar); gzSolids.forEach(s => (s.off = 1)); banner('Gazebo aperto', 'Il fucile è appeso al muro sotto la tettoia'); }
   if (i === 2) { scene.remove(storeDoor); doorSolid.off = 1; banner('Negozio aperto', 'Attenti ai Mammutones Cornuti tra le corsie'); }
   if (i === 3) feed('Seminterrato aperto');
   if (i === 4) { scene.remove(wareDoor); wareDoorSolid.off = 1; banner('Magazzino aperto', 'Attento ai Mammutones Furia: veloci e cattivi'); }
@@ -451,7 +451,7 @@ function startGame(i) {
     GENERATORS.forEach(g => { g.on = true; g.led.material.color.set('#3aff6a'); });
     lock(); banner('Sandbox', 'Tutto aperto: entra nella tana di Fab o nell\'ufficio di Loris per sfidarli'); audio(); return;
   }
-  lock(); banner('Sopravvivi al parcheggio', 'Il fucile è appeso al muro del Tigros'); audio();
+  lock(); banner('Sopravvivi al parcheggio', 'Al muro del Tigros trovi le munizioni della pistola'); audio();
 }
 function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
 function resume() { state = 'play'; $('pause').hidden = true; last = performance.now(); lock(); }
@@ -463,17 +463,23 @@ function gameOver() {
 }
 function victory() {
   if (state !== 'play') return; state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
-  $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = 'Il Tigros è <span>salvo</span>';
-  $('deadmsg').textContent = `${ROSTER[charIdx].name} ha sconfitto Loris Busato e la sua armata di Mammutones. Stasera si torna ai tavolini del Buongusto.`;
-  $('deadstats').innerHTML = `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>`;
+  $('hud').hidden = true; showEnding(true);
 }
-function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
+/* finale: complimenti, i boss scappano, poi la mappa del mondo */
+function showEnding(real) {
+  ['sel', 'dead', 'pause'].forEach(id => ($(id).hidden = true));
+  $('endstats').innerHTML = real ? `<div>${wave}<small>Ondate</small></div><div>${kills}<small>Mammutones abbattuti</small></div><div>${coins}<small>Monete rimaste</small></div>` : '';
+  $('endwho').textContent = real ? ROSTER[charIdx].name + ' e il gruppo' : 'Il gruppo';
+  $('ending').hidden = false; menuIdx = 0;
+}
+function showWorld() { $('ending').hidden = true; $('world').hidden = false; menuIdx = 0; }
+function toMenu() { state = 'menu'; resetWorld(); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
 /* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
 function padMenus() {
-  const vis = ['story', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
+  const vis = ['story', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
   if (vis === 'inv' && (pad.pressed[BTN.CIRCLE] || pad.pressed[8] || pad.pressed[17])) { closeInv(); return; }
   const btns = [...$(vis).querySelectorAll('button')]; if (!btns.length) return;
   const step = (pad.pressed[BTN.RIGHT] || pad.pressed[BTN.DOWN]) ? 1 : (pad.pressed[BTN.LEFT] || pad.pressed[BTN.UP]) ? -1 : 0;
@@ -486,6 +492,7 @@ function feedSafe(t) { if (state === 'play') feed(t); }
 
 /* storia e modalita' */
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto il Tigros aperto da subito, 25000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri il Tigros zona per zona, Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; }));
+$('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = showWorld; $('worldBack').onclick = toMenu;
 $('storyGo').onclick = () => { $('story').hidden = true; $('sel').hidden = false; menuIdx = 0; };
 $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = false; };
 
