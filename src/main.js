@@ -22,7 +22,7 @@ const V3 = THREE.Vector3;
 
 /* ===================== STATO ===================== */
 let P, charIdx = 0, pModel, state = 'menu', enemies = [], drops = [], tracers = [], sparks = [];
-let mode = 'adv', quiet = false, sinceHit = 99;
+let mode = 'adv', quiet = false, sinceHit = 99, god = false, stickDir = 0;
 let sprintToggle = false, menuIdx = 0, boss = null, fabDead = false, lorisDead = false, power = false, packs = 0, bag = 0;
 const bagMult = () => (bag ? INVENTORY.bags[bag - 1].mult : 1);
 const maxRes = w => (WEAPONS[w.id].noPack ? 0 : Math.round(WEAPONS[w.id].res * bagMult()));
@@ -421,6 +421,7 @@ function update(dt) {
   hud();
 }
 function hit(dmg) {
+  if (mode === 'sandbox' && god) { tone(1200, 0.04, 'square', 0.02); return; }
   if (P.pwT > 0 && P.pw.k === 'shield') { tone(1200, 0.05, 'square', 0.03); return; }
   if (P.ar > 0) { const a = Math.min(P.ar, dmg * 0.7); P.ar -= a; dmg -= a; }
   P.hp -= dmg; P.hurtT = 0.5; sinceHit = 0; hurt(); shake(0.15); if (P.hp <= 0) { P.hp = 0; gameOver(); }
@@ -481,8 +482,11 @@ $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = (
 function padMenus() {
   const vis = ['story', 'ending', 'world', 'sel', 'pause', 'dead', 'inv'].find(id => !$(id).hidden); if (!vis) return;
   if (vis === 'inv' && (pad.pressed[BTN.CIRCLE] || pad.pressed[8] || pad.pressed[17])) { closeInv(); return; }
-  const btns = [...$(vis).querySelectorAll('button')]; if (!btns.length) return;
-  const step = (pad.pressed[BTN.RIGHT] || pad.pressed[BTN.DOWN]) ? 1 : (pad.pressed[BTN.LEFT] || pad.pressed[BTN.UP]) ? -1 : 0;
+  const btns = [...$(vis).querySelectorAll('button')].filter(b => !b.hidden); if (!btns.length) return;
+  /* anche la levetta sinistra: uno scatto ogni volta che la spingi */
+  const sv = Math.abs(pad.lx) > Math.abs(pad.ly) ? pad.lx : pad.ly, sd = sv > 0.55 ? 1 : sv < -0.55 ? -1 : 0;
+  const stick = sd !== 0 && sd !== stickDir ? sd : 0; stickDir = Math.abs(sv) < 0.3 ? 0 : sd || stickDir;
+  const step = (pad.pressed[BTN.RIGHT] || pad.pressed[BTN.DOWN]) ? 1 : (pad.pressed[BTN.LEFT] || pad.pressed[BTN.UP]) ? -1 : stick;
   if (step) { menuIdx = (menuIdx + step + btns.length) % btns.length; btns[menuIdx].focus(); }
   if (vis === 'pause' && pad.pressed[BTN.OPTIONS]) { resume(); return; }
   if (pad.pressed[BTN.X]) { (btns[menuIdx] || btns[0]).click(); menuIdx = 0; }
@@ -491,7 +495,8 @@ addEventListener('gamepadconnected', () => { feedSafe('Controller collegato'); }
 function feedSafe(t) { if (state === 'play') feed(t); }
 
 /* storia e modalita' */
-document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto il Tigros aperto da subito, 25000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri il Tigros zona per zona, Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; }));
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); $('modeinfo').textContent = mode === 'sandbox' ? 'Sandbox: tutto il Tigros aperto da subito, 25000 monete, i boss escono appena entri nella loro zona.' : 'Avventura: apri il Tigros zona per zona, Fab La Rue arriva all\'ondata 8, Loris Busato alla 15.'; $('godBtn').hidden = mode !== 'sandbox'; }));
+$('godBtn').onclick = () => { god = !god; $('godBtn').setAttribute('aria-pressed', god ? 'true' : 'false'); $('godBtn').firstChild.textContent = god ? 'Invincibile: sì' : 'Invincibile: no'; };
 $('previewEnd').onclick = () => showEnding(false); $('toWorld').onclick = showWorld; $('worldBack').onclick = toMenu;
 $('storyGo').onclick = () => { $('story').hidden = true; $('sel').hidden = false; menuIdx = 0; };
 $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = false; };

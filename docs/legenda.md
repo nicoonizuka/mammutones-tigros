@@ -146,10 +146,16 @@ Si apre con **Tab** o **I** (sul controller: tasto Share o touchpad).
 | Modalità | Come funziona |
 |---|---|
 | Avventura | il percorso normale: apri le zone una alla volta, Fab La Rue arriva dall'ondata 8 nel seminterrato, Loris Busato dall'ondata 15; sconfiggere Loris è la vittoria |
-| Sandbox | tutte le zone aperte, corrente e generatori già accesi, 25000 monete. I nemici e la loro forza dipendono da dove ti trovi. Fab esce appena scendi nel seminterrato, Loris appena entri nel suo ufficio; se esci e rientri, il boss torna. Non c'è una fine |
+| Sandbox | tutte le zone aperte, corrente e generatori già accesi, 25000 monete. I nemici e la loro forza dipendono da dove ti trovi. Fab esce appena scendi nel seminterrato, Loris appena entri nel suo ufficio; se esci e rientri, il boss torna. Non c'è una fine. Con il pulsante **Invincibile** i nemici non ti fanno danno |
 
 ## Finale e mappa del mondo
 
-Quando sconfiggi Loris Busato compare la schermata "Complimenti, hai liberato il Tigros!". Loris e Fab La Rue in realtà scappano e torneranno più avanti. Poi si apre la mappa di Busto Arsizio: il Tigros è la prima mappa, le altre sono oscurate (Tribunale di Busto, Happy Shopping, il centro col Mac) e arriveranno con nuovi nemici e nuovi boss.
+Quando sconfiggi Loris Busato compare la schermata "Complimenti, hai liberato il Tigros!". Loris e Fab La Rue in realtà scappano e torneranno più avanti. Poi si apre la mappa di Busto Arsizio: il Tigros è la prima mappa, le altre sono bloccate, con il nome visibile ma l'immagine oscurata (Tribunale di Busto, Happy Shopping, il centro col Mac) e arriveranno con nuovi nemici e nuovi boss.
 
 Nella versione di prova il finale e la mappa si vedono anche senza giocare, col pulsante **Finale e mappa** nella schermata dei personaggi.
+
+## Idee per i prossimi mondi
+
+- Ogni mondo ha cattivi e boss diversi.
+- Ogni mondo ha personaggi nuovi da sbloccare; anche i personaggi iniziali del Tigros potranno cambiare.
+- La difficoltà sale piano piano da un mondo all'altro: l'inizio del mondo successivo è più difficile dell'inizio del Tigros, ma non quanto la sfida con Loris.
