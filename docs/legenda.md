@@ -253,10 +253,19 @@ Appunti della storia, da sviluppare quando arrivano le foto (Libe il matto, Well
 
 | Area | Nemici | Boss / evento |
 |---|---|---|
-| 1 · Parcheggio di fianco al Tribunale | Mammutones, Fab La Rue con i ratti | **Fab La Rue** al round 5, sconfitto una volta per tutte: libera la strada bloccata |
-| 2 · Piazza con i tavolini del Tribunale | **orchi di Well** (un solo tipo), Mammutones | **Well** attacca con gli orchi dal round 6; **Fabio Regaglia**, gigante, al round 10 |
-| 3 · Garage di Pika | — | si aprono dopo aver battuto Fabio Regaglia: liberi Leodessi, Castelluccio e Bulegato |
-| 4 · Casa di Pika (ci si arriva con l'ascensore) | da definire | **Pika** come boss finale: sconfiggerlo lo libera dal maleficio |
+| 1 · Parcheggio di fianco al Tribunale | Mammutones, i ratti di Fab | **Fab La Rue** al round 5, sconfitto una volta per tutte: libera la strada bloccata |
+| 2 · Piazza con i tavolini del Tribunale | **orchi di Well** (due tipi), Mammutones, un nemico nuovo di un altro tipo | **Well** attacca con gli orchi dal round 6; **Fabio Regaglia**, gigante, al round 10 |
+| 3 · Garage di Pika | ratti e **ratti più grossi**, alcuni Mammutones speciali | si aprono dopo aver battuto Fabio Regaglia: liberi Leodessi, Castelluccio e Bulegato. **Pika** combatte, viene sconfitto per poco e scappa su in casa |
+| 4 · Casa di Pika (con l'ascensore) | alcuni Mammutones speciali | c'è **Loris** con Pika: è lui che gli ha fatto il maleficio. Loris scappa subito, Pika resta a combattere. Sconfitto Pika, il maleficio si spezza |
 
-- Ci sono Mammutones ma **non Loris**.
-- Nemici nuovi e armi nuove da definire.
+**Boss e personaggi sbloccabili**
+
+| Chi | Come nemico | Dopo |
+|---|---|---|
+| Fabio Regaglia | gigante di 2,50 m ai tavolini, round 10 | diventa giocabile |
+| Pika | colpisce anche da lontano (con una spada o simile) | liberato dal maleficio, diventa giocabile |
+
+**Ordine di lavoro**: prima i personaggi e i nemici (foto e prompt in arrivo), poi le armi.
+
+- Loris compare solo nella scena della casa di Pika e scappa subito: non si combatte.
+- I Mammutones "speciali" del garage e della casa sono da definire.
