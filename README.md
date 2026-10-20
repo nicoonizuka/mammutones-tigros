@@ -41,6 +41,7 @@ Poi apri l'indirizzo che compare nel terminale, di solito http://localhost:5173.
 | P o Esc | pausa |
 | Tab o I | inventario |
 | H | usa un pacco di munizioni |
+| V | prima / terza persona (col controller: R3) |
 
 Col controller (PlayStation, Xbox): levetta sinistra muovi, destra mira, R2 spara, L1/R1 potere, Quadrato ricarica, Cerchio compra/apri, Triangolo cambia arma, X salta, L3 corri, Options pausa. Nei menu: frecce per scegliere, X per confermare.
 

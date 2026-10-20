@@ -230,3 +230,7 @@ Onda d'urto e Furia restano nel gioco, pronti per i personaggi dei prossimi mond
 In Avventura, quando sconfiggi Loris compare il finale del Tigros con due scelte: **Vai all'Happy Shopping** (parti dal mondo 2 con lo stesso personaggio, dopo l'intro) oppure **Resta al Tigros** (le ondate continuano all'infinito). Lo stesso vale dopo il Capo: puoi restare all'Happy Shopping.
 
 La katana è tolta per ora (troppo forte): il codice resta nel gioco per usarla più avanti.
+
+### Visuale
+
+Con **V** (o **R3** sul controller) passi dalla terza alla prima persona e viceversa. La scelta resta salvata nel browser.

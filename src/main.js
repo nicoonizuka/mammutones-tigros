@@ -41,7 +41,19 @@ const gzOpen = () => zone >= 1;
 
 /* ===================== GIOCATORE E ARMI ===================== */
 function newWeapon(id) { const W = WEAPONS[id]; return { ...W, id, ammo: W.mag, res: W.res }; }
+/* ---------- prima persona: arma davanti alla camera ---------- */
+let fp = false; try { fp = localStorage.getItem('mt_fp') === '1'; } catch (_) {}
+const vm = new THREE.Group(); camera.add(vm); scene.add(camera); let vmKick = 0;
+const skinM = new THREE.MeshStandardMaterial({ color: '#e0b48e', roughness: 0.7 });
+function buildVM() {
+  while (vm.children.length) vm.remove(vm.children[0]);
+  if (!P) return; const g = buildWeapon(P.weapons[P.cur].id); g.rotation.y = Math.PI; vm.add(g); vm.userData.gun = g;
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), skinM); hand.position.set(0, -0.06, 0.02); vm.add(hand);
+  vm.traverse(o => { if (o.isMesh) { o.castShadow = false; o.renderOrder = 10; } });
+}
+function setFP(on) { fp = on; try { localStorage.setItem('mt_fp', on ? '1' : '0'); } catch (_) {} if (state === 'play') feed(on ? 'Visuale in prima persona' : 'Visuale in terza persona'); }
 function equip() {
+  buildVM();
   const A = pModel.userData.P.armR, hand = A.userData.hand;
   if (pModel.userData.gun) A.remove(pModel.userData.gun);
   const g = buildWeapon(P.weapons[P.cur].id); g.position.copy(hand.position); g.position.y -= 0.02; g.rotation.x = Math.PI / 2;
@@ -109,7 +121,7 @@ function animLimbs(m, phase, amp) { const p = m.userData.P; const s = Math.sin(p
 /* ===================== SPARO ===================== */
 const ray = new THREE.Raycaster(); const tracerM = new THREE.LineBasicMaterial({ color: '#ffe08a' });
 const sparkG = new THREE.SphereGeometry(0.07, 6, 4), sparkM = new THREE.MeshBasicMaterial({ color: '#ffd27a' }), bloodM = new THREE.MeshBasicMaterial({ color: '#c0392b' });
-function muzzle() { const g = pModel.userData.gun; const v = g.userData.muzzle.clone(); g.localToWorld(v); return v; }
+function muzzle() { const g = fp && vm.userData.gun ? vm.userData.gun : pModel.userData.gun; const v = g.userData.muzzle.clone(); g.localToWorld(v); return v; }
 function hitTargets() { const t = blockers(); for (const e of enemies) if (!e.dead) t.push(e.m.userData.hit.head, e.m.userData.hit.body); return t; }
 function shoot() {
   const w = P.weapons[P.cur]; if (P.reloadT > 0) return;
@@ -145,7 +157,7 @@ function shoot() {
     tracer(muzzle(), end);
   }
   if (anyHit) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
-  pModel.userData.P.armR.rotation.x -= 0.25;
+  pModel.userData.P.armR.rotation.x -= 0.25; vmKick = Math.min(1, vmKick + (w.dmg > 50 || w.pel > 1 ? 1 : 0.45));
 }
 /* katana: colpisce tutti i nemici davanti a te entro pochi metri */
 function slash(w) {
@@ -336,6 +348,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Tab' || e.code === 'KeyI') { e.preventDefault(); openInv(); return; }
   if (e.code === 'Digit1') switchWeapon(0); if (e.code === 'Digit2') switchWeapon(1);
   if (e.code === 'KeyP') pauseGame();
+  if (e.code === 'KeyV') setFP(!fp);
   if (e.code === 'Space' && P.pos.y <= 0.001) P.vy = 6.2;
   if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
 });
@@ -411,7 +424,7 @@ function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000); last = t;
   pollPad(); if (pad.connected) padMenus();
   if (state === 'play') { time += dt; update(dt); }
-  else { time += dt * 0.3; if (state === 'menu') { if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
+  else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   renderer.render(scene, camera);
 }
 function update(dt) {
@@ -432,6 +445,7 @@ function update(dt) {
   if (pad.connected) {
     mv.addScaledVector(fwd, -pad.ly).addScaledVector(right, pad.lx);
     yaw -= pad.rx * 2.6 * dt; pitch = Math.max(-1.1, Math.min(0.9, pitch - pad.ry * 1.9 * dt));
+    if (pad.pressed[11]) setFP(!fp);
     if (pad.pressed[BTN.L3]) sprintToggle = !sprintToggle; if (Math.hypot(pad.lx, pad.ly) < 0.2) sprintToggle = false; padSprint = sprintToggle;
     if (pad.pressed[BTN.UP]) usePack(); if (pad.pressed[8] || pad.pressed[16] || pad.pressed[17]) { openInv(); return; }
     if (pad.pressed[BTN.SQUARE]) startReload(); if (pad.pressed[BTN.CIRCLE]) useInter(); if (pad.pressed[BTN.L1] || pad.pressed[BTN.R1]) usePower();
@@ -458,6 +472,9 @@ function update(dt) {
   else if (inWare(P.pos)) { cam.x = Math.max(WARE.x1 + 0.4, Math.min(WARE.x2 - 0.4, cam.x)); cam.z = Math.max(WARE.z1 + 0.4, cam.z); cam.y = Math.min(WARE.ceil - 0.4, cam.y); }
   else if (inStore(P.pos)) { cam.x = Math.max(STORE.x1 + 0.4, Math.min(STORE.x2 - 0.4, cam.x)); cam.z = Math.max(STORE.z1 + 0.4, Math.min(STORE.z2 - 0.3, cam.z)); cam.y = Math.min(STORE.ceil - 0.4, cam.y); }
   else { cam.x = Math.max(-39.5, Math.min(39.5, cam.x)); cam.z = Math.max(-13.6, Math.min(29.5, cam.z)); }
+  if (fp) { cam.copy(P.pos); cam.y += pModel.userData.height * 0.9; }
+  pModel.visible = !fp; vm.visible = fp;
+  if (fp) { vmKick = Math.max(0, vmKick - dt * 6); const bob = moving ? Math.sin(P.walk * 2) * 0.012 : 0; vm.position.set(0.16, -0.15 + bob, -0.36 + vmKick * 0.08); vm.scale.setScalar(0.62); vm.rotation.set(vmKick * 0.25 + (P.reloadT > 0 ? -0.6 : 0), 0, 0); }
   camera.position.copy(cam); camera.lookAt(cam.clone().add(d)); updateFx(dt, camera, P.pos, inBasement(P.pos));
   /* sparo */
   fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire) && w.auto && fireT <= 0) shoot();
