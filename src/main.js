@@ -217,7 +217,7 @@ function slash(w) {
   for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length();
     if (d < w.range + (e.r || 0.4) && (d < 0.8 || to.normalize().dot(pf) > 0.3)) { damageEnemy(e, w.dmg * mult, false); spark(e.m.userData.hit.body.getWorldPosition(new V3()), true); n++; } }
   if (n) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
-  if (pModel.userData.hd) pModel.userData.hd.once('baseball_pitching', 0.4, 0.06);
+  if (pModel.userData.hd) pModel.userData.hd.slash();
   const A = pModel.userData.P.armR; A.rotation.x -= 1.1; A.rotation.z = 0.8; setTimeout(() => { A.rotation.z = 0; }, 160);
 }
 /* bazooka: esplosione con danno ad area */
@@ -262,7 +262,7 @@ function bossDown() {
   banner('Fab La Rue è sconfitto!', nu ? 'Hai sbloccato ' + nu.short + '! Ora riaccendi la corrente nel locale tecnico' : 'I ratti scappano: riaccendi la corrente nel locale tecnico');
   for (const e of enemies) if (!e.dead && e.type === 'ratto') { e.dead = 1; e.deadT = 0; alive--; }
 }
-function startReload() { const w = P.weapons[P.cur]; if (P.reloadT > 0 || w.ammo >= w.mag || w.res <= 0) return; P.reloadT = w.reload; reloadSound(); }
+function startReload() { const w = P.weapons[P.cur]; if (P.reloadT > 0 || w.ammo >= w.mag || w.res <= 0) return; P.reloadT = w.reload; reloadSound(); if (pModel.userData.hd) pModel.userData.hd.reload(w.reload); }
 
 /* ===================== OGGETTI ===================== */
 const DROPLOOK = { cura: { c: '#ff4a5a', n: 'Cura' }, munizioni: { c: '#f2c14e', n: 'Munizioni' }, armatura: { c: '#5ab0ff', n: 'Armatura' } };
@@ -816,7 +816,7 @@ function updMirko(dt) {
   collide(m.position, 0.4, 1);
   if (hd) { const dir = target ? target.m.position.clone().sub(m.position).setY(0).normalize() : new V3(Math.sin(m.rotation.y), 0, Math.cos(m.rotation.y));
     const fdir = new V3(Math.sin(m.rotation.y), 0, Math.cos(m.rotation.y)), rdir = new V3(-fdir.z, 0, fdir.x), mn = walking ? mv.clone().normalize() : new V3();
-    hd.update(dt, { moving: walking, running: !target, f: walking ? mn.dot(fdir) : 0, side: walking ? mn.dot(rdir) : 0, shooting: !!target, dir, pitch: 0 }); }
+    hd.update(dt, { moving: walking, running: !target, speed: 6, f: walking ? mn.dot(fdir) : 0, side: walking ? mn.dot(rdir) : 0, shooting: !!target, dir, pitch: 0 }); }
   if (target) {
     const d = target.m.position.clone().sub(m.position); m.rotation.y = Math.atan2(d.x, d.z); m.userData.P.armR.rotation.x = -1.5;
     mirko.fire -= dt;
@@ -863,7 +863,7 @@ function usePower() {
   else if (pw.k === 'gratis') { P.freeGun = true; banner('DJ Gianfra', 'La prossima arma che compri al muro è gratis'); tone(900, 0.3, 'triangle', 0.05, 1400); }
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
-  if (pModel.userData.hd) pModel.userData.hd.power();
+  if (pModel.userData.hd) pModel.userData.hd.power(P.moving);
 }
 
 /* onda d'urto di Tefalin: ferisce e spinge via tutti i nemici vicini */
@@ -969,8 +969,8 @@ function update(dt) {
   /* camera in terza persona */
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   if (pModel.userData.hd) { const hd = pModel.userData.hd, mn = moving ? mv.clone().normalize() : mv;
-    hd.update(dt, { moving, running, f: mn.dot(fwd), side: mn.dot(right), air: P.pos.y > gY + 0.08, reloadT: P.reloadT, shooting: time - (P.shotT || -9) < 0.6, pitch, dir: d, fast: P.pwT > 0 && P.pw.k === 'speed' }); }
-  const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
+    P.moving = moving; hd.update(dt, { moving, running, speed: spd, f: mn.dot(fwd), side: mn.dot(right), air: P.pos.y > gY + 0.08, reloadT: P.reloadT, shooting: time - (P.shotT || -9) < 0.6, pitch, dir: d, fast: P.pwT > 0 && P.pw.k === 'speed' }); }
+  const head = P.pos.clone(); head.y += pModel.userData.hd ? 1.78 : pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
   if (world === 4) { const A = inMac(P.pos) ? MACIN : inChiesa(P.pos) ? CHIESA : inCata(P.pos) ? CATA : null;
     if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
