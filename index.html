@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mammutones al Tigros</title>
+<meta name="description" content="Lo sparatutto di Busto Arsizio: tu e i tuoi amici contro i Mammutones, al Tigros, all'Happy Shopping e al Tribunale. Si gioca dal computer (anche col controller della Play) o dal telefono, in orizzontale.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mammutones al Tigros · v2.0">
+<meta property="og:description" content="Busto Arsizio è nel caos. Scegli il tuo personaggio e riprenditi il Tigros, l'Happy Shopping e il Tribunale. Dal computer, col controller della Play o dal telefono.">
+<meta property="og:url" content="https://mammutones-tigros.vercel.app/">
+<meta property="og:image" content="https://mammutones-tigros.vercel.app/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0d1117">
+<link rel="icon" href="/mammutones-tigros/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Fredoka:wght@500;600;700&display=swap">
+  <script type="module" crossorigin src="/mammutones-tigros/assets/index-CIwpDeWv.js"></script>
+  <link rel="stylesheet" crossorigin href="/mammutones-tigros/assets/index-CoaRvypB.css">
+</head>
+<body>
+<div id="game"></div>
+<div class="dmg" id="dmg"></div>
+<div class="hud" id="hud" hidden>
+  <div class="tl"><div class="wave" id="wave">1<small>Ondata</small></div><div class="coins"><i></i><span id="coins">500</span></div></div>
+  <div class="feed" id="feed"></div><div class="buff" id="buff" hidden></div>
+  <div class="cross" id="cross"></div>
+  <div class="prompt" id="prompt" hidden></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="bossbar" id="boss" hidden><span id="bossn">Fab La Rue · Re dei ratti</span><div><i id="bossb"></i></div></div>
+  <div class="bl">
+    <div class="who"><canvas id="who" width="17" height="16"></canvas></div>
+    <div class="bars">
+      <div class="nm" id="pname"></div>
+      <div class="bar"><i id="hpb"></i><span id="hpt"></span></div>
+      <div class="bar ar"><i id="arb"></i></div><div class="bar st"><i id="stb"></i></div>
+      <div class="power" id="pw"><span class="k">Q</span><span id="pwn"></span><span class="pb"><i id="pwb"></i></span></div>
+    </div>
+  </div>
+  <div class="br"><div class="wname" id="wname"></div><div class="ammo" id="ammo"></div><div class="slots" id="slots"></div></div>
+</div>
+
+<div class="over" id="story">
+  <div class="box story">
+    <h1>Mammutones <span>al Tigros</span></h1>
+    <p class="kicker">Busto Arsizio, una sera d'estate. L'ultima sera normale.</p>
+    <p>Come ogni sera, il gruppo era seduto ai tavolini sotto il gazebo del Buongusto, davanti al Tigros. Nathan, Dado, Nico, Slime, Leo, Ponta, Jacopo e Corti. Poi dal parcheggio è arrivato un suono che nessuno di loro aveva mai sentito in Lombardia: <b>campanacci</b>. Centinaia di campanacci.</p>
+    <p>Era tornato <b>Loris Busato</b>. Dopo un'estate in Sardegna si era messo addosso la maschera nera e la pelliccia dei Mammutones e non se l'era più tolta. Ma non era tornato da solo: dietro di lui marciava un'armata di Mammutones veri, maschere di legno e sonagli di bronzo. In una notte hanno preso il Tigros. Fuori, intanto, il mondo era già finito in apocalisse, e Busto Arsizio nel caos: non solo per i Mammutones, che sono il problema del Tigros, ma per mille altri guai che nessuno ha ancora visto da vicino.</p>
+    <p>Nel seminterrato si è nascosto il suo luogotenente, <b>Fab La Rue</b>, diventato il re dei ratti. Ha staccato la corrente a tutto il supermercato. Loris invece si è chiuso nell'ufficio della zona controllo, in fondo al magazzino, e da lì comanda la sua armata guardando le telecamere.</p>
+    <p class="kicker">Il piano è semplice: riprendersi il Tigros, zona per zona.</p>
+    <ol class="plan"><li>Resistere nel parcheggio e liberare il gazebo</li><li>Entrare nel negozio</li><li>Scendere nel seminterrato, battere Fab e riaccendere la corrente</li><li>Aprire il magazzino e accendere i tre generatori</li><li>Entrare nell'ufficio e sconfiggere Loris Busato</li></ol>
+    <p>La vita è una sola. Le monete si guadagnano abbattendo Mammutones. Buona fortuna.</p>
+    <div class="btns"><button class="btn" id="storyGo" type="button">Scegli chi sei</button></div>
+  </div>
+</div>
+<div class="over" id="sel" hidden>
+  <div class="box home">
+    <header class="hhead">
+      <div><h1>Mammutones <span>al Tigros</span></h1><p class="tag">Busto Arsizio è nel caos. Riprenditela con i tuoi amici, un posto alla volta: Tigros, Happy Shopping, Tribunale e il centro di Busto.</p></div>
+      <div class="hver"><b>v2.0</b><small>capitolo 1 completo</small></div>
+    </header>
+    <div class="hgrid">
+      <section class="hcard"><h3><i>1</i>Modalità</h3><div class="modes"><button class="btn" type="button" data-mode="adv" aria-pressed="true">Avventura<small>zona per zona</small></button><button class="btn ghost" type="button" data-mode="sandbox" aria-pressed="false">Sandbox<small>tutto aperto, boss subito</small></button><button class="btn ghost" type="button" id="godBtn" aria-pressed="false" hidden>Invincibile: no<small>solo in Sandbox</small></button></div><p id="modeinfo" class="modeinfo">Avventura: apri il Tigros zona per zona, Fab La Rue arriva all'ondata 8, Loris Busato alla 15.</p></section>
+      <section class="hcard"><h3><i>2</i>Mondo</h3><div class="modes worlds"><button class="btn" type="button" data-world="1" aria-pressed="true">Mondo 1 · Tigros<small>Loris e i Mammutones</small></button><button class="btn ghost" type="button" data-world="2" aria-pressed="false" id="w2btn">Mondo 2 · Happy Shopping<small id="w2sub">il Capo del bazar</small></button><button class="btn ghost" type="button" data-world="3" aria-pressed="false" id="w3btn">Mondo 3 · Tribunale<small id="w3sub">Pika e il maleficio</small></button><button class="btn ghost" type="button" data-world="4" aria-pressed="false" id="w4btn">Mondo 4 · Centro di Busto<small id="w4sub">il Re dei Mammutones</small></button></div><p id="worldinfo" class="modeinfo" hidden></p></section>
+    </div>
+    <section class="hcard"><h3><i>3</i>Scegli chi sei</h3><div class="pick" id="pick"></div></section>
+    <div class="hbar"><button class="btn ghost" type="button" id="storyAgain">Rivedi la storia<small>il prologo</small></button><button class="btn ghost" type="button" id="previewEnd">Mappa del mondo<small>storie e luoghi</small></button><button class="btn ghost" type="button" id="invite">Invita gli amici<small>manda il link del gioco</small></button></div>
+    <p class="toast" id="toast" hidden></p>
+    <details class="help"><summary>Comandi: tastiera e controller</summary>
+      <div class="keys"><span><kbd>W A S D</kbd>muoviti</span><span><kbd>Mouse</kbd>mira</span><span><kbd>Clic</kbd>spara</span><span><kbd>Q</kbd>potere</span><span><kbd>R</kbd>ricarica</span><span><kbd>E</kbd>compra / apri</span><span><kbd>1 2</kbd>cambia arma</span><span><kbd>V</kbd>prima / terza persona</span><span><kbd>Shift</kbd>corri</span><span><kbd>Spazio</kbd>salta</span><span><kbd>Tab</kbd>inventario</span><span><kbd>H</kbd>usa pacco munizioni</span></div>
+      <div class="keys"><span><kbd>Controller</kbd>levetta sinistra muovi, destra mira, <kbd>R2</kbd> spara, <kbd>L1</kbd> potere, <kbd>□</kbd> ricarica, <kbd>○</kbd> compra / apri, <kbd>△</kbd> cambia arma, <kbd>X</kbd> salta, <kbd>L3</kbd> corri, <kbd>R3</kbd> prima / terza persona, <kbd>Options</kbd> pausa</span></div>
+      <p style="font-size:13px">Se il mouse non viene catturato dal gioco, tieni premuto il tasto destro per guardarti intorno.</p>
+    </details>
+    <div class="warn" id="touchwarn" hidden></div>
+    <p class="credits">Mammutones al Tigros · v2.0 · un gioco di Nico e del gruppo, fatto a Busto Arsizio</p>
+  </div>
+</div>
+<div class="over" id="inv" hidden>
+  <div class="box" style="align-items:flex-start">
+    <h1>Inventario</h1>
+    <p id="invinfo"></p>
+    <div id="invw" class="invw"></div>
+    <div class="btns"><button class="btn" id="buyPack" type="button"></button><button class="btn" id="usePack" type="button"></button><button class="btn" id="buyBag" type="button"></button><button class="btn ghost" id="closeInv" type="button">Chiudi<small>Tab, I o Esc</small></button></div>
+  </div>
+</div>
+<div class="over" id="pause" hidden>
+  <div class="box" style="align-items:flex-start">
+    <h1>Pausa</h1>
+    <p>Clicca per tornare a giocare. Il mouse viene catturato dal gioco: premi Esc per liberarlo.</p>
+    <div class="btns"><button class="btn" id="resume" type="button">Continua</button><button class="btn ghost" id="quit" type="button">Cambia personaggio</button><button class="btn ghost" id="hdbtn" type="button">Grafica: realistica</button></div>
+  </div>
+</div>
+<div class="over" id="ending" hidden>
+  <div class="box ending">
+    <p class="kicker" id="endkick">Mappa 1 completata</p>
+    <h1 id="endtitle">Complimenti, hai liberato <span>il Tigros</span>!</h1>
+    <div id="endtext" class="endtext"></div>
+    <p class="unlock" id="endunlock" hidden></p>
+    <div class="stats" id="endstats"></div>
+    <div class="btns"><button class="btn" id="endNext" type="button" hidden>Vai all'Happy Shopping<small>ricomincia dal mondo 2</small></button><button class="btn ghost" id="endCont" type="button" hidden>Resta al Tigros<small>ondate all'infinito</small></button><button class="btn ghost" id="toWorld" type="button">Apri la mappa del mondo</button></div>
+  </div>
+</div>
+<div class="over" id="tale" hidden>
+  <div class="box story"><div id="taleBody"></div><div class="btns"><button class="btn" id="taleGo" type="button">Continua</button></div></div>
+</div>
+<template id="hsIntro">
+  <p class="kicker">Mondo 2 · Sant'Edoardo, il giorno dopo</p>
+  <h1>Happy <span>Shopping</span></h1>
+  <p>Il Tigros è libero, ma il gruppo non è al completo. Mancano amici all'appello e nessuno risponde al telefono.</p>
+  <p>A due passi, sempre nel quartiere di Sant'Edoardo, c'è l'<b>Happy Shopping</b>, il bazar dove trovi di tutto, dalle pentole alle valigie. Da giorni lì succede il finimondo: Mammutones sbandati che girano per il parcheggio, merce che si muove da sola tra gli scaffali e un <b>Capo</b> che chiude le porte e non fa uscire nessuno.</p>
+  <p>Lì dentro ci sono <b>Tefalin</b> e <b>Diego</b>. E c'è <b>Debe</b>: il Capo lo tiene dietro le casse a lavorare, sfruttato, giorno e notte.</p>
+  <p class="kicker">Il piano</p>
+  <ol class="plan"><li>Ripulire il parcheggio e ritrovare Tefalin e Diego</li><li>Aprire il negozio e farsi strada tra gli scaffali</li><li>Sconfiggere il Capo e liberare Debe</li><li>Radunare tutti e partire verso il Tribunale</li></ol>
+</template>
+<template id="trIntro1">
+  <p class="kicker">Mondo 3 · Sulla strada, di notte</p>
+  <h1>Verso il <span>Tribunale</span></h1>
+  <svg viewBox="0 0 640 260" class="tale-art" role="img" aria-label="Libe il matto alla guida, Damiano accanto, gli amici dietro, di notte verso il Tribunale">
+    <rect width="640" height="260" fill="#1a2030"/><rect y="170" width="640" height="90" fill="#2a2a2e"/>
+    <g fill="#e0c040"><rect x="10" y="212" width="40" height="6"/><rect x="90" y="212" width="40" height="6"/><rect x="170" y="212" width="40" height="6"/><rect x="250" y="212" width="40" height="6"/><rect x="330" y="212" width="40" height="6"/><rect x="410" y="212" width="40" height="6"/><rect x="490" y="212" width="40" height="6"/><rect x="570" y="212" width="40" height="6"/></g>
+    <g fill="#3a4050"><rect x="0" y="110" width="44" height="60"/><rect x="52" y="96" width="44" height="74"/><rect x="104" y="82" width="44" height="88"/><rect x="156" y="68" width="44" height="102"/><rect x="208" y="104" width="44" height="66"/><rect x="260" y="90" width="44" height="80"/><rect x="312" y="76" width="44" height="94"/><rect x="364" y="62" width="44" height="108"/><rect x="416" y="98" width="44" height="72"/><rect x="468" y="84" width="44" height="86"/><rect x="520" y="70" width="44" height="100"/><rect x="572" y="106" width="44" height="64"/><rect x="624" y="92" width="44" height="78"/></g>
+    <g fill="#ffd25e" opacity=".7"><rect x="10" y="125" width="6" height="6"/><rect x="62" y="111" width="6" height="6"/><rect x="114" y="97" width="6" height="6"/><rect x="166" y="83" width="6" height="6"/><rect x="218" y="119" width="6" height="6"/><rect x="270" y="105" width="6" height="6"/><rect x="322" y="91" width="6" height="6"/><rect x="374" y="77" width="6" height="6"/><rect x="426" y="113" width="6" height="6"/><rect x="478" y="99" width="6" height="6"/><rect x="530" y="85" width="6" height="6"/><rect x="582" y="121" width="6" height="6"/><rect x="634" y="107" width="6" height="6"/></g>
+    <rect x="150" y="120" width="340" height="70" rx="14" fill="#c8b060"/><path d="M200 120 L240 80 H400 L450 120 Z" fill="#c8b060"/>
+    <path d="M214 120 L246 90 H316 V120 Z M326 120 V90 H396 L432 120 Z" fill="#9ac0d0" opacity=".85"/>
+    <circle cx="220" cy="192" r="24" fill="#121214"/><circle cx="220" cy="192" r="10" fill="#9aa3ad"/><circle cx="420" cy="192" r="24" fill="#121214"/><circle cx="420" cy="192" r="10" fill="#9aa3ad"/>
+    <rect x="470" y="140" width="22" height="12" fill="#ffe8a0"/><rect x="148" y="142" width="14" height="10" fill="#c0302a"/>
+    <circle cx="372" cy="104" r="11" fill="#e6b896"/><path d="M360 100 q12 -16 24 0 q-4 -6 -12 -6 q-8 0 -12 6z" fill="#2e2016"/>
+    <circle cx="290" cy="104" r="11" fill="#e4b896"/><path d="M279 100 q11 -15 22 0" fill="#21160f"/>
+    <circle cx="258" cy="106" r="9" fill="#ecc3a2"/><circle cx="306" cy="106" r="9" fill="#efc4a6" opacity=".9"/>
+    <rect x="372" y="60" width="150" height="34" rx="10" fill="#fffdf4"/><path d="M392 94 l-10 12 l20 -12z" fill="#fffdf4"/><text x="447" y="82" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700" fill="#12161c">Allacciatevi!</text>
+  </svg>
+  <p>Il gruppo esce dall'Happy Shopping e sale in macchina: alla guida c'è <b>Libe il matto</b>, accanto a lui <b>Damiano</b>, dietro tutti gli altri stretti come sardine. Libe prende le rotonde di Busto come se fossero curve di un rally.</p>
+  <p>E mentre guida, Libe racconta quello che ha visto al Tribunale.</p>
+</template>
+<template id="trIntro2">
+  <p class="kicker">Il racconto di Libe il matto</p>
+  <h1>Al Tribunale è successo <span>un bel casino</span></h1>
+  <p>«<b>Pika</b>, il governatore del Tribunale, quello che vendeva le sigarette di contrabbando… si è fatto corrompere. I Mammutones gli hanno portato <b>Pierre</b> e il suo banda di <b>sgherri</b>, e adesso il Tribunale è roba loro.»</p>
+  <p>«Ma Pika non lo fa apposta: c'è sotto un <b>maleficio</b>. Fa quello che gli dicono. E nel suo garage tiene chiusi <b>Leodessi</b>, <b>Castelluccio</b> e <b>Bulegato</b>.»</p>
+  <p>«Anche <b>Fabio Regaglia</b> è stato maledetto: due metri e mezzo di armatura. E all'ingresso c'è ancora <b>Fab La Rue</b> che blocca la strada.»</p>
+  <p class="kicker">Il piano</p>
+  <ol class="plan"><li>Battere Fab La Rue nel parcheggio, una volta per tutte (round 5)</li><li>Superare la strada e resistere ai tavolini: Pierre e i suoi sgherri, poi Fabio Regaglia</li><li>Entrare nel garage e liberare Leodessi, Castelluccio e Bulegato</li><li>Salire con l'ascensore a casa di Pika e liberarlo dal maleficio</li></ol>
+</template>
+<template id="buIntro">
+  <p class="kicker">Mondo 4 · Il centro di Busto, la sera dopo</p>
+  <h1>L'ultima <span>tappa</span></h1>
+  <p>Dal Tribunale il gruppo scende a piedi verso il centro. Più si avvicinano a <b>piazza Garibaldi</b>, più il suono dei campanacci diventa forte. Macchine bruciate, vetrine rotte, fumo che esce dai palazzi: il centro di Busto è <b>infestato</b>, ci sono Mammutones di ogni tipo.</p>
+  <p>Alla fontana li aspetta <b>Pierre</b> con gli ultimi sgherri. Al <b>Mac</b> sotto la torre grigia c'è <b>Corti</b>, che non risponde più al telefono da giorni: chi l'ha visto dice che è diventato enorme e che non lascia avvicinare nessuno alla sua Golf GT.</p>
+  <p>Più in là, nella zona dei bar, i <b>cugini Progni</b> tengono prigionieri <b>Napo</b> e <b>Ali Debbah</b>. E in fondo, nella basilica di San Giovanni, c'è <b>Loris Busato</b>.</p>
+  <p>Si dice che sotto la chiesa ci sia un sigillo con il simbolo dei Mammutones. Per aprirlo serve un talismano diviso in due. E dietro il sigillo, le catacombe… e un passaggio per il regno dei Mammutones.</p>
+</template>
+<div class="over" id="world" hidden>
+  <div class="box">
+    <h1>Busto Arsizio <span>nel caos</span></h1>
+    <p id="worldtxt">Il Tigros è solo la prima mappa. Nel resto di Busto i problemi sono altri, con nemici e boss nuovi. Prossima tappa: l'Happy Shopping di Sant'Edoardo, a radunare gli altri amici.</p>
+    <div class="map" id="map">
+      <svg viewBox="0 0 960 520" role="img" aria-label="Mappa di Busto Arsizio con il Tigros liberato e tre zone ancora bloccate">
+        <defs>
+          <pattern id="grass" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#2c3a2a"/><rect x="2" y="3" width="2" height="2" fill="#35472f"/><rect x="10" y="11" width="2" height="2" fill="#35472f"/></pattern>
+          <filter id="fog"><feGaussianBlur stdDeviation="3.2"/></filter>
+          <radialGradient id="glow"><stop offset="0" stop-color="#ffd25e" stop-opacity=".55"/><stop offset="1" stop-color="#ffd25e" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="960" height="520" fill="url(#grass)"/>
+        <!-- strade e ferrovia -->
+        <g fill="none" stroke-linecap="square">
+          <path d="M0 300 H960" stroke="#4a4a4e" stroke-width="26"/><path d="M0 300 H960" stroke="#c9b86a" stroke-width="2" stroke-dasharray="14 12"/>
+          <path d="M470 0 V520" stroke="#4a4a4e" stroke-width="22"/><path d="M470 0 V520" stroke="#c9b86a" stroke-width="2" stroke-dasharray="14 12"/>
+          <path d="M120 520 L330 300 M640 300 L860 60" stroke="#444448" stroke-width="16"/>
+          <path d="M0 140 C260 160 520 110 960 170" stroke="#2a2422" stroke-width="10"/><path d="M0 140 C260 160 520 110 960 170" stroke="#8a7a6a" stroke-width="2" stroke-dasharray="4 8"/>
+        </g>
+        <!-- 1 Tigros: liberato -->
+        <g class="node free" id="tgNode" data-node="1" transform="translate(150 360)">
+          <circle cx="60" cy="40" r="110" fill="url(#glow)"/>
+          <rect x="0" y="10" width="130" height="62" fill="#8c3a2e"/><rect x="0" y="4" width="130" height="10" fill="#b84a38"/>
+          <rect x="30" y="22" width="70" height="16" fill="#f1ede2"/><text x="65" y="35" text-anchor="middle" class="tg">TIGROS</text>
+          <rect x="52" y="46" width="26" height="26" fill="#2a3440"/><rect x="-46" y="40" width="40" height="32" fill="#e6e2d8"/><rect x="-50" y="34" width="48" height="6" fill="#f4f2ec"/>
+          <rect x="140" y="30" width="44" height="42" fill="#6a5a4c"/><rect x="144" y="36" width="10" height="10" fill="#ffd25e"/>
+        </g>
+        <!-- 2 Tribunale: oscurato -->
+        <g class="node locked" data-node="3" transform="translate(560 330)"><g filter="url(#fog)">
+          <rect x="0" y="34" width="150" height="70" fill="#d8d0c0"/><polygon points="-6,36 75,0 156,36" fill="#e8e0d0"/>
+          <rect x="14" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="44" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="96" y="44" width="10" height="60" fill="#bfb6a6"/><rect x="126" y="44" width="10" height="60" fill="#bfb6a6"/>
+        </g></g>
+        <!-- 3 Happy Shopping: oscurato -->
+        <g class="node locked" id="hsNode" data-node="2" transform="translate(640 60)"><g id="hsFog" filter="url(#fog)">
+          <rect x="0" y="20" width="200" height="60" fill="#3a6aa8"/><rect x="0" y="12" width="200" height="12" fill="#f0b030"/><rect x="60" y="34" width="80" height="20" fill="#f6f2e8"/><text x="100" y="49" text-anchor="middle" class="tg" style="fill:#f2643a">HAPPY</text>
+          <rect x="20" y="88" width="40" height="22" fill="#555"/><rect x="140" y="88" width="40" height="22" fill="#555"/>
+        </g></g>
+        <!-- 4 Centro di Busto: oscurato, con il fast food -->
+        <g class="node locked" data-node="4" transform="translate(150 40)"><g filter="url(#fog)">
+          <rect x="0" y="30" width="70" height="60" fill="#a8463a"/><rect x="80" y="10" width="40" height="80" fill="#cfc4ae"/><polygon points="80,10 100,-12 120,10" fill="#8a7a64"/>
+          <rect x="130" y="40" width="110" height="50" fill="#c8302a"/><rect x="130" y="34" width="110" height="8" fill="#f6c83a"/>
+          <rect x="250" y="20" width="6" height="70" fill="#777"/><rect x="236" y="0" width="34" height="26" rx="3" fill="#f6c83a"/>
+          <rect x="242" y="5" width="22" height="6" rx="3" fill="#c8862a"/><rect x="241" y="12" width="24" height="3" fill="#5a2e1a"/><rect x="241" y="16" width="24" height="2" fill="#5fb84a"/><rect x="242" y="19" width="22" height="4" rx="2" fill="#c8862a"/>
+          <rect x="165" y="56" width="40" height="34" fill="#2a3440"/>
+        </g></g>
+        <!-- etichette -->
+        <g class="lbl"><rect x="130" y="448" width="230" height="44" rx="4" fill="#12161c" stroke="#ffd25e" stroke-width="2"/><text x="145" y="468" class="t1">1 · TIGROS</text><text x="145" y="484" class="t2">Liberato · Fab e Loris sono scappati</text></g>
+        <g class="lbl dim"><rect x="555" y="446" width="240" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="570" y="466" class="t1">3 · TRIBUNALE DI BUSTO</text><text x="570" y="482" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lbl dim" id="hsLbl"><rect x="640" y="176" width="230" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2" id="hsRect"/><text x="655" y="196" class="t1">2 · HAPPY SHOPPING</text><text x="655" y="212" class="t2" id="hsSub">Bloccato · finisci prima il Tigros</text></g>
+        <g class="lbl dim"><rect x="150" y="152" width="230" height="44" rx="4" fill="#0c0e12" stroke="#3a3f48" stroke-width="2"/><text x="165" y="172" class="t1">4 · IL CENTRO DI BUSTO</text><text x="165" y="188" class="t2">Bloccato · prossimamente</text></g>
+        <g class="lock"><text x="635" y="400">?</text><text x="740" y="128" id="hsQ">?</text><text x="265" y="110">?</text></g>
+      </svg>
+    </div>
+    <div class="legend"><span><i class="sw on"></i>Disponibile</span><span><i class="sw off"></i>Oscurato: nuovi nemici e nuovi boss in arrivo</span></div>
+    <div class="modes places"><button class="btn" type="button" data-place="1">1 · Tigros</button><button class="btn ghost" type="button" data-place="2">2 · Happy Shopping</button><button class="btn ghost" type="button" data-place="3">3 · Tribunale</button><button class="btn ghost" type="button" data-place="4">4 · Centro di Busto</button></div>
+    <div class="place" id="place">
+      <h2 id="plName">Tigros</h2>
+      <p id="plState" class="plstate"></p>
+      <p id="plText"></p>
+      <div class="btns"><button class="btn" id="plPlay" type="button">Gioca qui</button><button class="btn ghost" id="plIntro" type="button">Intro</button><button class="btn ghost" id="plEnd" type="button">Finale</button><button class="btn ghost" id="worldBack" type="button">Torna al menu</button></div>
+    </div>
+  </div>
+</div>
+<div class="over" id="dead" hidden>
+  <div class="box" style="align-items:flex-start">
+    <h1 id="deadtitle">Ti hanno <span>preso</span></h1>
+    <p id="deadmsg"></p>
+    <div class="stats" id="deadstats"></div>
+    <div class="btns"><button class="btn" id="again" type="button">Rigioca</button><button class="btn ghost" id="change" type="button">Cambia personaggio</button></div>
+  </div>
+</div>
+</body>
+</html>
