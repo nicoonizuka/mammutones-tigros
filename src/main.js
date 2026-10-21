@@ -1,6 +1,7 @@
 /* Mammutones al Tigros - avvio, giocatore, nemici, armi, HUD e loop */
 import * as THREE from 'three';
 import './style.css';
+import './app.js';
 import { ROSTER, POWERS, MIRKO_MODEL, DAMIANO_MODEL } from './characters/roster.js';
 import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';

@@ -181,3 +181,9 @@ body.touch .prompt{bottom:auto;top:38%}
 .bar.st{height:8px;border-width:2px}.bar.st i{background:#9ad06a}.bar.st.tired i{background:#d0a03a}
 .buff{position:absolute;left:50%;top:calc(110px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:rgba(60,20,90,.8);border:2px solid #c070ff;color:#fff;border-radius:10px;padding:4px 12px;font-size:15px}
 .buff b{color:#ffd25e}
+
+/* niente zoom col doppio tocco o con due dita, niente rimbalzo della pagina */
+html,body{touch-action:none;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;height:100%;position:fixed;inset:0;width:100%}
+.over,.over *{touch-action:pan-y}
+#game canvas{touch-action:none}
+.installHint{font-size:13px;opacity:.8;margin-top:8px}

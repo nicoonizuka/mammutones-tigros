@@ -1,0 +1,30 @@
+{
+ "name": "Mammutones al Tigros",
+ "short_name": "Mammutones",
+ "description": "Lo sparatutto di Busto Arsizio con i tuoi amici contro i Mammutones.",
+ "start_url": ".",
+ "scope": ".",
+ "display": "fullscreen",
+ "orientation": "landscape",
+ "background_color": "#0d1117",
+ "theme_color": "#0d1117",
+ "lang": "it",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
