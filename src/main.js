@@ -6,6 +6,7 @@ import { CH as SPRITES } from './characters/sprites.js';
 import { pad, pollPad, BTN } from './input/gamepad.js';
 import { isTouch, touch, initTouch, takeLook } from './input/touch.js';
 const SPR = SPRITES.map(c => c.fn());
+import { loadHD, preloadHD, hdOn, setHD } from './characters/hd.js';
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss, buildCortiBoss, buildProgno, buildLorisRe } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
@@ -63,9 +64,12 @@ function buildVM() {
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), skinM); hand.position.set(0, -0.06, 0.02); vm.add(hand);
   vm.traverse(o => { if (o.isMesh) { o.castShadow = false; o.renderOrder = 10; } });
 }
+function hdLabel() { $('hdbtn').textContent = hdOn ? 'Grafica: realistica' : 'Grafica: classica'; }
 function setFP(on) { fp = on; try { localStorage.setItem('mt_fp', on ? '1' : '0'); } catch (_) {} if (state === 'play') feed(on ? 'Visuale in prima persona' : 'Visuale in terza persona'); }
 function equip() {
   buildVM();
+  const hd = pModel.userData.hd;
+  if (hd) { const g = buildWeapon(P.weapons[P.cur].id); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); hd.attachGun(g, P.weapons[P.cur].id); pModel.userData.gun = g; return; }
   const A = pModel.userData.P.armR, hand = A.userData.hand;
   if (pModel.userData.gun) A.remove(pModel.userData.gun);
   const g = buildWeapon(P.weapons[P.cur].id); g.position.copy(hand.position); g.position.y -= 0.02; g.rotation.x = Math.PI / 2;
@@ -73,11 +77,19 @@ function equip() {
   A.add(g); pModel.userData.gun = g;
 }
 function newPlayer(i) {
-  if (pModel) scene.remove(pModel);
-  pModel = buildHuman(ROSTER[i].model); scene.add(pModel);
   P = { pos: new V3(4, 0, -2), vy: 0, hp: 100, ar: 0, weapons: [newWeapon('pistola')], cur: 0, reloadT: 0, pw: POWERS[ROSTER[i].power], pwT: 0, pwCd: 0, hurtT: 0, walk: 0, stam: 1, tired: false };
-  yaw = 0; pitch = -0.1; equip();
+  yaw = 0; pitch = -0.1; applyModel(i);
 }
+function applyModel(i) {
+  if (pModel) scene.remove(pModel);
+  pModel = buildHuman(ROSTER[i].model); pModel.position.copy(P.pos); scene.add(pModel); equip();
+  /* modello realistico: si carica in background e prende il posto di quello a blocchi */
+  const id = ROSTER[i].hd, tok = ++hdTok;
+  if (hdOn && id) { if (P.pw.k === 'call') preloadHD('mirko');
+    loadHD(id).then(h => { if (tok !== hdTok || !P) return; const old = pModel; scene.remove(old); pModel = h.root; pModel.position.copy(old.position); pModel.rotation.copy(old.rotation); scene.add(pModel); equip(); })
+      .catch(e => console.warn('modello HD non caricato', id, e)); }
+}
+let hdTok = 0;
 function switchWeapon(k) { if (!P.weapons[k] || k === P.cur) return; P.cur = k; P.reloadT = 0; equip(); }
 
 /* ===================== NEMICI ===================== */
@@ -196,7 +208,7 @@ function shoot() {
     tracer(muzzle(), end);
   }
   if (anyHit) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
-  pModel.userData.P.armR.rotation.x -= 0.25; vmKick = Math.min(1, vmKick + (w.dmg > 50 || w.pel > 1 ? 1 : 0.45));
+  pModel.userData.P.armR.rotation.x -= 0.25; P.shotT = time; if (pModel.userData.hd) pModel.userData.hd.recoil(w.dmg > 50 || w.pel > 1 ? 0.9 : 0.45); vmKick = Math.min(1, vmKick + (w.dmg > 50 || w.pel > 1 ? 1 : 0.45));
 }
 /* katana: colpisce tutti i nemici davanti a te entro pochi metri */
 function slash(w) {
@@ -205,6 +217,7 @@ function slash(w) {
   for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length();
     if (d < w.range + (e.r || 0.4) && (d < 0.8 || to.normalize().dot(pf) > 0.3)) { damageEnemy(e, w.dmg * mult, false); spark(e.m.userData.hit.body.getWorldPosition(new V3()), true); n++; } }
   if (n) { $('cross').classList.add('hit'); setTimeout(() => $('cross').classList.remove('hit'), 90); }
+  if (pModel.userData.hd) pModel.userData.hd.once('baseball_pitching', 0.4, 0.06);
   const A = pModel.userData.P.armR; A.rotation.x -= 1.1; A.rotation.z = 0.8; setTimeout(() => { A.rotation.z = 0; }, 160);
 }
 /* bazooka: esplosione con danno ad area */
@@ -668,7 +681,7 @@ function throwGrenade(w) {
   to.y = Math.max(0.2, Math.min(to.y, 2)); const from = muzzle();
   const m = buildWeapon('granate'); m.scale.setScalar(2); m.position.copy(from); scene.add(m);
   nades.push({ m, from, to, t: 0, T: 0.35 + from.distanceTo(to) * 0.03, dmg: w.dmg * (P.pwT > 0 && (P.pw.k === 'rage' || P.pw.k === 'speed') ? (P.pw.k === 'rage' ? 2 : 1.8) : 1), R: w.explode });
-  pModel.userData.P.armR.rotation.x -= 1.0;
+  pModel.userData.P.armR.rotation.x -= 1.0; if (pModel.userData.hd) pModel.userData.hd.throw();
 }
 function updNades(dt) {
   for (const n of nades) { n.t += dt; const k = Math.min(1, n.t / n.T); n.m.position.lerpVectors(n.from, n.to, k); n.m.position.y += Math.sin(k * Math.PI) * 2.2; n.m.rotation.x += dt * 10;
@@ -790,14 +803,20 @@ function callMirko() {
   const m = buildHuman(MIRKO_MODEL); m.position.copy(P.pos).add(new V3(1.5, 0, 1.5)); scene.add(m);
   const A = m.userData.P.armR; const g = buildWeapon('pistola'); g.position.copy(A.userData.hand.position); g.rotation.x = Math.PI / 2; A.add(g);
   mirko = { m, t: P.pw.dur, fire: 0, walk: 0 }; banner('Arriva Mirko!', 'Spara ai Mammutones per qualche secondo');
+  if (hdOn) { const me = mirko; loadHD('mirko').then(h => { if (mirko !== me) return; h.root.position.copy(me.m.position); scene.remove(me.m); scene.add(h.root); me.m = h.root;
+    const g = buildWeapon('pistola'); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); h.attachGun(g, 'pistola'); }).catch(() => {}); }
 }
 function updMirko(dt) {
   if (!mirko) return; mirko.t -= dt; const m = mirko.m;
   if (mirko.t <= 0) { scene.remove(m); mirko = null; feed('Mirko se ne va'); return; }
   let target = null, bd = 22; for (const e of enemies) { if (e.dead) continue; const d = e.m.position.distanceTo(m.position); if (d < bd) { bd = d; target = e; } }
   const want = P.pos.clone().add(new V3(Math.sin(time * 0.5) * 2.2, 0, Math.cos(time * 0.5) * 2.2)); const mv = want.sub(m.position); mv.y = 0; const dist = mv.length();
-  if (dist > 1) { mv.normalize().multiplyScalar(Math.min(dist, 6 * dt)); m.position.add(mv); mirko.walk += dt * 9; animLimbs(m, mirko.walk, 0.6); }
+  const hd = m.userData.hd, walking = dist > 1;
+  if (walking) { mv.normalize(); if (hd && !target) m.rotation.y = Math.atan2(mv.x, mv.z); mv.multiplyScalar(Math.min(dist, 6 * dt)); m.position.add(mv); mirko.walk += dt * 9; if (!hd) animLimbs(m, mirko.walk, 0.6); }
   collide(m.position, 0.4, 1);
+  if (hd) { const dir = target ? target.m.position.clone().sub(m.position).setY(0).normalize() : new V3(Math.sin(m.rotation.y), 0, Math.cos(m.rotation.y));
+    const fdir = new V3(Math.sin(m.rotation.y), 0, Math.cos(m.rotation.y)), rdir = new V3(-fdir.z, 0, fdir.x), mn = walking ? mv.clone().normalize() : new V3();
+    hd.update(dt, { moving: walking, running: !target, f: walking ? mn.dot(fdir) : 0, side: walking ? mn.dot(rdir) : 0, shooting: !!target, dir, pitch: 0 }); }
   if (target) {
     const d = target.m.position.clone().sub(m.position); m.rotation.y = Math.atan2(d.x, d.z); m.userData.P.armR.rotation.x = -1.5;
     mirko.fire -= dt;
@@ -844,6 +863,7 @@ function usePower() {
   else if (pw.k === 'gratis') { P.freeGun = true; banner('DJ Gianfra', 'La prossima arma che compri al muro è gratis'); tone(900, 0.3, 'triangle', 0.05, 1400); }
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
+  if (pModel.userData.hd) pModel.userData.hd.power();
 }
 
 /* onda d'urto di Tefalin: ferisce e spinge via tutti i nemici vicini */
@@ -899,6 +919,7 @@ function loop(t) {
   pollPad(); if (pad.connected) padMenus(dt);
   if (touchUI) { const show = state === 'play'; if (touchUI.hidden === show) touchUI.hidden = !show; if (!show) { touch.fire = false; touch.mx = touch.my = 0; } }
   if (state === 'play') { time += dt; update(dt); }
+  if (state === 'dead' && pModel && pModel.userData.hd) pModel.userData.hd.update(dt, { dir: new V3(-Math.sin(yaw), 0, -Math.cos(yaw)) });
   else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 4) { camera.position.set(BX + Math.sin(time * 0.2) * 30, 15, 36 + Math.cos(time * 0.2) * 6); camera.lookAt(BX, 5, 2); } else if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
   updateSky(sky, camera, dt); renderer.render(scene, camera);
   if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
@@ -947,6 +968,8 @@ function update(dt) {
   shieldMesh.position.set(P.pos.x, P.pos.y + 1, P.pos.z);
   /* camera in terza persona */
   const d = new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+  if (pModel.userData.hd) { const hd = pModel.userData.hd, mn = moving ? mv.clone().normalize() : mv;
+    hd.update(dt, { moving, running, f: mn.dot(fwd), side: mn.dot(right), air: P.pos.y > gY + 0.08, reloadT: P.reloadT, shooting: time - (P.shotT || -9) < 0.6, pitch, dir: d, fast: P.pwT > 0 && P.pw.k === 'speed' }); }
   const head = P.pos.clone(); head.y += pModel.userData.height * 0.92;
   const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
   if (world === 4) { const A = inMac(P.pos) ? MACIN : inChiesa(P.pos) ? CHIESA : inCata(P.pos) ? CATA : null;
@@ -1076,7 +1099,7 @@ function hit(dmg) {
   if (mode === 'sandbox' && god) { tone(1200, 0.04, 'square', 0.02); return; }
   if (P.pwT > 0 && P.pw.k === 'shield') { tone(1200, 0.05, 'square', 0.03); return; }
   if (P.ar > 0) { const a = Math.min(P.ar, dmg * 0.7); P.ar -= a; dmg -= a; }
-  P.hp -= dmg; P.hurtT = 0.5; sinceHit = 0; hurt(); shake(0.15); if (P.hp <= 0) { P.hp = 0; gameOver(); }
+  P.hp -= dmg; P.hurtT = 0.5; sinceHit = 0; hurt(); if (pModel.userData.hd) pModel.userData.hd.hurt(); shake(0.15); if (P.hp <= 0) { P.hp = 0; gameOver(); }
 }
 function startWave() { wave++; toSpawn = WAVES.count(wave); spawnT = 0.5; banner('Ondata ' + wave, wave === 1 ? 'Arrivano i Mammutones' : ''); }
 
@@ -1134,6 +1157,7 @@ function startGame(i) {
 function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
 function resume() { state = 'play'; $('pause').hidden = true; last = performance.now(); lock(); }
 function gameOver(title, msg) {
+  if (pModel && pModel.userData.hd) { pModel.userData.hd.die(); pModel.userData.hd.update(0.001, { dir: new V3(0, 0, -1) }); }
   state = 'dead'; try { document.exitPointerLock(); } catch (_) {}
   $('hud').hidden = true; $('dead').hidden = false; $('deadtitle').innerHTML = title || 'Ti hanno <span>preso</span>';
   $('deadmsg').textContent = msg ? msg : world === 4 ? `${ROSTER[charIdx].name} è caduto nel centro di Busto (${ZONES[diffZone()].n}). Loris ride dal campanile.` : world === 3 ? `${ROSTER[charIdx].name} è caduto al Tribunale (${ZONES[diffZone()].n}). Pika ride dal balcone.` : world === 2 ? `${ROSTER[charIdx].name} è caduto all'Happy Shopping (${ZONES[zoneIdx()].n}). Il Capo ride dietro le casse.` : `${ROSTER[charIdx].name} è caduto al Tigros (${ZONES[zone].n}). Loris Busato ride da qualche parte nel magazzino.`;
@@ -1206,6 +1230,7 @@ document.querySelectorAll('[data-node]').forEach(n => n.addEventListener('click'
 const hsOpen = () => !!unlocks.loris || !!unlocks.hs;
 function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
+$('hdbtn').onclick = () => { setHD(!hdOn); hdLabel(); if (P) applyModel(charIdx); }; hdLabel();
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
 /* navigazione dei menu col controller: frecce o levetta per scegliere, X per confermare */
@@ -1332,5 +1357,5 @@ bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor,
 applyLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { cam: camera, scene, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; }, get bu() { return bu; }, buTeleport, openSeal, ringBell, goSard, goCata, get unlocks() { return unlocks; } };
+window.__game = { cam: camera, scene, get pModel() { return pModel; }, setState(s) { state = s; }, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; }, get bu() { return bu; }, buTeleport, openSeal, ringBell, goSard, goCata, get unlocks() { return unlocks; } };
 requestAnimationFrame(loop);

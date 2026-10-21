@@ -24,28 +24,28 @@ export const POWERS = {
   freeze: { k: 'freeze', n: 'Rallentatore',        d: 'Tutti i nemici rallentano quasi fino a fermarsi',     dur: 7,  cd: 26 },
 };
 export const ROSTER = [
-  { name: 'Nathan Mascheroni', short: 'Nathan', c: '#5ab0ff', sprite: 0, model: 0, power: 'aim' },
-  { name: 'Dado',              short: 'Dado',   c: '#5fd38a', sprite: 1, model: 1, power: 'heal' },
-  { name: 'Nico',              short: 'Nico',   c: '#4f8cf0', sprite: 2, model: 2, power: 'speed' },
-  { name: 'Slime',             short: 'Slime',  c: '#f2b93b', sprite: 3, model: 3, power: 'shield' },
-  { name: 'Leonardo Ceriotti', short: 'Leo',    c: '#a8d14f', sprite: 4, model: 4, power: 'ammo', unlock: 'loris' },
-  { name: 'Ponta',             short: 'Ponta',  c: '#ff7a6a', sprite: 5, model: 5, power: 'call' },
-  { name: 'Jacopo Castiglioni',short: 'Jacopo', c: '#c07ae8', sprite: 7, model: 7, power: 'double', unlock: 'fab' },
-  { name: 'Corti',             short: 'Corti',  c: '#e8c35a', sprite: 8, model: 8, power: 'coins', unlock: 'corti' },
+  { name: 'Nathan Mascheroni', short: 'Nathan', c: '#5ab0ff', sprite: 0, model: 0, power: 'aim', hd: 'nathan' },
+  { name: 'Dado',              short: 'Dado',   c: '#5fd38a', sprite: 1, model: 1, power: 'heal', hd: 'dado' },
+  { name: 'Nico',              short: 'Nico',   c: '#4f8cf0', sprite: 2, model: 2, power: 'speed', hd: 'nico' },
+  { name: 'Slime',             short: 'Slime',  c: '#f2b93b', sprite: 3, model: 3, power: 'shield', hd: 'slime' },
+  { name: 'Leonardo Ceriotti', short: 'Leo',    c: '#a8d14f', sprite: 4, model: 4, power: 'ammo', hd: 'leo', unlock: 'loris' },
+  { name: 'Ponta',             short: 'Ponta',  c: '#ff7a6a', sprite: 5, model: 5, power: 'call', hd: 'ponta' },
+  { name: 'Jacopo Castiglioni',short: 'Jacopo', c: '#c07ae8', sprite: 7, model: 7, power: 'double', hd: 'jacopo', unlock: 'fab' },
+  { name: 'Corti',             short: 'Corti',  c: '#e8c35a', sprite: 8, model: 8, power: 'coins', hd: 'corti', unlock: 'corti' },
   /* arrivano dal mondo 2, l'Happy Shopping */
-  { name: 'Tefalin',           short: 'Tefalin', c: '#ff6a7a', sprite: 9,  model: 9,  power: 'albanesi', world: 2 },
-  { name: 'Diego Margarito',   short: 'Diego',  c: '#f2a63b', sprite: 11, model: 11, power: 'fischio', world: 2 },
-  { name: 'Debe',              short: 'Debe',   c: '#7ad0ff', sprite: 10, model: 10, power: 'lenti', unlock: 'hs', world: 2 },
+  { name: 'Tefalin',           short: 'Tefalin', c: '#ff6a7a', sprite: 9,  model: 9,  power: 'albanesi', hd: 'tefalin', world: 2 },
+  { name: 'Diego Margarito',   short: 'Diego',  c: '#f2a63b', sprite: 11, model: 11, power: 'fischio', hd: 'diego', world: 2 },
+  { name: 'Debe',              short: 'Debe',   c: '#7ad0ff', sprite: 10, model: 10, power: 'lenti', hd: 'debe', unlock: 'hs', world: 2 },
   /* arrivano dal mondo 3, il Tribunale: si liberano nel garage di Pika (poteri provvisori) */
-  { name: 'Leodessi',        short: 'Leodessi', c: '#9aa0ff', sprite: 12, model: 14, power: 'rage', world: 3 },
-  { name: 'Libe il matto',   short: 'Libe', c: '#d8c08a', sprite: 13, model: 15, power: 'matto', world: 3 },
-  { name: 'Bulegato',        short: 'Bulegato', c: '#c0303a', sprite: 14, model: 16, power: 'pipistrelli', world: 3 },
-  { name: 'Castelluccio',    short: 'Castelluccio', c: '#8ad0a0', sprite: 15, model: 17, power: 'esplosivi', world: 3 },
-  { name: 'Pika',            short: 'Pika', c: '#e8c060', sprite: 16, model: 18, power: 'sigarette', world: 3 },
+  { name: 'Leodessi',        short: 'Leodessi', c: '#9aa0ff', sprite: 12, model: 14, power: 'rage', hd: 'leodessi', world: 3 },
+  { name: 'Libe il matto',   short: 'Libe', c: '#d8c08a', sprite: 13, model: 15, power: 'matto', hd: 'libe', world: 3 },
+  { name: 'Bulegato',        short: 'Bulegato', c: '#c0303a', sprite: 14, model: 16, power: 'pipistrelli', hd: 'bulegato', world: 3 },
+  { name: 'Castelluccio',    short: 'Castelluccio', c: '#8ad0a0', sprite: 15, model: 17, power: 'esplosivi', hd: 'castelluccio', world: 3 },
+  { name: 'Pika',            short: 'Pika', c: '#e8c060', sprite: 16, model: 18, power: 'sigarette', hd: 'pika', world: 3 },
   /* arrivano dal mondo 4, il centro di Busto: Napo e Ali si liberano ai bar, DJ Gianfra in Sardegna */
-  { name: 'Napo',            short: 'Napo', c: '#6ac0a0', sprite: 17, model: 20, power: 'collare', world: 4, unlock: 'bar' },
-  { name: 'Ali Debbah',      short: 'Ali', c: '#c0a0ff', sprite: 18, model: 21, power: 'algerino', world: 4, unlock: 'bar' },
-  { name: 'DJ Gianfra',      short: 'Gianfra', c: '#5ad0ff', sprite: 19, model: 22, power: 'gratis', world: 4, unlock: 'busto' },
+  { name: 'Napo',            short: 'Napo', c: '#6ac0a0', sprite: 17, model: 20, power: 'collare', hd: 'napo', world: 4, unlock: 'bar' },
+  { name: 'Ali Debbah',      short: 'Ali', c: '#c0a0ff', sprite: 18, model: 21, power: 'algerino', hd: 'ali', world: 4, unlock: 'bar' },
+  { name: 'DJ Gianfra',      short: 'Gianfra', c: '#5ad0ff', sprite: 19, model: 22, power: 'gratis', hd: 'gianfra', world: 4, unlock: 'busto' },
 ];
 export const DAMIANO_MODEL = 12;
 export const LIBE_MODEL = 15;
