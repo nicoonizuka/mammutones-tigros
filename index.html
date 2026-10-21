@@ -2,7 +2,13 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mammutones">
 <title>Mammutones al Tigros</title>
 <meta name="description" content="Lo sparatutto di Busto Arsizio: tu e i tuoi amici contro i Mammutones, al Tigros, all'Happy Shopping e al Tribunale. Si gioca dal computer (anche col controller della Play) o dal telefono, in orizzontale.">
 <meta property="og:type" content="website">
@@ -16,8 +22,8 @@
 <link rel="icon" href="/mammutones-tigros/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Fredoka:wght@500;600;700&display=swap">
-  <script type="module" crossorigin src="/mammutones-tigros/assets/index-CIwpDeWv.js"></script>
-  <link rel="stylesheet" crossorigin href="/mammutones-tigros/assets/index-CoaRvypB.css">
+  <script type="module" crossorigin src="/mammutones-tigros/assets/index-Bk_Tun_M.js"></script>
+  <link rel="stylesheet" crossorigin href="/mammutones-tigros/assets/index-mc419uyw.css">
 </head>
 <body>
 <div id="game"></div>
@@ -51,7 +57,8 @@
     <p class="kicker">Il piano è semplice: riprendersi il Tigros, zona per zona.</p>
     <ol class="plan"><li>Resistere nel parcheggio e liberare il gazebo</li><li>Entrare nel negozio</li><li>Scendere nel seminterrato, battere Fab e riaccendere la corrente</li><li>Aprire il magazzino e accendere i tre generatori</li><li>Entrare nell'ufficio e sconfiggere Loris Busato</li></ol>
     <p>La vita è una sola. Le monete si guadagnano abbattendo Mammutones. Buona fortuna.</p>
-    <div class="btns"><button class="btn" id="storyGo" type="button">Scegli chi sei</button></div>
+    <div class="btns"><button class="btn" id="storyGo" type="button">Scegli chi sei</button><button class="btn ghost" id="installBtn" type="button" hidden>Installa come app</button></div>
+    <p class="installHint" id="installHint" hidden></p>
   </div>
 </div>
 <div class="over" id="sel" hidden>
