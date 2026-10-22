@@ -29,13 +29,16 @@ const CFG = {
   sgherrone:    { files: ['mob_sgherrone'],   move: 'Running',             ref: 3.6,  atk: ['Punch_Combo', 'Charged_Slash'], die: ['Dead', 'dying_backwards'], idle: 'Block5' },
   ratto:        { files: ['mob_ratto'],   quad: 1, h: 0.42, ref: 1.1 },
   fachiro:      { files: ['mob_fachiro'], quad: 1, h: 0.78, ref: 1.1 },
+  /* la capra non ha animazioni: zampe, testa e coda le muoviamo noi (ossa dello scheletro da animale di Meshy) */
+  capra:        { files: ['mob_capra'], quad: 1, h: 1.15, ref: 1.6, head: 'Bone_022', chest: 'Bone_009', tail: 'Bone_001',
+                  legs: [['Bone_028', 'Bone_027', 0], ['Bone_032', 'Bone_031', 1], ['Bone_016', 'Bone_015', 1], ['Bone_021', 'Bone_020', 0]] },
 };
 /* in che ordine scaricarli, a seconda del mondo (prima quelli che escono subito) */
 const ORDER = {
   1: ['base', 'cornuto', 'furia', 'ratto', 'grosso'],
   2: ['base', 'cornuto', 'furia', 'grosso'],
   3: ['orco', 'orcone', 'ratto', 'fachiro', 'impossessato', 'base', 'furia'],
-  4: ['base', 'orco', 'orcone', 'sgherrone', 'furia', 'cornuto', 'grosso', 'impossessato'],
+  4: ['base', 'orco', 'orcone', 'sgherrone', 'capra', 'furia', 'cornuto', 'grosso', 'impossessato'],
 };
 const tpl = {}; let lib = null, loading = null;
 
@@ -85,8 +88,7 @@ export function makeMob(type) {
   const model = skClone(T.scene); const raw = T.box.max.y - T.box.min.y;
   const H = (C.h || G.userData.height) / G.scale.x;
   model.scale.multiplyScalar(H / raw); model.position.y = -T.box.min.y * H / raw;
-  /* i ratti di Meshy guardano verso +X: li giriamo dentro un gruppo, cosi' guardano avanti come tutti */
-  if (C.quad) { const w = new THREE.Group(); w.rotation.y = -Math.PI / 2; w.add(model); G.add(w); } else G.add(model);
+  G.add(model);
   const ctl = G.userData.hdm = new MobCtl(type, C, model, T.clips, H * G.scale.x); ctl.y0 = model.position.y; return G;
 }
 
@@ -111,6 +113,7 @@ class MobCtl {
     if (C.quad) { this.walk = Object.values(this.act)[0]; if (this.walk) { this.walk.play(); this.walk.time = Math.random() * 1; } }
     else this.play(C.move, 0);
     if (C.weapon && this.bones.RightHand) this.arm(C.weapon);
+    if (C.legs) this.rest = Object.values(this.bones).map(b => [b, b.quaternion.clone()]);
   }
   arm(kind) {
     const len = kind === 'palo' ? 1.7 : 0.95, r = kind === 'palo' ? 0.035 : 0.024;
@@ -145,26 +148,50 @@ class MobCtl {
       this.model.updateMatrixWorld(true); turnBone(this.bones.Spine1 || this.bones.Spine, R, s.kick * 3);
     }
   }
+  /* capra: trotto (zampe in diagonale), salto con cornata, colpo; tutto a mano sulle ossa */
+  goat(dt, s) {
+    const C = this.C, B = this.bones, m = this.model;
+    for (const [b, q] of this.rest) b.quaternion.copy(q);
+    m.updateMatrixWorld(true);
+    const yaw = this.root().rotation.y, R = new V3(-Math.cos(yaw), 0, Math.sin(yaw));
+    const k = this.height / 1.15, spd = s.moving ? s.speed : 0;
+    this.ph = (this.ph || 0) + dt * s.slow * (s.moving ? THREE.MathUtils.clamp(spd / (C.ref * k), 0.6, 3) * 9 : 0);
+    const A = s.moving ? 0.55 : 0, ph = this.ph;
+    for (const [up, low, pair] of C.legs) {
+      const p = ph + pair * Math.PI, sw = Math.sin(p);
+      turnBone(B[up], R, sw * A); turnBone(B[low], R, -Math.max(0, Math.cos(p)) * A * 1.1);
+    }
+    m.position.z = 0; m.position.y = this.y0 + (s.moving ? Math.abs(Math.sin(ph)) * 0.05 * this.height : 0);
+    turnBone(B[C.tail], R, Math.sin(this.t * 6) * 0.25);
+    if (s.attacking) {
+      /* salto in avanti a testa bassa, poi indietro */
+      const a = Math.max(0, Math.sin(this.t * 7 * s.slow));
+      m.position.z = a * 0.35 * this.height / this.root().scale.x; m.position.y += a * 0.12 * this.height;
+      turnBone(B[C.head], R, a * 0.6); turnBone(B[C.chest], R, -a * 0.15);
+    } else turnBone(B[C.head], R, s.moving ? Math.sin(ph * 2) * 0.06 : Math.sin(this.t * 2) * 0.05);
+    if (s.kick > 0) turnBone(B[C.chest], R, s.kick * 2.5);
+  }
   /* ratti: camminata di Meshy accelerata, il resto a mano sulle ossa */
   quad(dt, s) {
     const B = this.bones, m = this.model;
     if (this.dead) {
       this.deadT += dt; const k = Math.min(1, this.deadT * 4);
-      m.rotation.x = k * Math.PI / 2 * 0.95; if (this.walk) this.walk.timeScale = Math.max(0, 1 - k * 2); this.mixer.update(dt); return;
+      m.rotation.z = k * Math.PI / 2 * 0.95; if (this.C.legs) return; if (this.walk) this.walk.timeScale = Math.max(0, 1 - k * 2); this.mixer.update(dt); return;
     }
+    if (this.C.legs) return this.goat(dt, s);
     const k = this.height / 0.6;
     if (this.walk) this.walk.timeScale = s.moving ? THREE.MathUtils.clamp(s.speed / (this.C.ref * k), 0.6, 3.2) : s.attacking ? 0.4 : 0.15;
     this.mixer.update(dt);
     m.updateMatrixWorld(true);
     const yaw = this.root().rotation.y, R = new V3(-Math.cos(yaw), 0, Math.sin(yaw));
     /* corsa: il corpo rimbalza un po' */
-    m.position.x = 0;
+    m.position.z = 0;
     if (s.moving) m.position.y = this.y0 + Math.abs(Math.sin(this.t * 14)) * 0.04 * this.height;
     else m.position.y = this.y0;
     if (s.attacking) {
       /* morso: scatto in avanti con la testa che si abbassa e si rialza */
       const a = Math.max(0, Math.sin(this.t * 9));
-      m.position.x = a * 0.22 * this.height / this.root().scale.x; turnBone(B.head, R, -a * 0.5); turnBone(B.chest, R, -a * 0.18);
+      m.position.z = a * 0.22 * this.height / this.root().scale.x; turnBone(B.head, R, -a * 0.5); turnBone(B.chest, R, -a * 0.18);
     } else if (!s.moving) turnBone(B.chest, R, Math.sin(this.t * 3) * 0.04);
     if (s.kick > 0) turnBone(B.chest, R, s.kick * 2.5);
   }
