@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as skClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { hdOn } from './hd.js';
+import { hdOn, HD_SCALE, pointBone, ik2 } from './hd.js';
 import { buildEnemy } from './styled.js';
 
 const V3 = THREE.Vector3, Q = THREE.Quaternion;
@@ -33,6 +33,24 @@ const CFG = {
   capra:        { files: ['mob_capra'], quad: 1, h: 1.15, ref: 1.6, head: 'Bone_022', chest: 'Bone_009', tail: 'Bone_001',
                   legs: [['Bone_028', 'Bone_027', 0], ['Bone_032', 'Bone_031', 1], ['Bone_016', 'Bone_015', 1], ['Bone_021', 'Bone_020', 0]] },
 };
+/* boss: le animazioni base vengono dai mob (mobanim) e da Pika (anim); h = altezza nel gioco (null = quella del modello).
+   gest = mossa fatta a mano: intro quando compare, call quando chiama rinforzi, hurt quando lo colpisci */
+const BCFG = {
+  fab:    { files: ['boss_fab'],    h: 1.65, move: 'Running', ref: 3.6, atk: ['Punch_Combo'], die: ['Shot_and_Fall_Forward'], idle: 'Idle_02', intro: 'whistle', call: 'whistle' },
+  loris:  { files: ['boss_loris'],  h: 2.8,  move: 'Walking', ref: 1.35, atk: ['Punch_Combo', 'Charged_Slash'], die: ['Fall_Dead_from_Abdominal_Injury'], idle: 'Neck_Slashing_Gesture', intro: 'arms', call: 'arms', throwC: 'baseball_pitching' },
+  re:     { files: ['boss_re'],     h: 5.0,  move: 'Walking', ref: 1.35, atk: ['Charged_Slash'], die: ['Fall_Dead_from_Abdominal_Injury'], idle: 'Block5', intro: 'roar', call: 'arms', throwC: 'Charged_Slash', slowK: 0.8 },
+  capo:   { files: ['boss_capo'],   h: 3.0,  move: 'Walking', ref: 1.35, atk: ['Punch_Combo'], die: ['Fall_Dead_from_Abdominal_Injury'], idle: 'Block5', intro: 'arms', call: 'point', charge: 'run_fast_10_inplace' },
+  pierre: { files: ['boss_pierre'], h: null, move: 'Running', ref: 3.6, atk: ['Punch_Combo', 'Right_Hand_Sword_Slash'], die: ['dying_backwards'], idle: 'Idle_02', intro: 'point', call: 'point' },
+  fabio:  { files: ['boss_fabio'],  h: 3.8,  move: 'Walking', ref: 1.35, atk: ['Charged_Slash', 'Right_Hand_Sword_Slash'], die: ['Fall_Dead_from_Abdominal_Injury'], idle: 'Block5', intro: 'arms', call: 'arms', weapon: 'lancia', slowK: 0.85 },
+  pika:   { files: ['boss_pika'],   h: null, move: 'Running', ref: 3.6, atk: ['Punch_Combo'], die: ['Shot_and_Fall_Forward'], idle: 'Neck_Slashing_Gesture', intro: 'arms', call: 'arms', throwC: 'baseball_pitching' },
+  corti:  { files: ['boss_corti'],  h: 3.4,  move: 'Walking', ref: 1.35, atk: ['Charged_Slash', 'Punch_Combo'], die: ['Fall_Dead_from_Abdominal_Injury'], idle: 'Idle_02', intro: 'belly', call: 'arms', hurt: 'belly', throwC: 'baseball_pitching', slowK: 0.85 },
+  progno1: { files: ['boss_progno1'], h: 2.15, move: 'Running', ref: 3.6, atk: ['Punch_Combo', 'Right_Hand_Sword_Slash'], die: ['Dead'], idle: 'Idle_02', intro: 'radio', call: 'radio' },
+  progno2: { files: ['boss_progno2'], h: 2.15, move: 'Running', ref: 3.6, atk: ['Right_Hand_Sword_Slash', 'Punch_Combo'], die: ['dying_backwards'], idle: 'Idle_02', intro: 'radio', call: 'radio' },
+};
+for (const k in BCFG) { BCFG[k].boss = 1; CFG['B_' + k] = BCFG[k]; }
+/* da tipo di boss del gioco a modello */
+const BOSS_OF = { fab: 'fab', loris: 'loris', loris4: 'loris', re: 're', capo: 'capo', well: 'pierre', pierre4: 'pierre', fabio: 'fabio', pika: 'pika', corti: 'corti', progni: 'progno1', progni2: 'progno2' };
+const BOSS_ORDER = { 1: ['fab', 'loris'], 2: ['capo'], 3: ['fab', 'pierre', 'fabio', 'pika', 'loris'], 4: ['pierre', 'corti', 'loris', 'progno1', 'progno2', 're'] };
 /* in che ordine scaricarli, a seconda del mondo (prima quelli che escono subito) */
 const ORDER = {
   1: ['base', 'cornuto', 'furia', 'ratto', 'grosso'],
@@ -40,7 +58,7 @@ const ORDER = {
   3: ['orco', 'orcone', 'ratto', 'fachiro', 'impossessato', 'base', 'furia'],
   4: ['base', 'orco', 'orcone', 'sgherrone', 'capra', 'furia', 'cornuto', 'grosso', 'impossessato'],
 };
-const tpl = {}; let lib = null, loading = null;
+const tpl = {}; let lib = null, lib2 = null, loading = null;
 
 /* altezza vera del modello in posa di partenza (funziona anche coi ratti, che Meshy esporta in scala minuscola) */
 function measure(scene) {
@@ -61,19 +79,21 @@ function fit(clips, nodes, hips, srcY) {
 async function loadType(type) {
   const C = CFG[type]; if (tpl[type]) return;
   if (!C.quad && !lib) lib = await get('mobanim');
+  if (C.boss && !lib2) lib2 = await get('anim');
   const list = [];
   for (const f of C.files) {
     const g = await get(f); const nodes = new Set(); let hips = null;
     g.scene.traverse(o => { nodes.add(o.name); if (/Hips$/.test(o.name) && o.isBone) hips = o; if (o.isMesh) { o.castShadow = !lowEnd; o.receiveShadow = false; o.frustumCulled = false; const m = o.material; m.metalness = 0; m.roughness = Math.max(0.6, m.roughness ?? 0.85); m.envMapIntensity = 0.6; } });
     let srcY = 0; if (lib) lib.scene.traverse(o => { if (/Hips$/.test(o.name)) srcY = o.position.y; });
-    const clips = C.quad ? fit(g.animations, nodes, null, 0) : fit(lib.animations, nodes, hips && hips.position, srcY);
+    let clips = C.quad ? fit(g.animations, nodes, null, 0) : fit(lib.animations, nodes, hips && hips.position, srcY);
+    if (C.boss) { let y2 = 0; lib2.scene.traverse(o => { if (/Hips$/.test(o.name)) y2 = o.position.y; }); clips = clips.concat(fit(lib2.animations, nodes, hips && hips.position, y2)); }
     list.push({ scene: g.scene, clips, box: measure(g.scene) });
   }
   tpl[type] = list;
 }
 export function preloadMobs(world) {
   if (!hdOn) return Promise.resolve();
-  const order = (ORDER[world] || []).concat(Object.keys(CFG)).filter((t, i, a) => a.indexOf(t) === i);
+  const order = (ORDER[world] || []).concat((BOSS_ORDER[world] || []).map(b => 'B_' + b), Object.keys(CFG)).filter((t, i, a) => a.indexOf(t) === i);
   const run = async () => { for (const t of order) { try { await loadType(t); } catch (e) { console.warn('mob HD non caricato', t, e); } } };
   loading = (loading || Promise.resolve()).then(run); return loading;
 }
@@ -90,6 +110,20 @@ export function makeMob(type) {
   model.scale.multiplyScalar(H / raw); model.position.y = -T.box.min.y * H / raw;
   G.add(model);
   const ctl = G.userData.hdm = new MobCtl(type, C, model, T.clips, H * G.scale.x); ctl.y0 = model.position.y; return G;
+}
+
+/* il boss: quello di sempre (con le sue hitbox) portato all'altezza giusta, invisibile, col modello vero dentro */
+export function makeBoss(kind, build) {
+  const key = 'B_' + BOSS_OF[kind]; if (!hdOn || !BOSS_OF[kind] || !tpl[key]) return null;
+  const C = CFG[key], T = tpl[key][0]; const G = build();
+  G.traverse(o => { if (o.isMesh && o.name !== 'hitBody' && o.name !== 'hitHead') o.visible = false; });
+  const raw = T.box.max.y - T.box.min.y, target = C.h || raw * HD_SCALE;
+  const sc = target / (G.userData.height || 1.9); G.scale.multiplyScalar(sc); G.userData.height = target; G.userData.hdScale = sc;
+  const model = skClone(T.scene); const H = target / G.scale.x;
+  model.scale.multiplyScalar(H / raw); model.position.y = -T.box.min.y * H / raw; G.add(model);
+  const ctl = G.userData.hdm = new MobCtl(key, C, model, T.clips, target); ctl.y0 = model.position.y;
+  if (C.intro) ctl.gesture(C.intro, 1.8);
+  return G;
 }
 
 const _q1 = new Q(), _q2 = new Q(), _q3 = new Q(), UP = new V3(0, 1, 0);
@@ -116,8 +150,9 @@ class MobCtl {
     if (C.legs) this.rest = Object.values(this.bones).map(b => [b, b.quaternion.clone()]);
   }
   arm(kind) {
-    const len = kind === 'palo' ? 1.7 : 0.95, r = kind === 'palo' ? 0.035 : 0.024;
-    const g = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), kind === 'palo' ? wood : metal); g.castShadow = !lowEnd;
+    const len = kind === 'lancia' ? 2.4 : kind === 'palo' ? 1.7 : 0.95, r = kind === 'lancia' ? 0.03 : kind === 'palo' ? 0.035 : 0.024;
+    const g = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), kind === 'metal' ? metal : kind === 'tubo' ? metal : wood); g.castShadow = !lowEnd;
+    if (kind === 'lancia') { const tip = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.4, 6), new THREE.MeshStandardMaterial({ color: '#e8e0cc', roughness: 0.6 })); tip.position.y = len / 2 + 0.18; g.add(tip); }
     const h = this.bones.RightHand; h.updateMatrixWorld(true); const ws = h.getWorldScale(new V3()).x / this.model.parent.getWorldScale(new V3()).x || 1;
     /* il bastone attraversa il pugno (asse X dell'osso della mano), con la parte lunga in avanti */
     g.rotation.z = Math.PI / 2; g.position.set(len * 0.32, 0.07 * this.height / 1.9, 0); g.scale.setScalar(1 / ws / (this.model.scale.x || 1));
@@ -129,14 +164,23 @@ class MobCtl {
     if (this.cur === a) { a.timeScale = ts; return; }
     a.reset(); a.timeScale = ts; a.fadeIn(fade).play(); if (this.cur) this.cur.fadeOut(fade); this.cur = a;
   }
+  /* animazione intera una volta (lancio, pestone): blocca le altre per dur secondi */
+  once(name, dur) { const a = this.act[name]; if (!a || this.dead) return; const d = a.getClip().duration; this.lockT = dur || d; if (this.cur === a) this.cur = null; this.play(name, 0.12, d / (dur || d)); }
+  gesture(name, dur = 1.2) { if (!this.dead) this.gest = { name, t: 0, dur }; }
+  summon() { if (this.C.call) this.gesture(this.C.call, 1.4); }
+  throw() { if (this.C.throwC) this.once(this.C.throwC, this.C.throwC === 'Charged_Slash' ? 1.2 : 0.9); }
+  stomp() { this.once('Charged_Slash', 0.9); this.gesture('stomp', 0.9); }
   die() { if (this.dead) return; this.dead = true; this.deadT = 0; if (!this.C.quad && this.dieName) this.play(this.dieName, 0.15, 1); }
   /* s: { moving, speed, attacking, atkCd, slow, kick } */
   update(dt, s) {
     this.t += dt; const C = this.C;
     this.mixer.timeScale = this.dead ? 1 : s.slow;
     if (C.quad) return this.quad(dt, s);
-    if (!this.dead) {
-      const k = this.height / 1.8;
+    if (this.lockT > 0) this.lockT -= dt;
+    if (!this.dead && this.lockT > 0) { /* sta facendo un'azione: non cambiare */ }
+    else if (!this.dead && s.charge && C.charge) this.play(s.charge === 'run' ? C.charge : C.idle, 0.15, s.charge === 'run' ? 1.6 : 1);
+    else if (!this.dead) {
+      const k = this.height / 1.8 / (C.slowK || 1);
       if (s.attacking && this.atkName) { const d = this.act[this.atkName].getClip().duration; this.play(this.atkName, 0.15, THREE.MathUtils.clamp(d / Math.max(0.5, s.atkCd || 1.2), 0.8, 2.2)); }
       else if (s.moving) this.play(C.move, 0.2, THREE.MathUtils.clamp(s.speed / (C.ref * k), 0.5, 2.3));
       else this.play(this.act[C.idle] ? C.idle : C.move, 0.3, this.act[C.idle] ? 1 : 0.0001);
@@ -146,7 +190,33 @@ class MobCtl {
       /* colpito: il busto va indietro per un attimo */
       const yaw = this.root().rotation.y, R = new V3(-Math.cos(yaw), 0, Math.sin(yaw));
       this.model.updateMatrixWorld(true); turnBone(this.bones.Spine1 || this.bones.Spine, R, s.kick * 3);
+      if (C.hurt && s.kick > 0.15 && !this.gest) this.gesture(C.hurt, 0.7);
     }
+    if (!this.dead && s.charge) { const yaw = this.root().rotation.y, R = new V3(-Math.cos(yaw), 0, Math.sin(yaw)); this.model.updateMatrixWorld(true);
+      turnBone(this.bones.Spine, R, s.charge === 'wind' ? 0.55 : 0.35); if (s.charge === 'wind') { turnBone(this.bones.Spine1, R, 0.25); } }
+    if (this.gest && !this.dead) this.doGesture(dt);
+  }
+  /* mosse fatte a mano sulle ossa, sopra l'animazione (peso che sale e scende) */
+  doGesture(dt) {
+    const g = this.gest; g.t += dt; if (g.t >= g.dur) { this.gest = null; return; }
+    const w = Math.min(1, Math.sin(Math.PI * g.t / g.dur) * 1.6), B = this.bones, root = this.root();
+    this.model.updateMatrixWorld(true);
+    const yaw = root.rotation.y, F = new V3(Math.sin(yaw), 0, Math.cos(yaw)), R = new V3(-Math.cos(yaw), 0, Math.sin(yaw)), U = new V3(0, 1, 0), hs = this.height / 1.8;
+    const head = (B.Head || B.Neck).getWorldPosition(new V3()), chest = (B.Spine2 || B.Spine1).getWorldPosition(new V3()), hips = B.Hips.getWorldPosition(new V3());
+    const down = new V3(0, -1, 0), poleR = R.clone().multiplyScalar(0.7).add(down).normalize(), poleL = R.clone().multiplyScalar(-0.7).add(down).normalize();
+    const armR = T => ik2(B.RightArm, B.RightForeArm, B.RightHand, T, poleR, w), armL = T => ik2(B.LeftArm, B.LeftForeArm, B.LeftHand, T, poleL, w);
+    switch (g.name) {
+      case 'whistle': /* due dita in bocca */ armR(head.clone().addScaledVector(F, 0.1 * hs).addScaledVector(U, -0.08 * hs)); break;
+      case 'radio': /* mano all'orecchio */ armL(head.clone().addScaledVector(R, -0.12 * hs)); turnBone(B.Head, F, -0.25 * w); break;
+      case 'point': /* indica col braccio teso */ pointBone(B.RightArm, F.clone().addScaledVector(U, 0.15).normalize(), w); pointBone(B.RightForeArm, F, w); break;
+      case 'arms': case 'roar': /* braccia al cielo */
+        pointBone(B.RightArm, U.clone().addScaledVector(R, 0.45).normalize(), w); pointBone(B.RightForeArm, U, w);
+        pointBone(B.LeftArm, U.clone().addScaledVector(R, -0.45).normalize(), w); pointBone(B.LeftForeArm, U, w);
+        if (g.name === 'roar') { turnBone(B.Spine1, R, -0.3 * w); turnBone(B.Head, R, -0.4 * w); } break;
+      case 'belly': /* si tiene la pancia */ armR(chest.clone().addScaledVector(F, 0.38 * hs).addScaledVector(U, -0.22 * hs).addScaledVector(R, 0.08 * hs)); armL(chest.clone().addScaledVector(F, 0.38 * hs).addScaledVector(U, -0.22 * hs).addScaledVector(R, -0.08 * hs)); break;
+      case 'stomp': /* si abbassa di colpo e batte a terra */ this.model.position.y = this.y0 - Math.sin(Math.PI * g.t / g.dur) * 0.08 * this.height / root.scale.y; break;
+    }
+    if (g.name === 'stomp' && g.t + dt >= g.dur) this.model.position.y = this.y0;
   }
   /* capra: trotto (zampe in diagonale), salto con cornata, colpo; tutto a mano sulle ossa */
   goat(dt, s) {

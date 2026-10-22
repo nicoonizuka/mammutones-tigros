@@ -380,3 +380,18 @@ La Golf GT di Corti è parcheggiata davanti al Mac: premendo E la righi. Se lo f
 | Personaggio | Altezza | Potere | Come si sblocca |
 |---|---|---|---|
 | Mattia | 1,90 m | **Dono del Messina**: tutti i nemici entro 10 metri muoiono all'istante, tranne i boss (ricarica 50 s) | finendo il gioco: sconfiggi il Re dei Mammutones in Sardegna |
+
+### Boss realistici
+| Boss | Altezza | Mosse speciali |
+|---|---|---|
+| Fab La Rue | 1,65 m | fischia con le dita in bocca quando chiama i ratti |
+| Loris Busato | 2,8 m | braccia al cielo quando chiama i Mammutones, lancia i campanacci |
+| Il Capo | 3 m | si abbassa prima della carica e corre a testa bassa |
+| Pierre | 1,95 m | indica col braccio quando chiama gli sgherri |
+| Fabio Regaglia | 3,8 m | colpi con la lancia, braccia al cielo per i rinforzi |
+| Pika impossessato | 2 m | lancia le sigarette |
+| Corti maledetto | 3,4 m | lancia i panini, si tiene la pancia quando lo colpisci |
+| Cugini Progni | 2,15 m | mano all'orecchio come con la radio per chiamare gli sgherri |
+| Loris, Re dei Mammutones | 5 m | urlo all'arrivo, lancio a due mani, pestone |
+
+Anche gli amici liberati nelle scene, gli albanesi di Tefalin (con l'AK) e Damiano nella Mercedes sono realistici.

@@ -91,7 +91,7 @@ const Y = new V3(0, 1, 0);
 const _q1 = new Q(), _q2 = new Q(), _q3 = new Q(), _q4 = new Q();
 const _a = new V3(), _b = new V3(), _c = new V3(), _d = new V3(), _e = new V3();
 /* gira l'osso perche' punti (asse +Y) verso dir, mescolando con l'animazione di peso w */
-function pointBone(bone, dir, w) {
+export function pointBone(bone, dir, w) {
   const bw = bone.getWorldQuaternion(_q1); const cur = _a.copy(Y).applyQuaternion(bw);
   const tgt = _q2.setFromUnitVectors(cur, dir).multiply(bw);
   const local = bone.parent.getWorldQuaternion(_q3).invert().multiply(tgt);
@@ -104,7 +104,7 @@ function turnBone(bone, axis, ang) {
   bone.quaternion.copy(bone.parent.getWorldQuaternion(_q3).invert().multiply(tgt)); bone.updateMatrixWorld(true);
 }
 /* IK a due ossa (spalla-gomito-mano) verso T, gomito spinto verso pole */
-function ik2(up, low, hand, T, pole, w) {
+export function ik2(up, low, hand, T, pole, w) {
   const S = up.getWorldPosition(_b), E0 = low.getWorldPosition(_c), H0 = hand.getWorldPosition(_d);
   const a = S.distanceTo(E0), b = E0.distanceTo(H0);
   const u = _e.copy(T).sub(S); let c = u.length(); u.normalize();

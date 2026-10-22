@@ -159,6 +159,7 @@ for (let i = 0; i < 80; i++) mesh(rbox(0.12 + rnd() * 0.4, 0.04 + rnd() * 0.1, 0
 
 /* ---------- easter egg: la Mercedes Classe C station wagon "albanese" con Damiano ---------- */
 const MERC = { x: -20, z: 22 };
+export const DAMIANO_NPC = { m: null };
 export const DAMIANO = { x: OX + MERC.x + 1.6, z: MERC.z + 0.4 };
 {
   const C = new THREE.Group(); C.position.set(MERC.x, 0, MERC.z); G.add(C);
@@ -195,6 +196,7 @@ export const DAMIANO = { x: OX + MERC.x + 1.6, z: MERC.z + 0.4 };
   const D = buildHuman(DAMIANO_MODEL); const P = D.userData.P;
   P.legL.rotation.x = P.legR.rotation.x = -1.45; P.armL.rotation.x = P.armR.rotation.x = -1.15; P.head.rotation.y = 0.5;
   D.position.set(0.42, -0.42, 0.2); C.add(D);
+  DAMIANO_NPC.m = D;
   /* fumetto sopra la macchina */
   const bub = ctex(256, 128, (g, w, h) => { g.fillStyle = '#ffffff'; g.beginPath(); g.roundRect(6, 6, w - 12, h - 34, 22); g.fill(); g.beginPath(); g.moveTo(90, h - 30); g.lineTo(110, h - 4); g.lineTo(124, h - 30); g.fill(); g.fillStyle = '#111'; g.font = '900 54px Arial Black,Arial,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('...', w / 2, 46); });
   const bubM = new THREE.SpriteMaterial({ map: bub, transparent: true }); const sp = new THREE.Sprite(bubM); sp.scale.set(1.4, 0.7, 1); sp.position.set(0.4, 2.3, 0.3); C.add(sp);

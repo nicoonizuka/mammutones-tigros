@@ -8,12 +8,12 @@ import { pad, pollPad, BTN } from './input/gamepad.js';
 import { isTouch, touch, initTouch, takeLook } from './input/touch.js';
 const SPR = SPRITES.map(c => c.fn());
 import { loadHD, preloadHD, hdOn, setHD } from './characters/hd.js';
-import { preloadMobs, makeMob } from './characters/hdmob.js';
+import { preloadMobs, makeMob, makeBoss } from './characters/hdmob.js';
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss, buildCortiBoss, buildProgno, buildLorisRe } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
 import { makeSky, setSky, updateSky } from './render/sky.js';
-import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, updateHS, applyWorldLook } from './world/happyshopping.js';
+import { OX, HSB, HSTORE, inHSStore, HS_DOOR, HS_START, CAPO_SPOT, HS_SPAWNS_OUT, HS_SPAWNS_IN, HS_BUYS, hsDoor, hsDoorSolid, DAMIANO, DAMIANO_NPC, updateHS, applyWorldLook } from './world/happyshopping.js';
 import { mat, box, sign } from './render/textures.js';
 import { renderer, scene, camera, solids, blockers, solid, BOUNDS, bakeStatic, sun } from './render/engine.js';
 import { BX, BUB, MACIN, CHIESA, inMac, inChiesa, buRegion, BU_LOW, BU_START, updateBU, buAnim, BU_BUYS, BU_SPAWNS, BU_DOORS, buGT, buMacDoor, buMacSolid, buBarGate, buPiazzaGate, buChurchDoor, buChurchSolid, buHole, buSeal, CATA, inCata, CATA_START, PORTAL, BELLS, setTablet, setPortal, SARD, inSard, SARD_START, RE_SPOT, updateSheep } from './world/busto.js';
@@ -87,7 +87,7 @@ function applyModel(i) {
   pModel = buildHuman(ROSTER[i].model); pModel.position.copy(P.pos); scene.add(pModel); equip();
   /* modello realistico: si carica in background e prende il posto di quello a blocchi */
   const id = ROSTER[i].hd, tok = ++hdTok;
-  if (hdOn && id) { if (P.pw.k === 'call') preloadHD('mirko');
+  if (hdOn && id) { if (P.pw.k === 'call') preloadHD('mirko'); if (P.pw.k === 'albanesi') preloadHD('albanese');
     loadHD(id).then(h => { if (tok !== hdTok || !P) return; const old = pModel; scene.remove(old); pModel = h.root; pModel.position.copy(old.position); pModel.rotation.copy(old.rotation); scene.add(pModel); equip(); })
       .catch(e => console.warn('modello HD non caricato', id, e)); }
 }
@@ -128,16 +128,17 @@ const BOSSK = {
   pika: { B: BOSS_PIKA, build: buildPikaBoss, at: () => (P && inCasa(P.pos) ? PIKA_SPOT_C : PIKA_SPOT_G), r: 0.5, name: 'Pika · Governatore del Tribunale (sotto maleficio)', minions: ['fachiro', 'impossessato'], call: 'Pika chiama i suoi!', title: 'Pika!', sub: () => (P && inCasa(P.pos) ? 'Il maleficio di Loris lo controlla: liberalo!' : 'Il governatore del Tribunale, impossessato. Ti lancia le sigarette da lontano') },
 };
 function spawnBoss(kind = 'fab') {
-  const K = BOSSK[kind], B = K.B, m = K.build(), at = K.at(); m.position.set(at.x, 0, at.z); scene.add(m);
+  const K = BOSSK[kind], B = K.B, m = makeBoss(kind, K.build) || K.build(), at = K.at(); m.position.set(at.x, 0, at.z); scene.add(m);
   const phase = kind === 'pika' ? (inCasa(P.pos) ? 2 : 1) : 0;
   const base = kind === 'pika' && phase === 1 ? B.hpGarage : B.hp;
   const tough = kind === 'fab' && world === 3 ? 2.6 : 1; /* al Tribunale Fab La Rue e' molto piu' forte */
   const hp = Math.round(base * tough * (1 + (kind === 'fab' ? 0.04 : 0.03) * wave));
   boss = { m, kind, capo: kind === 'capo', phase, type: 'boss', boss: 1, hp, max: hp, dmg: B.dmg * (tough > 1 ? 1.5 : 1), reward: B.reward * tough, atkCd: B.atkCd, spd: B.spd * (tough > 1 ? 1.15 : 1), atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0, summon: B.summonEvery, ch: null, chCd: 4, throwT: 2 };
+  if (m.userData.hdScale) boss.r = K.r * m.userData.hdScale;
   m.userData.hit.body.userData.enemy = boss; m.userData.hit.head.userData.enemy = boss; m.userData.hit.head.userData.head = true;
   enemies.push(boss); alive++; $('boss').hidden = false; $('bossn').textContent = K.name;
-  if (kind === 'progni') { const m2 = buildProgno(1); m2.position.set(at.x + 6, 0, at.z); scene.add(m2);
-    const tw = { m: m2, kind: 'progni', type: 'boss', twin: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd * 1.05, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r, kick: 0 };
+  if (kind === 'progni') { const m2 = makeBoss('progni2', () => buildProgno(1)) || buildProgno(1); m2.position.set(at.x + 6, 0, at.z); scene.add(m2);
+    const tw = { m: m2, kind: 'progni', type: 'boss', twin: 1, hp, max: hp, dmg: B.dmg, reward: B.reward, atkCd: B.atkCd, spd: B.spd * 1.05, atk: 1, dead: 0, stuck: 0, side: 0, walk: 0, r: K.r * (m2.userData.hdScale || 1), kick: 0 };
     m2.userData.hit.body.userData.enemy = tw; m2.userData.hit.head.userData.enemy = tw; m2.userData.hit.head.userData.head = true; enemies.push(tw); alive++; boss.twinRef = tw; }
   banner(K.title, K.sub()); tone(110, 0.8, 'sawtooth', 0.08, 60);
 }
@@ -394,15 +395,21 @@ let rescues = [];
 function rescue(model, name, txt, at, o = {}) {
   if (state !== 'play' || !P) return;
   const m = o.build ? o.build() : buildHuman(model); let from = P.pos.clone().add(new V3(-Math.sin(yaw) * 4, 0, -Math.cos(yaw) * 4)); if (at) { const v = at.clone().sub(P.pos); v.y = 0; const L = v.length(); if (L > 0.5) from = P.pos.clone().addScaledVector(v.normalize(), Math.min(L, 5)); } from.y = 0; collide(from, 0.4, 1); m.position.copy(from); scene.add(m);
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(name, txt), depthTest: false, transparent: true, toneMapped: false })); sp.scale.set(2.6, 1.12, 1); sp.position.y = (m.userData.height || 1.8) + 0.9; sp.renderOrder = 20; m.add(sp);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(name, txt), depthTest: false, transparent: true, toneMapped: false })); const ks = 1 / (m.scale.x || 1); sp.scale.set(2.6 * ks, 1.12 * ks, 1); sp.position.y = ((m.userData.height || 1.8) + 0.9) * ks; sp.renderOrder = 20; m.add(sp);
   if (o.build && at) { m.position.copy(at); }
-  rescues.push({ m, t: 0, life: o.life || 5.5, to: o.to || null, s0: m.scale.x }); banner(o.title || name + ' è libero!', o.sub || 'Ti viene a ringraziare'); bell();
+  const rr = { m, t: 0, life: o.life || 5.5, to: o.to || null, s0: m.scale.x }; rescues.push(rr);
+  /* amico liberato: modello realistico appena e' scaricato (dentro quello di sempre, che ha il fumetto) */
+  const fr = model != null && ROSTER.find(c => c.model === model);
+  if (hdOn && fr && fr.hd) loadHD(fr.hd).then(h => { if (rr.gone) return; m.traverse(x => { if (x.isMesh) x.visible = false; }); const k = 1 / (m.scale.x || 1); h.root.scale.setScalar(k); m.add(h.root); rr.hd = h; }).catch(() => {}); banner(o.title || name + ' è libero!', o.sub || 'Ti viene a ringraziare'); bell();
 }
 function updRescues(dt) {
   for (const r of rescues) {
     r.t += dt; const m = r.m; const to = (r.to || P.pos).clone().sub(m.position); to.y = 0; const d = to.length(); const stop = r.to ? 0.2 : 2.4;
     m.rotation.y = Math.atan2(to.x, to.z);
-    if (r.t < r.life - 1 && d > stop) { m.position.addScaledVector(to.normalize(), Math.min(d - stop, 4 * dt)); collide(m.position, 0.4, 1); r.walk = (r.walk || 0) + dt * 9; animLimbs(m, r.walk, 0.55); }
+    const walking = r.t < r.life - 1 && d > stop;
+    if (r.hd) r.hd.update(dt, { moving: walking, running: walking, speed: 4, f: 1, side: 0, dir: new V3(Math.sin(m.rotation.y), 0, Math.cos(m.rotation.y)), pitch: 0 });
+    if (m.userData.hdm) { const p0 = r.lp || m.position; const sp = Math.hypot(m.position.x - p0.x, m.position.z - p0.z) / Math.max(dt, 1e-3); r.lp = m.position.clone(); m.userData.hdm.update(dt, { moving: sp > 0.25, speed: Math.max(sp, 0.5), attacking: false, slow: 1, kick: 0 }); }
+    if (walking) { m.position.addScaledVector(to.normalize(), Math.min(d - stop, 4 * dt)); collide(m.position, 0.4, 1); r.walk = (r.walk || 0) + dt * 9; animLimbs(m, r.walk, 0.55); }
     else if (r.t < r.life - 1) { m.userData.P.armR.rotation.x = -2.6 + Math.sin(r.t * 9) * 0.4; }
     if (r.t > r.life - 1) { const k = Math.max(0.001, r.life - r.t); m.scale.setScalar(r.s0 * k); m.position.y += dt * 1.5; }
     if (r.t >= r.life) { scene.remove(m); r.gone = 1; }
@@ -455,10 +462,11 @@ function trBossDown(kind, at) {
 /* scena nella casa di Pika: c'e' Loris che gli ha fatto il maleficio, poi scappa dalla finestra */
 function casaScene() {
   if (lorisScene) return; lorisScene = true; casaT = 4.8;
-  rescue(null, 'Loris Busato', 'Il maleficio è fatto: ora Pika è mio. Ci rivediamo, ragazzi!', new V3(TX + 114, 0, -12), { build: buildLoris, to: new V3(TX + 116, 0, -15.2), life: 4.6, title: 'Loris Busato!', sub: 'Era lui dietro al maleficio' });
+  rescue(null, 'Loris Busato', 'Il maleficio è fatto: ora Pika è mio. Ci rivediamo, ragazzi!', new V3(TX + 114, 0, -12), { build: () => makeBoss('loris', buildLoris) || buildLoris(), to: new V3(TX + 116, 0, -15.2), life: 4.6, title: 'Loris Busato!', sub: 'Era lui dietro al maleficio' });
 }
 /* pacchetti di sigarette lanciati da Pika: atterrano dove eri, se ti sposti li schivi */
 function pikaThrow(e) {
+  if (e.m.userData.hdm) e.m.userData.hdm.throw();
   const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.07), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.162, 0.08, 0.072), packM[1]); top.position.y = 0.08; g.add(top);
   const from = e.m.position.clone(); from.y += 1.6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.4;
   hostile.push({ m: g, from, to, t: 0, T: 0.55 + from.distanceTo(to) * 0.03 }); tone(500, 0.08, 'triangle', 0.04, 260);
@@ -467,6 +475,7 @@ function pikaThrow(e) {
 /* proiettili dei boss: i pacchetti di Pika (piccola esplosione) e le campane di Loris (solo chi viene preso) */
 const bellM = new THREE.MeshStandardMaterial({ color: '#c8a03a', roughness: 0.3, metalness: 0.85 });
 function lorisThrow(e) {
+  if (e.m.userData.hdm) e.m.userData.hdm.throw();
   const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 0.22, 12, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bellM); top.position.y = 0.11; g.add(top);
   const from = e.m.position.clone(); from.y += 2.2; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.7;
   hostile.push({ m: g, from, to, t: 0, T: 0.5 + from.distanceTo(to) * 0.025, bell: 1, arc: 1.2 }); bell(); const A = e.m.userData.P.armR; A.rotation.x = -2.8; setTimeout(() => { A.rotation.x = 0; }, 180);
@@ -474,7 +483,7 @@ function lorisThrow(e) {
 function updHostile(dt) {
   if (boss && boss.kind === 'corti' && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 3.5 && d < 24) { boss.throwT = BOSS_CORTI.throwEvery * (0.8 + Math.random() * 0.4); cortiThrow(boss); } }
   if (boss && boss.kind === 're' && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 5 && d < 34) { boss.throwT = BOSS_RE.throwEvery * (0.8 + Math.random() * 0.4); reThrow(boss); }
-    boss.stompT = (boss.stompT === undefined ? 3 : boss.stompT) - dt; if (boss.stompT <= 0 && d < 6) { boss.stompT = BOSS_RE.stompEvery; const c = boss.m.position.clone(); c.y = 0.4; explode(c, 5.5, 0, false); if (d < 5.5) hit(BOSS_RE.stompDmg * ZONES[diffZone()].dmg); banner('Il Re batte i piedi!', ''); } }
+    boss.stompT = (boss.stompT === undefined ? 3 : boss.stompT) - dt; if (boss.stompT <= 0 && d < 6) { boss.stompT = BOSS_RE.stompEvery; if (boss.m.userData.hdm) boss.m.userData.hdm.stomp(); const c = boss.m.position.clone(); c.y = 0.4; explode(c, 5.5, 0, false); if (d < 5.5) hit(BOSS_RE.stompDmg * ZONES[diffZone()].dmg); banner('Il Re batte i piedi!', ''); } }
   if (boss && (boss.kind === 'loris' || boss.kind === 'loris4') && !boss.dead) { boss.throwT -= dt; const d = boss.m.position.distanceTo(P.pos); if (boss.throwT <= 0 && d > 4 && d < 26) { boss.throwT = 2.4 + Math.random() * 1.2; lorisThrow(boss); } }
   for (const h of hostile) {
     h.t += dt; const k = Math.min(1, h.t / h.T); h.m.position.lerpVectors(h.from, h.to, k); h.m.position.y += Math.sin(k * Math.PI) * (h.arc || 1.6); h.m.rotation.x += dt * 12; h.m.rotation.z += dt * 8;
@@ -621,7 +630,7 @@ function buBossDown(kind, at) {
     bu.corti = 1; bu.tal = Math.max(bu.tal, 1); const c = unlockChar('corti');
     setTimeout(() => rescue(8, 'Corti', 'Raga… avevo una fame da maledizione. Grazie! Tenete, era nel mio panino: metà del talismano.', at), 1200);
     banner('Corti è libero dalla maledizione!', (c ? 'Hai sbloccato Corti · ' : '') + 'Ti dà la prima metà del talismano');
-    setTimeout(() => { if (state !== 'play' || world !== 4) return; rescue(null, 'Loris Busato', 'Bravi… ma non basta. Vi aspetto alla chiesa: lì finisce tutto.', new V3(BX + 27, 0, 11), { build: buildLoris, to: new V3(BX + 8, 0, -40), life: 5.2, title: 'Loris Busato!', sub: 'Vi aspetta alla chiesa · apri la strada per i bar (' + BU_COSTS.bar + ')' }); }, 7200);
+    setTimeout(() => { if (state !== 'play' || world !== 4) return; rescue(null, 'Loris Busato', 'Bravi… ma non basta. Vi aspetto alla chiesa: lì finisce tutto.', new V3(BX + 27, 0, 11), { build: () => makeBoss('loris', buildLoris) || buildLoris(), to: new V3(BX + 8, 0, -40), life: 5.2, title: 'Loris Busato!', sub: 'Vi aspetta alla chiesa · apri la strada per i bar (' + BU_COSTS.bar + ')' }); }, 7200);
     return;
   }
   if (kind === 'progni') {
@@ -632,7 +641,7 @@ function buBossDown(kind, at) {
   }
   if (kind === 'loris4') {
     bu.loris = 1; bu.tal = 2;
-    rescue(null, 'Loris Busato', 'Non è finita! Il mio regno vi aspetta sotto la chiesa…', at, { build: buildLoris, to: new V3(BX, 0, -182.5), life: 3.6, title: 'Loris scappa nelle catacombe!', sub: 'Ti lascia l\'altra metà del talismano: uniscile sul sigillo' }); return;
+    rescue(null, 'Loris Busato', 'Non è finita! Il mio regno vi aspetta sotto la chiesa…', at, { build: () => makeBoss('loris', buildLoris) || buildLoris(), to: new V3(BX, 0, -182.5), life: 3.6, title: 'Loris scappa nelle catacombe!', sub: 'Ti lascia l\'altra metà del talismano: uniscile sul sigillo' }); return;
   }
   if (kind === 're') {
     bu.re = 1; for (const e of enemies) if (!e.dead) { e.dead = 1; e.deadT = 0; alive--; }
@@ -664,12 +673,14 @@ function updBU4(dt) {
 /* panini di Corti e campanacci giganti del Re */
 const bunM = new THREE.MeshStandardMaterial({ color: '#d8963a', roughness: 0.6 }), meatM = new THREE.MeshStandardMaterial({ color: '#5a2e1a', roughness: 0.8 });
 function cortiThrow(e) {
+  if (e.m.userData.hdm) e.m.userData.hdm.throw();
   const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bunM); t.scale.set(1, 0.6, 1); t.position.y = 0.06; g.add(t); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 12), meatM)); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 12), bunM); b.position.y = -0.06; g.add(b);
   const from = e.m.position.clone(); from.y += 2.6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.8;
   hostile.push({ m: g, from, to, t: 0, T: 0.45 + from.distanceTo(to) * 0.028, burger: 1, arc: 1.4 }); tone(400, 0.08, 'triangle', 0.04, 220);
   const A = e.m.userData.P.armL; A.rotation.x = -2.6; setTimeout(() => { A.rotation.x = 0; }, 200);
 }
 function reThrow(e) {
+  if (e.m.userData.hdm) e.m.userData.hdm.throw();
   const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.5, 0.7, 14, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), bellM); top.position.y = 0.35; g.add(top);
   const from = e.m.position.clone(); from.y += 6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.5;
   hostile.push({ m: g, from, to, t: 0, T: 0.7 + from.distanceTo(to) * 0.025, big: 1, arc: 3 }); bell(); tone(120, 0.4, 'sawtooth', 0.06, 70);
@@ -770,7 +781,10 @@ function callAlbanesi() {
     const m = buildHuman(DAMIANO_MODEL); m.position.copy(P.pos).add(new V3(1.6 * s, 0, 1.4)); scene.add(m);
     const hb = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 20), redBand); hb.rotation.x = Math.PI / 2; hb.position.y = 1.78; m.add(hb);
     const A = m.userData.P.armR; const g = buildWeapon('ak47'); g.position.copy(A.userData.hand.position); g.rotation.x = Math.PI / 2; A.add(g);
-    albanesi.push({ m, s, t: P.pw.dur, fire: Math.random() * 0.1, walk: 0 });
+    const al = { m, s, t: P.pw.dur, fire: Math.random() * 0.1, walk: 0 }; albanesi.push(al);
+    /* modello realistico dell'albanese (lo stesso per tutti e due), con l'AK in mano */
+    if (hdOn) loadHD('albanese').then(h => { if (al.gone || !albanesi.includes(al)) return; h.root.position.copy(m.position); h.root.rotation.copy(m.rotation); scene.remove(m); scene.add(h.root); al.m = h.root;
+      const g = buildWeapon('ak47'); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); h.attachGun(g, 'ak47'); }).catch(() => {});
   }
   banner('Arrivano gli albanesi!', 'Due amici di Tefalin con l\'AK-47: smitragliano tutto per qualche secondo');
 }
@@ -779,8 +793,12 @@ function updAlbanesi(dt) {
     if (a.gone) continue; a.t -= dt; const m = a.m; if (a.t <= 0) { scene.remove(m); a.gone = 1; continue; }
     let target = null, bd = 24; for (const e of enemies) { if (e.dead || e.boss) continue; const d = e.m.position.distanceTo(m.position); if (d < bd) { bd = d; target = e; } }
     const want = P.pos.clone().add(new V3(Math.sin(time * 0.6 + a.s * 1.6) * 2.6, 0, Math.cos(time * 0.6 + a.s * 1.6) * 2.6)); const mv = want.sub(m.position); mv.y = 0; const dist = mv.length();
-    if (dist > 1) { mv.normalize().multiplyScalar(Math.min(dist, 6.5 * dt)); m.position.add(mv); a.walk += dt * 9; animLimbs(m, a.walk, 0.6); }
+    const hd = m.userData.hd, walking = dist > 1;
+    if (walking) { mv.normalize(); if (hd && !target) m.rotation.y = Math.atan2(mv.x, mv.z); mv.multiplyScalar(Math.min(dist, 6.5 * dt)); m.position.add(mv); a.walk += dt * 9; if (!hd) animLimbs(m, a.walk, 0.6); }
     collide(m.position, 0.4, 1);
+    if (hd) { const fdir = new V3(Math.sin(m.rotation.y), 0, Math.cos(m.rotation.y)), rdir = new V3(-fdir.z, 0, fdir.x), mn = walking ? mv.clone().normalize() : new V3();
+      const dir = target ? target.m.position.clone().sub(m.position).setY(0).normalize() : fdir;
+      hd.update(dt, { moving: walking, running: !target, speed: 6.5, f: walking ? mn.dot(fdir) : 0, side: walking ? mn.dot(rdir) : 0, shooting: !!target, dir, pitch: 0 }); }
     if (target) {
       const d = target.m.position.clone().sub(m.position); m.rotation.y = Math.atan2(d.x, d.z); m.userData.P.armR.rotation.x = -1.5;
       a.fire -= dt;
@@ -1050,7 +1068,7 @@ function update(dt) {
   for (const e of enemies) { const H = e.m.userData.hdm; if (!H || e.gone) continue;
     const p0 = e.lp || e.m.position, sp = dt > 0 ? Math.hypot(e.m.position.x - p0.x, e.m.position.z - p0.z) / dt : 0; e.lp = e.m.position.clone();
     const slow = slow0 * (e.frozen > 0 ? 0 : 1) * (e.slowT > 0 ? 0.35 : 1);
-    H.update(dt, { moving: sp > 0.25, speed: Math.max(sp, 0.5) / Math.max(0.2, slow), attacking: !!e.atkNow && !e.dead, atkCd: e.atkCd, slow, kick: e.kick }); e.atkNow = 0; }
+    H.update(dt, { moving: sp > 0.25, speed: Math.max(sp, 0.5) / Math.max(0.2, slow), attacking: !!e.atkNow && !e.dead, atkCd: e.atkCd, slow, kick: e.kick, charge: e.ch ? e.ch.ph : null }); e.atkNow = 0; }
   enemies = enemies.filter(e => !e.gone);
   /* oggetti ed effetti */
   for (const dr of drops) { dr.t -= dt; dr.m.rotation.y += dt * 2; dr.m.position.y = 0.6 + Math.sin(time * 4) * 0.1; if (dr.m.position.distanceTo(new V3(P.pos.x, 0.5, P.pos.z)) < 1.3) { pickup(dr); dr.t = 0; } if (dr.t <= 0) scene.remove(dr.m); }
@@ -1077,7 +1095,8 @@ function update(dt) {
   /* vita che si ricarica dopo qualche secondo senza colpi */
   sinceHit += dt; if (sinceHit > REGEN.delay && P.hp < 100) P.hp = Math.min(100, P.hp + REGEN.perSec * dt);
   if (boss && !boss.dead && !boss.flee) { boss.summon -= dt; if (boss.summon <= 0) { const K = BOSSK[boss.kind]; boss.summon = K.B.summonEvery;
-      const list = boss.kind === 'pika' && boss.phase === 2 ? ['impossessato', 'orcone'] : boss.kind === 'fab' && world === 3 ? ['ratto', 'ratto', 'fachiro', 'impossessato'] : K.minions; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(K.call); }
+      const list = boss.kind === 'pika' && boss.phase === 2 ? ['impossessato', 'orcone'] : boss.kind === 'fab' && world === 3 ? ['ratto', 'ratto', 'fachiro', 'impossessato'] : K.minions; list.forEach(t => spawnEnemy(t, [boss.m.position.x + (Math.random() - 0.5) * 3, boss.m.position.z + (Math.random() - 0.5) * 3])); feed(K.call);
+      if (boss.m.userData.hdm) boss.m.userData.hdm.summon(); if (boss.twinRef && !boss.twinRef.dead && boss.twinRef.m.userData.hdm) boss.twinRef.m.userData.hdm.summon(); }
     const tw = boss.twinRef && !boss.twinRef.dead ? boss.twinRef : null; $('bossb').style.width = Math.max(0, (boss.hp + (tw ? tw.hp : 0)) / (boss.max + (tw ? tw.max : 0)) * 100) + '%'; }
   nearI = null; for (const i of INTER) { if (Math.hypot(P.pos.x - i.x, P.pos.z - i.z) < i.r && i.label()) { nearI = i; break; } }
   if (bannerT > 0) { bannerT -= dt; if (bannerT <= 0) $('banner').hidden = true; }
@@ -1371,7 +1390,18 @@ if (isTouch) {
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
 const sky = makeSky(scene); setSky(sky, 1); skyRef = sky;
-bakeStatic(scene, [storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim, buSeal]);
+bakeStatic(scene, [DAMIANO_NPC.m, storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim, buSeal]);
+/* Damiano seduto nella Mercedes: modello realistico in posa seduta (fissa, non si anima) */
+if (hdOn && DAMIANO_NPC.m) loadHD('damiano').then(h => {
+  const D = DAMIANO_NPC.m; D.traverse(x => { if (x.isMesh) x.visible = false; }); D.add(h.root); h.root.position.y = 0.12; h.root.updateMatrixWorld(true);
+  const B = h.bones, q = new THREE.Quaternion(), W = new THREE.Quaternion(), Pq = new THREE.Quaternion();
+  const R = new V3(-1, 0, 0).applyQuaternion(D.getWorldQuaternion(new THREE.Quaternion())).normalize();
+  const turn = (b, ang, ax = R) => { if (!b) return; b.getWorldQuaternion(W); q.setFromAxisAngle(ax, ang).multiply(W); b.quaternion.copy(b.parent.getWorldQuaternion(Pq).invert().multiply(q)); b.updateMatrixWorld(true); };
+  h.mixer.stopAllAction(); h.root.updateMatrixWorld(true);
+  turn(B.LeftUpLeg, 1.5); turn(B.RightUpLeg, 1.5); turn(B.LeftLeg, -0.35); turn(B.RightLeg, -0.35);
+  turn(B.LeftArm, 0.9); turn(B.RightArm, 0.9); turn(B.LeftForeArm, 0.5); turn(B.RightForeArm, 0.5); turn(B.Head, 0.45, new V3(0, 1, 0));
+  h.update = () => {}; DAMIANO_NPC.hd = h;
+}).catch(() => {});
 applyLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
