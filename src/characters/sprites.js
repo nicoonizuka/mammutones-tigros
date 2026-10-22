@@ -195,7 +195,12 @@ const CH=[
    extra:(s,cx,t)=>{const C=["#4a3020","#5a3c28","#3a2416"];
      [[-5,1],[-3,-1],[0,-1],[3,-1],[5,1],[-6,3],[6,3],[-1,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.6,C[k%3]));
      [[-4,4],[-1,5],[2,4]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%3]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
-     s.rect(cx-4,t+5,4,2,"#0d0e10");s.rect(cx,t+5,4,2,"#0d0e10");s.rect(cx-4,t+12,8,2,"#18181c");}})},
+     s.rect(cx-4,t+5,4,2,"#0d0e10");s.rect(cx,t+5,4,2,"#0d0e10");s.rect(cx-4,t+12,8,2,"#18181c");}})}, {name:"Mattia",role:"Occhiali da sole, giacca scura e camicia bianca",h:"1,90 m",c:"#ff6aa8",tag:"FINE DEL GIOCO",pw:"Dono del Messina",pd:"Tutti i nemici intorno a lui muoiono all'istante, tranne i boss.",ic:"shield",
+  fn:()=>human({seed:79,H:55,bw:6,skin:"#e8bea0",top:"#22232a",topFn:(x,y)=>(x>20&&x<24&&y>21&&y<34)?"#f2f2ee":"#22232a",hem:"#1a1b20",pants:"#1e2028",shoe:"#f0f0f0",nose:"#d0a080",brow:"#4a3222",
+   extra:(s,cx,t)=>{const C=["#4a3222","#5c4030","#3a2618"];
+     [[-5,1],[-3,-1],[0,-1],[3,-1],[5,1],[-6,3],[6,3],[-1,-2],[2,-2]].forEach(([dx,dy],k)=>s.ell(cx+dx,t+dy+1,2.1,1.6,C[k%3]));
+     [[-4,4],[-1,5],[2,4]].forEach(([dx,y],k)=>s.rect(cx+dx,t+3,2,y-3,C[k%3]));s.rect(cx-6,t+3,1,3,C[0]);s.rect(cx+5,t+3,1,3,C[0]);
+     s.rect(cx-4,t+5,4,2,"#0d0e10");s.rect(cx,t+5,4,2,"#0d0e10");}})},
 ];
 
 export {Sprite,human,CH,OUT};

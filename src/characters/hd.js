@@ -9,11 +9,12 @@
    Sopra al busto c'e' la mira: schiena e braccia puntano l'arma dove guardi. */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as skClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const V3 = THREE.Vector3, Q = THREE.Quaternion;
 const BASE = (import.meta.env.BASE_URL || '/') + 'models/';
-const loader = new GLTFLoader();
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 const files = {};
 const get = id => files[id] || (files[id] = loader.loadAsync(BASE + id + '.glb').catch(e => { delete files[id]; throw e; }));
 
@@ -77,7 +78,10 @@ export async function loadHD(id) {
   });
   let srcY = 0; lib.scene.traverse(o => { if (/Hips$/.test(o.name)) srcY = o.position.y; });
   const clips = fitClips(lib.animations, nodes, bones.Hips.position, srcY).concat(fitClips(g.animations, nodes, bones.Hips.position, 0));
-  const box = new THREE.Box3().setFromObject(model);
+  /* altezza vera: con la compressione le posizioni sono in un'altra scala, quindi misuriamo i vertici gia' attaccati alle ossa */
+  model.updateMatrixWorld(true); const box = new THREE.Box3(), v = new V3();
+  model.traverse(o => { if (!o.isSkinnedMesh) return; const pos = o.geometry.attributes.position, step = Math.max(1, Math.floor(pos.count / 2000));
+    for (let i = 0; i < pos.count; i += step) { v.fromBufferAttribute(pos, i); o.boneTransform(i, v); v.applyMatrix4(o.matrixWorld); box.expandByPoint(v); } });
   model.scale.setScalar(HD_SCALE);
   return new HDChar(id, model, clips, bones, (box.max.y - box.min.y) * HD_SCALE);
 }

@@ -8,6 +8,7 @@ import { pad, pollPad, BTN } from './input/gamepad.js';
 import { isTouch, touch, initTouch, takeLook } from './input/touch.js';
 const SPR = SPRITES.map(c => c.fn());
 import { loadHD, preloadHD, hdOn, setHD } from './characters/hd.js';
+import { preloadMobs, makeMob } from './characters/hdmob.js';
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss, buildCortiBoss, buildProgno, buildLorisRe } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
@@ -106,7 +107,7 @@ function spawnEnemy(forceType, at) {
   const down = world !== 4 && P && inBasement(P.pos);
   let type = forceType || (down && Math.random() < RAT_SHARE ? 'ratto' : pickType(diffZone()));
   if (world === 4 && !forceType && type === 'sgherrone' && wave < BU_SGHERRONI_WAVE) type = 'orco'; const st = enemyStats(type, wave, diffZone());
-  const m = buildEnemy(type); m.position.set(p[0] + (Math.random() - 0.5) * 2, 0, p[1] + (Math.random() - 0.5) * 2); scene.add(m);
+  const m = makeMob(type) || buildEnemy(type); m.position.set(p[0] + (Math.random() - 0.5) * 2, 0, p[1] + (Math.random() - 0.5) * 2); scene.add(m);
   const e = { m, type, hp: st.hp, max: st.hp, dmg: st.dmg, reward: st.reward, atkCd: ENEMIES[type].atkCd, spd: st.spd * (0.9 + Math.random() * 0.2), atk: 0.6, dead: 0, stuck: 0, side: 0, walk: Math.random() * 6, r: 0.45 * m.scale.x, kick: 0 };
   m.userData.hit.body.userData.enemy = e; m.userData.hit.head.userData.enemy = e; m.userData.hit.head.userData.head = true;
   enemies.push(e); alive++; if (type !== 'ratto') bell(); return e;
@@ -635,7 +636,7 @@ function buBossDown(kind, at) {
   }
   if (kind === 're') {
     bu.re = 1; for (const e of enemies) if (!e.dead) { e.dead = 1; e.deadT = 0; alive--; }
-    const c = unlockChar('busto'); lastUnlock = { name: c ? 'DJ Gianfra' + (unlocks.bar ? '' : '') : 'tutto il centro di Busto' };
+    const c = unlockChar('busto'); lastUnlock = { name: c ? 'DJ Gianfra e Mattia' : 'tutto il centro di Busto' };
     setTimeout(() => rescue(22, 'DJ Gianfra', 'Raga, finalmente! Loris mi aveva portato qui a fare la musica per il suo regno. Adesso si festeggia a Busto!', at), 1600);
     banner('Il Re dei Mammutones è sconfitto!', 'Busto è salva'); setTimeout(victory, 8200);
   }
@@ -861,6 +862,7 @@ function usePower() {
   else if (pw.k === 'pipistrelli') callBats();
   else if (pw.k === 'matto') { libeMatto(); return; }
   else if (pw.k === 'collare') { collare(); P.pwT = pw.dur; }
+  else if (pw.k === 'messina') messina();
   else if (pw.k === 'gratis') { P.freeGun = true; banner('DJ Gianfra', 'La prossima arma che compri al muro è gratis'); tone(900, 0.3, 'triangle', 0.05, 1400); }
   else { P.pwT = pw.dur; feed(pw.n + '!'); }
   if (pw.k === 'shield') shieldMesh.visible = true;
@@ -868,6 +870,15 @@ function usePower() {
 }
 
 /* onda d'urto di Tefalin: ferisce e spinge via tutti i nemici vicini */
+/* Dono del Messina (Mattia): tutti i nemici entro 10 metri muoiono subito, tranne i boss */
+function messina() {
+  const R = 10; let n = 0;
+  for (const e of enemies) { if (e.dead || e.boss || e.twin || e.ally > 0) continue; const d = e.m.position.clone().sub(P.pos); d.y = 0; if (d.length() > R) continue; e.kick = 0.4; damageEnemy(e, e.hp + 1, false); n++; }
+  for (const [c, dl] of [['#ffd25e', 0], ['#ff6aa8', 120]]) setTimeout(() => { const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.16, 8, 48), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.9 }));
+    ring.rotation.x = Math.PI / 2; ring.position.set(P.pos.x, 0.5, P.pos.z); scene.add(ring); rings.push({ m: ring, t: 0 }); }, dl);
+  shake(0.4); tone(55, 0.6, 'sawtooth', 0.1, 25); tone(880, 0.4, 'triangle', 0.05, 1760);
+  banner('Dono del Messina!', n ? n + (n === 1 ? ' nemico spazzato via' : ' nemici spazzati via') : 'Nessun nemico vicino');
+}
 function blast() {
   const R = 7; for (const e of enemies) {
     if (e.dead) continue; const d = e.m.position.clone().sub(P.pos); d.y = 0; const l = d.length(); if (l > R) continue;
@@ -1002,6 +1013,7 @@ function update(dt) {
     const slow = slow0 * (e.frozen > 0 ? 0 : 1) * (e.slowT > 0 ? 0.35 : 1);
     if (e.ice) e.ice.visible = e.frozen > 0;
     if (!e.dead && e.capo && updCapo(e, dt * slow)) continue;
+    if (e.dead && m.userData.hdm) { e.deadT += dt; m.userData.hdm.die(); m.position.y = -Math.max(0, e.deadT - 3.1) * 0.8; if (e.deadT > 4.2) { scene.remove(m); e.gone = 1; } continue; }
     if (e.dead) { e.deadT += dt; m.rotation.x = Math.min(1.5, e.deadT * 4); m.position.y = -Math.max(0, e.deadT - 1.2) * 0.8; if (e.deadT > 2.6) { scene.remove(m); e.gone = 1; } continue; }
     if (e.ally > 0) { updAlly(e, dt); continue; }
     e.kick = Math.max(0, e.kick - dt); EP.torso.rotation.x = -e.kick * 1.4;
@@ -1031,9 +1043,14 @@ function update(dt) {
       e.walk += dt * e.spd * 2.2; animLimbs(m, e.walk, 0.55); EP.armR.rotation.x = -Math.sin(e.walk) * 0.45;
     } else {
       e.atk -= dt * slow; EP.armR.rotation.x = -1.4 + Math.sin(time * 12) * 0.4; EP.armL.rotation.x = -1.4 - Math.sin(time * 12) * 0.4;
-      if (e.atk <= 0) { e.atk = e.atkCd; hit(e.dmg); }
+      if (e.atk <= 0) { e.atk = e.atkCd; hit(e.dmg); } e.atkNow = 1;
     }
   }
+  /* mob realistici: animazione in base a come si sono mossi in questo frame */
+  for (const e of enemies) { const H = e.m.userData.hdm; if (!H || e.gone) continue;
+    const p0 = e.lp || e.m.position, sp = dt > 0 ? Math.hypot(e.m.position.x - p0.x, e.m.position.z - p0.z) / dt : 0; e.lp = e.m.position.clone();
+    const slow = slow0 * (e.frozen > 0 ? 0 : 1) * (e.slowT > 0 ? 0.35 : 1);
+    H.update(dt, { moving: sp > 0.25, speed: Math.max(sp, 0.5) / Math.max(0.2, slow), attacking: !!e.atkNow && !e.dead, atkCd: e.atkCd, slow, kick: e.kick }); e.atkNow = 0; }
   enemies = enemies.filter(e => !e.gone);
   /* oggetti ed effetti */
   for (const dr of drops) { dr.t -= dt; dr.m.rotation.y += dt * 2; dr.m.position.y = 0.6 + Math.sin(time * 4) * 0.1; if (dr.m.position.distanceTo(new V3(P.pos.x, 0.5, P.pos.z)) < 1.3) { pickup(dr); dr.t = 0; } if (dr.t <= 0) scene.remove(dr.m); }
@@ -1128,7 +1145,7 @@ function startGame(i) {
   if (pickWorld === 4 && mode === 'adv' && !seenBU) { seenBU = true; $('sel').hidden = true; showTale('buIntro', 'Scendi in piazza Garibaldi', () => startGame(i)); return; }
   if (pickWorld === 2 && mode === 'adv' && !seenHS) { seenHS = true; $('sel').hidden = true; showTale('hsIntro', 'Entra nel parcheggio', () => startGame(i)); return; }
   fullscreen();
-  charIdx = i; resetWorld(); world = pickWorld; applyLook(world); newPlayer(i);
+  charIdx = i; resetWorld(); world = pickWorld; preloadMobs(world); applyLook(world); newPlayer(i);
   if (world === 2) { P.pos.set(HS_START.x, 0, HS_START.z); yaw = HS_START.yaw; coins = HS_START_COINS; }
   if (world === 3) { P.pos.set(TR_START.x, 0, TR_START.z); yaw = TR_START.yaw; coins = TR_START_COINS; }
   if (world === 4) { P.pos.set(BU_START.x, 0, BU_START.z); yaw = BU_START.yaw; coins = BU_START_COINS; } state = 'play'; ['sel', 'dead', 'pause', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = false;

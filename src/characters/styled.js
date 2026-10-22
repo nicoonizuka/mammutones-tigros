@@ -625,6 +625,22 @@ const CONFIGS = [
       for (const sd of [-1, 1]) mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 14), hp, T, [sd * 0.09, 0.6, 0.07], [0, 0, Math.PI / 2]);
     },
   }),
+  /* 23 Mattia: 1,90 m, capelli castani mossi, occhiali da sole, giacca scura sopra la camicia bianca, pantaloni scuri, scarpe bianche */
+  () => human({
+    h: 1.9, w: 1.02, chest: 1.04, skin: '#e8bea0', top: '#22232a', pants: '#1e2028', shoe: '#f0f0f0', sole: '#cfcfcf', sleeve: 'long', cuff: '#1a1b20', hem: '#1a1b20', hair: '#4a3222', brow: 1,
+    hairFn: (H) => {
+      const c = [M('#4a3222', { roughness: 0.65 }), M('#5c4030', { roughness: 0.65 }), M('#3a2618', { roughness: 0.65 })];
+      hairCap(H, c[2], 0.142, 0.42); backHair(H, c[2]); seed = 231;
+      for (let i = 0; i < 46; i++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * 0.13, f = Math.sin(a) * rr; mesh(sph(0.04, 8, 6), c[i % 3], H, [Math.cos(a) * rr, 0.13 + rnd() * 0.035, f], [(rnd() - 0.5), a, (rnd() - 0.5)], [1, 0.6, 1.5]); }
+      fringe(H, c[0], 7, 232, 0.6);
+    },
+    extra: (G, T, H) => {
+      const black = M('#0d0e10', { roughness: 0.15, metalness: 0.4 });
+      for (const sd of [-1, 1]) { mesh(rbox(0.075, 0.048, 0.02, 0.012), black, H, [sd * 0.047, 0.012, 0.13]); mesh(rbox(0.012, 0.012, 0.13, 0.005), black, H, [sd * 0.124, 0.02, 0.07]); }
+      mesh(rbox(0.035, 0.012, 0.012, 0.005), black, H, [0, 0.025, 0.136]);
+      mesh(rbox(0.12, 0.34, 0.012, 0.01), M('#f2f2ee', { roughness: 0.7 }), T, [0, 0.42, 0.118]);
+    },
+  }),
 ];
 export function buildHuman(i) { return CONFIGS[i](); }
 

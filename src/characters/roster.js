@@ -21,6 +21,7 @@ export const POWERS = {
   collare:  { k: 'collare',  n: 'Collare',          d: 'I Mammutones vicini a Napo diventano suoi alleati e combattono al posto suo (non i boss)', dur: 10, cd: 30 },
   algerino: { k: 'algerino', n: "L'Algerino",       d: 'Per qualche secondo tutti i nemici hanno la vita dimezzata: ogni colpo vale doppio', dur: 7, cd: 26 },
   gratis:   { k: 'gratis',   n: 'Arma gratis',      d: 'La prossima arma che compri al muro non la paghi', dur: 0, cd: 45 },
+  messina: { k: 'messina', n: 'Dono del Messina', d: 'Tutti i nemici intorno a Mattia muoiono all\'istante (tranne i boss)', dur: 0, cd: 50 },
   freeze: { k: 'freeze', n: 'Rallentatore',        d: 'Tutti i nemici rallentano quasi fino a fermarsi',     dur: 7,  cd: 26 },
 };
 export const ROSTER = [
@@ -46,6 +47,8 @@ export const ROSTER = [
   { name: 'Napo',            short: 'Napo', c: '#6ac0a0', sprite: 17, model: 20, power: 'collare', hd: 'napo', world: 4, unlock: 'bar' },
   { name: 'Ali Debbah',      short: 'Ali', c: '#c0a0ff', sprite: 18, model: 21, power: 'algerino', hd: 'ali', world: 4, unlock: 'bar' },
   { name: 'DJ Gianfra',      short: 'Gianfra', c: '#5ad0ff', sprite: 19, model: 22, power: 'gratis', hd: 'gianfra', world: 4, unlock: 'busto' },
+  /* Mattia: si sblocca solo finendo il gioco (battendo il Re dei Mammutones) */
+  { name: 'Mattia',          short: 'Mattia', c: '#ff6aa8', sprite: 20, model: 23, power: 'messina', hd: 'mattia', world: 4, unlock: 'busto' },
 ];
 export const DAMIANO_MODEL = 12;
 export const LIBE_MODEL = 15;

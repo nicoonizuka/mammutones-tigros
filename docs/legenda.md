@@ -370,3 +370,13 @@ Alla fontana ci sono anche pistola, mitra, fucile a pompa, AK-47 e pompa automat
 
 ### Easter egg
 La Golf GT di Corti è parcheggiata davanti al Mac: premendo E la righi. Se lo fai prima dello scontro, Corti se ne accorge e invece di «la mia GT non l'hai toccata, vero?» ti dice «Hai rigato la mia GT?! Adesso sono cavoli tuoi!».
+
+## Aggiornamento: grafica realistica
+- Tutti i personaggi giocabili, Mirko e gli 11 nemici normali hanno il modello realistico (fatto con Meshy). Nel menu di pausa, "Grafica", si torna ai modelli classici.
+- I nemici hanno camminate, corse, attacchi e morti diverse per tipo; gli sgherri attaccano col tubo e col palo; i ratti e il ratto fachiro mordono con uno scatto in avanti e quando muoiono cadono di lato.
+- Si può installare come app (Android, PC, iPhone con "Aggiungi alla schermata Home").
+
+### Personaggio nuovo
+| Personaggio | Altezza | Potere | Come si sblocca |
+|---|---|---|---|
+| Mattia | 1,90 m | **Dono del Messina**: tutti i nemici entro 10 metri muoiono all'istante, tranne i boss (ricarica 50 s) | finendo il gioco: sconfiggi il Re dei Mammutones in Sardegna |
