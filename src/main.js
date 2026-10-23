@@ -28,6 +28,7 @@ import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoor
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
 import { initFx, muzzleFlash, updateFx, shake } from './render/fx.js';
+import { initLook, renderFrame, upgradeWorld, lookForWorld, followSun, updateLook, addGrass } from './render/look.js';
 
 const $ = id => document.getElementById(id);
 const V3 = THREE.Vector3;
@@ -66,7 +67,7 @@ const skinM = new THREE.MeshStandardMaterial({ color: '#e0b48e', roughness: 0.7 
 function buildVM() {
   while (vm.children.length) vm.remove(vm.children[0]);
   if (!P) return; const g = buildWeapon(P.weapons[P.cur].id); g.rotation.y = Math.PI; vm.add(g); vm.userData.gun = g;
-  const hand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), skinM); hand.position.set(0, -0.06, 0.02); vm.add(hand);
+  if (!g.userData.hdWeapon) { const hand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), skinM); hand.position.set(0, -0.06, 0.02); vm.add(hand); }
   vm.traverse(o => { if (o.isMesh) { o.castShadow = false; o.renderOrder = 10; } });
 }
 function hdLabel() { $('hdbtn').textContent = hdOn ? 'Grafica: realistica' : 'Grafica: classica'; }
@@ -956,11 +957,13 @@ function loop(t) {
   requestAnimationFrame(loop); const dt = Math.min(window.__dtMax || 0.05, (t - last) / 1000); last = t;
   pollPad(); if (pad.connected) padMenus(dt);
   if (touchUI) { const show = state === 'play'; if (touchUI.hidden === show) touchUI.hidden = !show; if (!show) { touch.fire = false; touch.mx = touch.my = 0; } }
-  if (state === 'play') { time += dt; update(dt); }
+  if (state === 'play') { time += dt; update(dt); followSun(P.pos); }
+  updateLook(dt);
   if (state === 'dead' && pModel && pModel.userData.hd) pModel.userData.hd.update(dt, { dir: new V3(-Math.sin(yaw), 0, -Math.cos(yaw)) });
   else { time += dt * 0.3; if (state === 'menu') vm.visible = false; if (state === 'menu') { if (world === 4) { camera.position.set(BX + Math.sin(time * 0.2) * 30, 15, 36 + Math.cos(time * 0.2) * 6); camera.lookAt(BX, 5, 2); } else if (world === 3) { camera.position.set(TX + Math.sin(time * 0.2) * 28, 12, 24 + Math.cos(time * 0.2) * 6); camera.lookAt(TX, 4, -14); } else if (world === 2) { camera.position.set(OX + Math.sin(time * 0.2) * 26, 11, 24 + Math.cos(time * 0.2) * 5); camera.lookAt(OX - 4, 3, 0); } else { camera.position.set(Math.sin(time * 0.2) * 30, 14, 20 + Math.cos(time * 0.2) * 6); camera.lookAt(0, 2, -8); } } }
-  updateSky(sky, camera, dt); renderer.render(scene, camera);
-  if (vm.visible && state === 'play') { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(vmScene, camera); renderer.autoClear = ac; }
+  updateSky(sky, camera, dt);
+  const vmOn = vm.visible && state === 'play'; if (vmOn) { vmRoot.position.copy(camera.position); vmRoot.quaternion.copy(camera.quaternion); }
+  renderFrame(scene, camera, vmScene, vmOn);
 }
 function update(dt) {
   /* ondate */
@@ -1242,7 +1245,7 @@ function showEnding(real, wf) {
   $('endunlock').hidden = !(real && lastUnlock); if (real && lastUnlock) $('endunlock').textContent = 'Hai sbloccato ' + lastUnlock.name + '!' + (world === 1 ? ' E da adesso puoi giocare anche con Tefalin e Diego.' : ''); lastUnlock = null;
   $('ending').hidden = false; menuIdx = 0;
 }
-function applyLook(w) { applyWorldLook(w); if (skyRef) setSky(skyRef, w); }
+function applyLook(w) { applyWorldLook(w); if (skyRef) setSky(skyRef, w); lookForWorld(w); }
 function showWorld() {
   $('ending').hidden = true; $('sel').hidden = true; $('world').hidden = false; menuIdx = 0;
   const open = hsOpen(), done = !!unlocks.hs;
@@ -1398,7 +1401,12 @@ if (isTouch) {
 /* unisce la scenografia ferma (lasciando fuori porte, barriere e scudo) */
 initFx(scene);
 const sky = makeSky(scene); setSky(sky, 1); skyRef = sky;
+/* grafica nuova: dettaglio sulle superfici, chiome di foglie, asfalto bagnato (prima di unire le mesh ferme) */
+{ const wetHsl = {}; upgradeWorld(scene, o => { const m = o.material; if (!m || !m.color || !o.geometry) return false; const ty = o.geometry.type; if (ty !== 'PlaneGeometry' && ty !== 'BoxGeometry') return false;
+    m.color.getHSL(wetHsl); const p = o.geometry.parameters || {}; const big = (p.width || 0) * (p.height || p.depth || 0) > 60; return big && wetHsl.l < 0.42 && wetHsl.s < 0.2; }); }
 bakeStatic(scene, [DAMIANO_NPC.m, storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim, buSeal]);
+initLook(renderer, scene, camera, vmScene);
+addGrass(scene, { x1: SARD.x1 + 2, x2: SARD.x2 - 2, z1: SARD.z1 + 2, z2: SARD.z2 - 2 }, '#8aa04e', 14000);
 /* Damiano seduto nella Mercedes: modello realistico in posa seduta (fissa, non si anima) */
 if (hdOn && DAMIANO_NPC.m) loadHD('damiano').then(h => {
   const D = DAMIANO_NPC.m; D.traverse(x => { if (x.isMesh) x.visible = false; }); D.add(h.root); h.root.position.y = 0.12; h.root.updateMatrixWorld(true);
