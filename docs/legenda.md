@@ -395,3 +395,6 @@ La Golf GT di Corti è parcheggiata davanti al Mac: premendo E la righi. Se lo f
 | Loris, Re dei Mammutones | 5 m | urlo all'arrivo, lancio a due mani, pestone |
 
 Anche gli amici liberati nelle scene, gli albanesi di Tefalin (con l'AK) e Damiano nella Mercedes sono realistici.
+
+### Armi realistiche
+Tutte le armi sono modelli Meshy (pistola, pistola automatica, Desert Eagle, fucile, pompa, pompa automatico, AK-47, AR, mitra, mitragliatore, minigun, cecchino dorato, bazooka, katana), sia in terza che in prima persona e in mano a Mirko e agli albanesi. Anche i panini di Corti, i campanacci di Loris, le sigarette di Pika e i pipistrelli di Bulegato (con le ali che sbattono e il morso) sono realistici. Granate e lancia di Fabio restano quelle di prima.

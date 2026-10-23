@@ -9,6 +9,9 @@ import { isTouch, touch, initTouch, takeLook } from './input/touch.js';
 const SPR = SPRITES.map(c => c.fn());
 import { loadHD, preloadHD, hdOn, setHD } from './characters/hd.js';
 import { preloadMobs, makeMob, makeBoss } from './characters/hdmob.js';
+import { preloadWeapons, propify, makeBatHD } from './characters/hdweapons.js';
+/* armi realistiche: appena scaricate, rivesti l'arma in mano */
+preloadWeapons().then(() => { if (P && pModel) equip(); });
 import { buildHuman, buildEnemy, buildWeapon, buildFabBoss, buildLoris, buildCapo, buildWell, buildFabio, buildPikaBoss, buildCortiBoss, buildProgno, buildLorisRe } from './characters/styled.js';
 import { TX, TRB, CASA, GARAGE, inCasa, inGarage, trRegion, TR_ORDER, TR_GATE, TR_GDOOR, TR_START, FAB_SPOT3, WELL_SPOT, FABIO_SPOT, PIKA_SPOT_G, PIKA_SPOT_C, LIFT, CASA_START, TR_SPAWNS, TR_BUYS, trGate, trGateSolid, trGDoor, trGDoorSolid, CAGES, liftLed, updateTR, trFx, TR_PANEL, trPanelLed, PAUL, paulM } from './world/tribunale.js';
 import { hemi } from './render/engine.js';
@@ -467,7 +470,7 @@ function casaScene() {
 /* pacchetti di sigarette lanciati da Pika: atterrano dove eri, se ti sposti li schivi */
 function pikaThrow(e) {
   if (e.m.userData.hdm) e.m.userData.hdm.throw();
-  const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.07), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.162, 0.08, 0.072), packM[1]); top.position.y = 0.08; g.add(top);
+  const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.07), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.162, 0.08, 0.072), packM[1]); top.position.y = 0.08; g.add(top); propify(g, 'sigarette');
   const from = e.m.position.clone(); from.y += 1.6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.4;
   hostile.push({ m: g, from, to, t: 0, T: 0.55 + from.distanceTo(to) * 0.03 }); tone(500, 0.08, 'triangle', 0.04, 260);
   const A = e.m.userData.P.armL; A.rotation.x = -2.6; setTimeout(() => { A.rotation.x = 0; }, 180);
@@ -476,7 +479,7 @@ function pikaThrow(e) {
 const bellM = new THREE.MeshStandardMaterial({ color: '#c8a03a', roughness: 0.3, metalness: 0.85 });
 function lorisThrow(e) {
   if (e.m.userData.hdm) e.m.userData.hdm.throw();
-  const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 0.22, 12, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bellM); top.position.y = 0.11; g.add(top);
+  const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 0.22, 12, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bellM); top.position.y = 0.11; g.add(top); propify(g, 'campanaccio');
   const from = e.m.position.clone(); from.y += 2.2; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.7;
   hostile.push({ m: g, from, to, t: 0, T: 0.5 + from.distanceTo(to) * 0.025, bell: 1, arc: 1.2 }); bell(); const A = e.m.userData.P.armR; A.rotation.x = -2.8; setTimeout(() => { A.rotation.x = 0; }, 180);
 }
@@ -674,14 +677,14 @@ function updBU4(dt) {
 const bunM = new THREE.MeshStandardMaterial({ color: '#d8963a', roughness: 0.6 }), meatM = new THREE.MeshStandardMaterial({ color: '#5a2e1a', roughness: 0.8 });
 function cortiThrow(e) {
   if (e.m.userData.hdm) e.m.userData.hdm.throw();
-  const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bunM); t.scale.set(1, 0.6, 1); t.position.y = 0.06; g.add(t); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 12), meatM)); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 12), bunM); b.position.y = -0.06; g.add(b);
+  const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bunM); t.scale.set(1, 0.6, 1); t.position.y = 0.06; g.add(t); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 12), meatM)); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 12), bunM); b.position.y = -0.06; g.add(b); propify(g, 'panino');
   const from = e.m.position.clone(); from.y += 2.6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.8;
   hostile.push({ m: g, from, to, t: 0, T: 0.45 + from.distanceTo(to) * 0.028, burger: 1, arc: 1.4 }); tone(400, 0.08, 'triangle', 0.04, 220);
   const A = e.m.userData.P.armL; A.rotation.x = -2.6; setTimeout(() => { A.rotation.x = 0; }, 200);
 }
 function reThrow(e) {
   if (e.m.userData.hdm) e.m.userData.hdm.throw();
-  const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.5, 0.7, 14, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), bellM); top.position.y = 0.35; g.add(top);
+  const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.5, 0.7, 14, 1, true), bellM); g.add(b); const top = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), bellM); top.position.y = 0.35; g.add(top); propify(g, 'campanaccio');
   const from = e.m.position.clone(); from.y += 6; g.position.copy(from); scene.add(g); const to = P.pos.clone(); to.y = 0.5;
   hostile.push({ m: g, from, to, t: 0, T: 0.7 + from.distanceTo(to) * 0.025, big: 1, arc: 3 }); bell(); tone(120, 0.4, 'sawtooth', 0.06, 70);
 }
@@ -729,21 +732,26 @@ function makeBat() {
 }
 function callBats() {
   bats.forEach(b => scene.remove(b.m)); bats = [];
-  for (let k = 0; k < 3; k++) { const m = makeBat(); m.position.copy(P.pos).add(new V3(Math.cos(k * 2.1) * 1.2, 1.8, Math.sin(k * 2.1) * 1.2)); scene.add(m); bats.push({ m, k, t: P.pw.dur, cd: k * 0.15, flap: k }); }
+  for (let k = 0; k < 3; k++) { const m = makeBatHD(0.8) || makeBat(); m.position.copy(P.pos).add(new V3(Math.cos(k * 2.1) * 1.2, 1.8, Math.sin(k * 2.1) * 1.2)); scene.add(m); bats.push({ m, k, t: P.pw.dur, cd: k * 0.15, flap: k }); }
   banner('I pipistrelli del re dei vampiri!', 'Bulegato evoca tre pipistrelli'); tone(1800, 0.3, 'square', 0.04, 900);
 }
 function updBats(dt) {
   for (const b of bats) {
-    b.t -= dt; const m = b.m; b.flap += dt * 22; m.userData.wings.forEach((w, i) => (w.rotation.z = Math.sin(b.flap) * 0.9 * (i ? -1 : 1)));
+    b.t -= dt; const m = b.m; b.flap += dt * (b.bite > 0 ? 30 : 20); m.userData.wings.forEach((w, i) => (w.rotation.z = Math.sin(b.flap) * 0.85 * (i ? -1 : 1)));
     if (b.t <= 0) { m.scale.multiplyScalar(0.9); m.position.y += dt * 3; if (m.scale.x < 0.05) { scene.remove(m); b.gone = 1; } continue; }
     let tgt = null, bd = 22; for (const e of enemies) { if (e.dead) continue; const d = e.m.position.distanceTo(P.pos); if (d < bd) { bd = d; tgt = e; } }
     b.cd -= dt; let goal;
     if (tgt) { goal = tgt.m.userData.hit.head.getWorldPosition(new V3()); goal.y -= 0.1; }
     else goal = P.pos.clone().add(new V3(Math.cos(time * 2 + b.k * 2.1) * 1.4, 1.9, Math.sin(time * 2 + b.k * 2.1) * 1.4));
     const to = goal.clone().sub(m.position); const d = to.length();
-    if (tgt && d < 0.7 && b.cd <= 0) { b.cd = 0.35; damageEnemy(tgt, tgt.boss ? 16 : 32, false); spark(goal, true); m.position.add(to.clone().normalize().multiplyScalar(-1.2)); m.position.y += 0.4; }
-    else if (d > 0.05) { m.position.addScaledVector(to.normalize(), Math.min(d, 10 * dt)); }
+    if (tgt && d < 0.7 && b.cd <= 0) { b.cd = 0.35; b.bite = 0.3; damageEnemy(tgt, tgt.boss ? 16 : 32, false); spark(goal, true); b.back = to.clone().normalize().multiplyScalar(-1.2); b.back.y += 0.4; }
+    /* volo morbido: velocita' che segue piano la direzione, piccolo su e giu' a ogni battito; dopo il morso torna indietro di scatto */
+    if (b.back) { const st = b.back.clone().multiplyScalar(Math.min(1, dt * 9)); m.position.add(st); b.back.sub(st); if (b.back.lengthSq() < 0.001) b.back = null; }
+    else if (d > 0.05) { b.v = (b.v || new V3()).lerp(to.clone().normalize().multiplyScalar(Math.min(10, d * 6)), Math.min(1, dt * 5)); m.position.addScaledVector(b.v, dt); }
+    m.position.y += Math.sin(b.flap) * 0.006;
     m.lookAt(goal);
+    /* morso: testa in avanti e giu' */
+    if (b.bite > 0) { b.bite -= dt; if (m.userData.body) m.userData.body.rotation.x = Math.sin(Math.max(0, b.bite) / 0.3 * Math.PI) * 0.6; } else if (m.userData.body) m.userData.body.rotation.x = 0;
   }
   if (bats.length && bats.every(b => b.gone)) bats = [];
 }
@@ -754,7 +762,7 @@ function updCigs(dt) {
   if (P && P.pwT > 0 && P.pw.k === 'sigarette') {
     cigT -= dt;
     if (cigT <= 0) { let tgt = null, bd = 24; for (const e of enemies) { if (e.dead) continue; const d = e.m.position.distanceTo(P.pos); if (d < bd) { bd = d; tgt = e; } }
-      if (tgt) { cigT = 0.42; const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.2, 0.06), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.142, 0.07, 0.062), packM[1]); top.position.y = 0.07; g.add(top);
+      if (tgt) { cigT = 0.42; const g = new THREE.Group(); const box = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.2, 0.06), packM[0]); g.add(box); const top = new THREE.Mesh(new THREE.BoxGeometry(0.142, 0.07, 0.062), packM[1]); top.position.y = 0.07; g.add(top); propify(g, 'sigarette');
         g.position.copy(P.pos); g.position.y += 1.4; scene.add(g); cigs.push({ m: g, from: g.position.clone(), tgt, t: 0, T: 0.25 + bd * 0.025 }); tone(600, 0.06, 'triangle', 0.03, 300);
         const A = pModel.userData.P.armL; A.rotation.x = -2.4; setTimeout(() => { A.rotation.x = 0; }, 150); } else cigT = 0.15; }
   }
@@ -1405,5 +1413,5 @@ if (hdOn && DAMIANO_NPC.m) loadHD('damiano').then(h => {
 applyLook(1); setWorld(1);
 
 /* per i test automatici e il debug dalla console */
-window.__game = { cam: camera, scene, get pModel() { return pModel; }, setState(s) { state = s; }, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; }, get bu() { return bu; }, buTeleport, openSeal, ringBell, goSard, goCata, get unlocks() { return unlocks; } };
+window.__game = { cam: camera, scene, get pModel() { return pModel; }, give: id => giveWeapon(id), get bats() { return bats; }, setState(s) { state = s; }, solids, models: () => rescues.map(r => r.m), rescue: (m, n, t) => rescue(m, n, t), hurtEnemy: (e, d) => damageEnemy(e, d, false), setWorld, get world() { return world; }, unlock(k) { unlocks[k] = 1; renderPick(); }, set god(v) { god = v; }, usePower, spawnBoss: k => spawnBoss(k), openZone: i => openZone(i), get GEN() { return GENERATORS; }, set power(v) { power = v; }, get boss() { return boss; }, get info() { return renderer.info.render; }, get P() { return P; }, get enemies() { return enemies; }, get coins() { return coins; }, set coins(v) { coins = v; }, get wave() { return wave; }, spawnEnemy, shoot, useInter, startGame, get zone() { return zone; }, setAim(y, p) { yaw = y; pitch = p; }, get yaw() { return yaw; }, spawnBottle, drinkBottle, get bottle() { return bottle; }, get buff() { return buff; }, setBuff(k) { buff = { k, n: k, t: 15 }; }, openBox, get boxes() { return boxes3d; }, get keys() { return keys; }, get hostile() { return hostile; }, get bu() { return bu; }, buTeleport, openSeal, ringBell, goSard, goCata, get unlocks() { return unlocks; } };
 requestAnimationFrame(loop);

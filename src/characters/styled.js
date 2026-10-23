@@ -59,7 +59,10 @@ function finish(G) {
 }
 
 /* ---------- armi ---------- */
-export function buildWeapon(id) {
+/* le armi realistiche (hdweapons.js) si agganciano qui: ricevono l'arma a blocchi e la vestono col modello vero */
+export const weaponHook = { fn: null };
+export function buildWeapon(id) { const g = buildWeapon0(id); return weaponHook.fn ? weaponHook.fn(id, g) : g; }
+function buildWeapon0(id) {
   const g = new THREE.Group(); const dark = M('#2a2d33', { roughness: 0.4, metalness: 0.55 });
   if (id === 'minigun') {
     const st = M('#3a3d44', { roughness: 0.35, metalness: 0.8 });
