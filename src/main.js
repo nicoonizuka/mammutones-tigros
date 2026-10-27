@@ -28,7 +28,7 @@ import { inOffice, WARE, inWare, WARE_SPAWNS, GENERATORS, officeDoor, officeDoor
 import './world/basement.js';
 import { BASE, inBasement, BASE_START, BASE_ESCALATOR, PANEL, LAIR, BASE_SPAWNS, panelLed, updateBasement } from './world/basement.js';
 import { initFx, muzzleFlash, updateFx, shake } from './render/fx.js';
-import { initLook, renderFrame, upgradeWorld, lookForWorld, followSun, updateLook, addGrass } from './render/look.js';
+import { initLook, renderFrame, upgradeWorld, lookForWorld, followSun, updateLook, addGrass, cycleQuality, quality } from './render/look.js';
 
 const $ = id => document.getElementById(id);
 const V3 = THREE.Vector3;
@@ -59,7 +59,10 @@ const gzOpen = () => zone >= 1;
 /* ===================== GIOCATORE E ARMI ===================== */
 function newWeapon(id) { const W = WEAPONS[id]; return { ...W, id, ammo: W.mag, res: W.res }; }
 /* ---------- prima persona: arma davanti alla camera ---------- */
-let fp = false; try { fp = localStorage.getItem('mt_fp') === '1'; } catch (_) {}
+let camMode = 0; try { camMode = +(localStorage.getItem('mt_cam') || (localStorage.getItem('mt_fp') === '1' ? 1 : 0)) || 0; } catch (_) {}
+let fp = camMode === 1;
+/* da dove partono i colpi: dalla telecamera, tranne nella visuale frontale (lì la telecamera ti guarda in faccia) */
+const aimO = new V3(), aimD = new V3(0, 0, -1);
 /* l'arma in prima persona sta in una scena a parte disegnata sopra a tutto: cosi' non entra mai nei muri */
 const vmScene = new THREE.Scene(), vmRoot = new THREE.Group(), vm = new THREE.Group(); vmScene.add(vmRoot); vmRoot.add(vm); let vmKick = 0;
 vmScene.add(new THREE.HemisphereLight('#fff4e0', '#5a5048', 1.1)); { const dl = new THREE.DirectionalLight('#ffffff', 1.4); dl.position.set(1, 2, 1.5); vmScene.add(dl); }
@@ -71,7 +74,11 @@ function buildVM() {
   vm.traverse(o => { if (o.isMesh) { o.castShadow = false; o.renderOrder = 10; } });
 }
 function hdLabel() { $('hdbtn').textContent = hdOn ? 'Grafica: realistica' : 'Grafica: classica'; }
-function setFP(on) { fp = on; try { localStorage.setItem('mt_fp', on ? '1' : '0'); } catch (_) {} if (state === 'play') feed(on ? 'Visuale in prima persona' : 'Visuale in terza persona'); }
+function setFP(on) { setCam(on ? 1 : 0); }
+function setCam(m) { camMode = m; fp = m === 1; try { localStorage.setItem('mt_cam', String(m)); localStorage.setItem('mt_fp', fp ? '1' : '0'); } catch (_) {}
+  if (state === 'play') feed(m === 1 ? 'Visuale in prima persona' : m === 2 ? 'Visuale frontale: ti vedi in faccia' : 'Visuale in terza persona'); const c = document.getElementById('cross'); if (c) c.style.visibility = m === 2 ? 'hidden' : ''; }
+const nextCam = () => setCam((camMode + 1) % 3);
+if (camMode === 2) { const c0 = document.getElementById('cross'); if (c0) c0.style.visibility = 'hidden'; }
 function equip() {
   buildVM();
   const hd = pModel.userData.hd;
@@ -186,9 +193,9 @@ function shoot() {
   if (w.thrown) { throwGrenade(w); return; }
   const aimPow = P.pwT > 0 && P.pw.k === 'aim';
   fireT = w.rate * (aimPow ? 0.6 : 1); shotSound(w.sound); muzzleFlash(muzzle()); shake(w.pel > 1 ? 0.18 : w.dmg > 50 ? 0.12 : 0.04);
-  const camDir = new V3(); camera.getWorldDirection(camDir); let assist = null;
-  if (aimPow) { let best = 0.17; for (const e of enemies) { if (e.dead) continue; const hp = e.m.userData.hit.head.getWorldPosition(new V3()); const a = hp.clone().sub(camera.position).normalize().angleTo(camDir); if (a < best) { best = a; assist = hp; } } }
-  if (!assist && isTouch) { let best = 0.075; for (const e of enemies) { if (e.dead) continue; const hp = e.m.userData.hit.body.getWorldPosition(new V3()); const a = hp.clone().sub(camera.position).normalize().angleTo(camDir); if (a < best) { best = a; assist = hp; } } }
+  const camDir = aimD.clone(); let assist = null;
+  if (aimPow) { let best = 0.17; for (const e of enemies) { if (e.dead) continue; const hp = e.m.userData.hit.head.getWorldPosition(new V3()); const a = hp.clone().sub(aimO).normalize().angleTo(camDir); if (a < best) { best = a; assist = hp; } } }
+  if (!assist && isTouch) { let best = 0.075; for (const e of enemies) { if (e.dead) continue; const hp = e.m.userData.hit.body.getWorldPosition(new V3()); const a = hp.clone().sub(aimO).normalize().angleTo(camDir); if (a < best) { best = a; assist = hp; } } }
   if (!assist) {
     let bd = 2.6; const pf = new V3(-Math.sin(yaw), 0, -Math.cos(yaw));
     for (const e of enemies) { if (e.dead) continue; const to = e.m.position.clone().sub(P.pos); to.y = 0; const d = to.length(); if (d < bd && to.normalize().dot(pf) > 0.55) { bd = d; assist = e.m.userData.hit.body.getWorldPosition(new V3()); } }
@@ -197,11 +204,11 @@ function shoot() {
   const dbl = P.pwT > 0 && P.pw.k === 'double'; const pellets = w.pel * (dbl ? 2 : 1);
   for (let k = 0; k < pellets; k++) {
     let dir;
-    if (assist) { dir = assist.clone().sub(camera.position).normalize(); if (k > 0) { dir.x += (Math.random() - 0.5) * 0.02; dir.y += (Math.random() - 0.5) * 0.02; dir.normalize(); } }
+    if (assist) { dir = assist.clone().sub(aimO).normalize(); if (k > 0) { dir.x += (Math.random() - 0.5) * 0.02; dir.y += (Math.random() - 0.5) * 0.02; dir.normalize(); } }
     else { const sp = w.spread + (dbl && k > 0 ? 0.012 : 0); dir = camDir.clone(); dir.x += (Math.random() - 0.5) * sp * 2; dir.y += (Math.random() - 0.5) * sp * 2; dir.z += (Math.random() - 0.5) * sp * 2; dir.normalize(); }
-    ray.set(camera.position, dir); ray.far = 90;
+    ray.set(aimO, dir); ray.far = 90;
     const hits = ray.intersectObjects(targets, false);
-    let end = camera.position.clone().add(dir.clone().multiplyScalar(60)); const hitE = new Set();
+    let end = aimO.clone().add(dir.clone().multiplyScalar(60)); const hitE = new Set();
     for (const h of hits) {
       const e = h.object.userData.enemy; if (!e) { end = h.point; spark(h.point, false); break; }
       if (e.dead || hitE.has(e)) continue; hitE.add(e);
@@ -693,8 +700,8 @@ function reThrow(e) {
 let nades = [];
 function throwGrenade(w) {
   fireT = w.rate; tone(500, 0.08, 'triangle', 0.04, 260);
-  const camDir = new V3(); camera.getWorldDirection(camDir); ray.set(camera.position, camDir); ray.far = 34;
-  const hits = ray.intersectObjects(hitTargets(), false); let to = hits.length ? hits[0].point.clone() : camera.position.clone().add(camDir.clone().multiplyScalar(24));
+  const camDir = aimD.clone(); ray.set(aimO, camDir); ray.far = 34;
+  const hits = ray.intersectObjects(hitTargets(), false); let to = hits.length ? hits[0].point.clone() : aimO.clone().add(camDir.clone().multiplyScalar(24));
   to.y = Math.max(0.2, Math.min(to.y, 2)); const from = muzzle();
   const m = buildWeapon('granate'); m.scale.setScalar(2); m.position.copy(from); scene.add(m);
   nades.push({ m, from, to, t: 0, T: 0.35 + from.distanceTo(to) * 0.03, dmg: w.dmg * (P.pwT > 0 && (P.pw.k === 'rage' || P.pw.k === 'speed') ? (P.pw.k === 'rage' ? 2 : 1.8) : 1), R: w.explode });
@@ -864,7 +871,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Tab' || e.code === 'KeyI') { e.preventDefault(); openInv(); return; }
   if (e.code === 'Digit1') switchWeapon(0); if (e.code === 'Digit2') switchWeapon(1);
   if (e.code === 'KeyP') pauseGame();
-  if (e.code === 'KeyV') setFP(!fp);
+  if (e.code === 'KeyV') nextCam();
   if (e.code === 'Space' && onGround()) P.vy = 6.9;
   if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
 });
@@ -985,7 +992,7 @@ function update(dt) {
   if (pad.connected) {
     mv.addScaledVector(fwd, -pad.ly).addScaledVector(right, pad.lx);
     yaw -= pad.rx * 2.6 * dt; pitch = Math.max(-1.1, Math.min(0.9, pitch - pad.ry * 1.9 * dt));
-    if (pad.pressed[11]) setFP(!fp);
+    if (pad.pressed[11]) nextCam();
     if (pad.pressed[BTN.L3]) sprintToggle = !sprintToggle; if (Math.hypot(pad.lx, pad.ly) < 0.2) sprintToggle = false; padSprint = sprintToggle;
     if (pad.pressed[BTN.UP]) usePack(); if (pad.pressed[8] || pad.pressed[16] || pad.pressed[17]) { openInv(); return; }
     if (pad.pressed[BTN.SQUARE]) startReload(); if (pad.pressed[BTN.CIRCLE]) useInter(); if (pad.pressed[BTN.L1] || pad.pressed[BTN.R1]) usePower();
@@ -1012,7 +1019,8 @@ function update(dt) {
   if (pModel.userData.hd) { const hd = pModel.userData.hd, mn = moving ? mv.clone().normalize() : mv;
     P.moving = moving; hd.update(dt, { moving, running, speed: spd, f: mn.dot(fwd), side: mn.dot(right), air: P.pos.y > gY + 0.08, reloadT: P.reloadT, shooting: time - (P.shotT || -9) < 0.6, pitch, dir: d, fast: P.pwT > 0 && P.pw.k === 'speed' }); }
   const head = P.pos.clone(); head.y += pModel.userData.hd ? 1.78 : pModel.userData.height * 0.92;
-  const cam = head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + 0.15);
+  const front = camMode === 2;
+  const cam = front ? head.clone().addScaledVector(fwd, 2.9).addScaledVector(right, -0.35) : head.clone().sub(d.clone().multiplyScalar(3.4)).add(right.clone().multiplyScalar(0.85)); cam.y = Math.max(0.4, cam.y + (front ? 0.05 : 0.15));
   if (world === 4) { const A = inMac(P.pos) ? MACIN : inChiesa(P.pos) ? CHIESA : inCata(P.pos) ? CATA : null;
     if (A) { cam.x = Math.max(A.x1 + 0.4, Math.min(A.x2 - 0.4, cam.x)); cam.z = Math.max(A.z1 + 0.4, Math.min(A.z2 - 0.4, cam.z)); cam.y = Math.min(A.ceil - 0.3, cam.y); }
     else { const Bb = inSard(P.pos) ? SARD : BUB; cam.x = Math.max(Bb.x1 + 0.6, Math.min(Bb.x2 - 0.6, cam.x)); cam.z = Math.max(Bb.z1 + 0.6, Math.min(Bb.z2 - 0.6, cam.z));
@@ -1029,7 +1037,8 @@ function update(dt) {
   if (fp) { cam.copy(P.pos); cam.y += pModel.userData.height * 0.9; }
   pModel.visible = !fp; vm.visible = fp;
   if (fp) { vmKick = Math.max(0, vmKick - dt * 6); const bob = moving ? Math.sin(P.walk * 2) * 0.012 : 0; vm.position.set(0.16, -0.15 + bob, -0.36 + vmKick * 0.08); vm.scale.setScalar(0.62); vm.rotation.set(vmKick * 0.25 + (P.reloadT > 0 ? -0.6 : 0), 0, 0); }
-  camera.position.copy(cam); camera.lookAt(cam.clone().add(d)); updateFx(dt, camera, P.pos, world === 4 ? inCata(P.pos) : inBasement(P.pos));
+  camera.position.copy(cam); if (front) camera.lookAt(head.x, head.y - 0.15, head.z); else camera.lookAt(cam.clone().add(d));
+  if (front) { aimO.copy(head); aimD.copy(d); } else { aimO.copy(camera.position); camera.getWorldDirection(aimD); } updateFx(dt, camera, P.pos, world === 4 ? inCata(P.pos) : inBasement(P.pos));
   /* sparo */
   fireT -= dt; const w = P.weapons[P.cur]; if ((mouseDown || pad.fire || touch.fire) && w.auto && fireT <= 0) shoot();
   if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { const n = Math.min(w.mag - w.ammo, w.res); w.ammo += n; w.res -= n; P.reloadT = 0; } }
@@ -1202,7 +1211,7 @@ function startGame(i) {
   }
   lock(); banner('Sopravvivi al parcheggio', 'Al muro del Tigros trovi le munizioni della pistola'); audio();
 }
-function pauseGame() { if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
+function pauseGame() { try { qLabel(); } catch (_) {} if (state !== 'play') return; state = 'pause'; $('pause').hidden = false; mouseDown = false; }
 function resume() { state = 'play'; $('pause').hidden = true; last = performance.now(); lock(); }
 function gameOver(title, msg) {
   if (pModel && pModel.userData.hd) { pModel.userData.hd.die(); pModel.userData.hd.update(0.001, { dir: new V3(0, 0, -1) }); }
@@ -1278,6 +1287,8 @@ document.querySelectorAll('[data-node]').forEach(n => n.addEventListener('click'
 const hsOpen = () => !!unlocks.loris || !!unlocks.hs;
 function toMenu() { state = 'menu'; resetWorld(); world = pickWorld; applyLook(world); if (pModel) { scene.remove(pModel); pModel = null; } ['dead', 'pause', 'ending', 'world', 'tale'].forEach(id => ($(id).hidden = true)); $('hud').hidden = true; $('sel').hidden = false; }
 $('buyPack').onclick = () => invBuy('pack'); $('usePack').onclick = () => invBuy('use'); $('buyBag').onclick = () => invBuy('bag'); $('closeInv').onclick = closeInv;
+function qLabel() { const q = quality(); $('qbtn').textContent = 'Qualità: ' + (q.pref === 'auto' ? 'automatica (' + q.name + ')' : q.name); }
+$('qbtn').onclick = () => { cycleQuality(); qLabel(); };
 $('hdbtn').onclick = () => { setHD(!hdOn); hdLabel(); if (P) applyModel(charIdx); }; hdLabel();
 $('resume').onclick = resume; $('quit').onclick = toMenu; $('again').onclick = () => startGame(charIdx); $('change').onclick = toMenu;
 
@@ -1389,7 +1400,7 @@ const touchUI = initTouch({
   fire: () => { if (state === 'play' && fireT <= 0) shoot(); }, jump: () => { if (state === 'play' && onGround()) P.vy = 6.9; },
   reload: () => state === 'play' && startReload(), power: () => state === 'play' && usePower(), use: () => state === 'play' && useInter(),
   swap: () => { if (state === 'play' && P.weapons.length > 1) switchWeapon(1 - P.cur); }, inv: () => state === 'play' && openInv(),
-  view: () => setFP(!fp), pause: () => pauseGame(),
+  view: () => nextCam(), pause: () => pauseGame(),
 });
 if (isTouch) {
   document.body.classList.add('touch');
@@ -1406,7 +1417,7 @@ const sky = makeSky(scene); setSky(sky, 1); skyRef = sky;
     m.color.getHSL(wetHsl); const p = o.geometry.parameters || {}; const big = (p.width || 0) * (p.height || p.depth || 0) > 60; return big && wetHsl.l < 0.42 && wetHsl.s < 0.2; }); }
 bakeStatic(scene, [DAMIANO_NPC.m, storeDoor, gzBar, shieldMesh, panelLed, wareDoor, officeDoor, hsDoor, trGate, trGDoor, liftLed, trFx, trPanelLed, paulM, ...CAGES.map(c => c.group), ...GENERATORS.map(g => g.led), ...buAnim, buSeal]);
 initLook(renderer, scene, camera, vmScene);
-addGrass(scene, { x1: SARD.x1 + 2, x2: SARD.x2 - 2, z1: SARD.z1 + 2, z2: SARD.z2 - 2 }, '#8aa04e', 14000);
+addGrass(scene, { x1: SARD.x1 + 2, x2: SARD.x2 - 2, z1: SARD.z1 + 2, z2: SARD.z2 - 2 }, '#8aa04e', 7000);
 /* Damiano seduto nella Mercedes: modello realistico in posa seduta (fissa, non si anima) */
 if (hdOn && DAMIANO_NPC.m) loadHD('damiano').then(h => {
   const D = DAMIANO_NPC.m; D.traverse(x => { if (x.isMesh) x.visible = false; }); D.add(h.root); h.root.position.y = 0.12; h.root.updateMatrixWorld(true);

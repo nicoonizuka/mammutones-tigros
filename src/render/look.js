@@ -24,9 +24,9 @@ let composer = null, vmPass = null, bloom = null, grade = null, R = null;
 
 /* ---------- ritocco finale dell'immagine ---------- */
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, exposure: { value: 1.0 }, contrast: { value: 1.06 }, saturation: { value: 1.06 }, vignette: { value: 0.32 }, grain: { value: 0.025 }, tint: { value: new THREE.Color(1, 1, 1) }, time: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, texel: { value: new THREE.Vector2(1 / 1280, 1 / 720) }, sharp: { value: 0.35 }, exposure: { value: 1.0 }, contrast: { value: 1.06 }, saturation: { value: 1.06 }, vignette: { value: 0.32 }, grain: { value: 0.025 }, tint: { value: new THREE.Color(1, 1, 1) }, time: { value: 0 } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float exposure, contrast, saturation, vignette, grain, time; uniform vec3 tint; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 texel; uniform float sharp; uniform float exposure, contrast, saturation, vignette, grain, time; uniform vec3 tint; varying vec2 vUv;
     vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
     vec3 aces(vec3 c){ const mat3 I = mat3(vec3(0.59719,0.07600,0.02840), vec3(0.35458,0.90834,0.13383), vec3(0.04823,0.01566,0.83777));
       const mat3 O = mat3(vec3(1.60475,-0.10208,-0.00327), vec3(-0.53108,1.10813,-0.07276), vec3(-0.07367,-0.00605,1.07602));
@@ -34,7 +34,11 @@ const GradeShader = {
     vec3 srgb(vec3 c){ return mix(c * 12.92, pow(c, vec3(0.41666)) * 1.055 - 0.055, step(0.0031308, c)); }
     float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
     void main(){
-      vec3 c = texture2D(tDiffuse, vUv).rgb * exposure * tint;
+      vec3 c0 = texture2D(tDiffuse, vUv).rgb;
+      /* nitidezza: toglie l'effetto sfocato (piu' definizione senza costare quasi niente) */
+      vec3 nb = texture2D(tDiffuse, vUv + vec2(texel.x, 0.0)).rgb + texture2D(tDiffuse, vUv - vec2(texel.x, 0.0)).rgb + texture2D(tDiffuse, vUv + vec2(0.0, texel.y)).rgb + texture2D(tDiffuse, vUv - vec2(0.0, texel.y)).rgb;
+      c0 = max(c0 + (c0 * 4.0 - nb) * sharp * 0.25, 0.0);
+      vec3 c = c0 * exposure * tint;
       c = aces(c);
       float l = dot(c, vec3(0.2126,0.7152,0.0722)); c = mix(vec3(l), c, saturation);
       c = (c - 0.5) * contrast + 0.5;
@@ -49,18 +53,54 @@ export function initLook(renderer, scene, camera, vmScene) {
   if (!looks.on) return;
   /* riflessi d'ambiente: una stanza luminosa finta, molto attenuata, cosi' metallo e vetro riflettono qualcosa */
   const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+  /* texture nitide anche viste di sbieco (pavimenti, strade) */
+  const an = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  scene.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) for (const k of ['map', 'emissiveMap']) if (m && m[k] && m[k].anisotropy < an) { m[k].anisotropy = an; m[k].needsUpdate = true; } });
+  /* ombre: PCF semplice (molto piu' leggero del morbido), dimensione e frequenza decise dalla qualita' */
+  renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false;
+  Object.assign(sun.shadow.camera, { left: -32, right: 32, top: 32, bottom: -32, near: 1, far: 150 }); sun.shadow.camera.updateProjectionMatrix();
   if (HQ) {
-    sun.shadow.mapSize.set(4096, 4096); Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 160 }); sun.shadow.camera.updateProjectionMatrix();
     renderer.toneMapping = THREE.NoToneMapping;
     const size = renderer.getDrawingBufferSize(new THREE.Vector2());
     const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: renderer.capabilities.isWebGL2 ? 4 : 0 });
     composer = new EffectComposer(renderer, rt);
     composer.addPass(new RenderPass(scene, camera));
     vmPass = new RenderPass(vmScene, camera); vmPass.clear = false; vmPass.clearDepth = true; composer.addPass(vmPass);
-    bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 1.25); composer.addPass(bloom);
+    bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 3, size.y / 3), 0.28, 0.4, 1.25); composer.addPass(bloom);
     grade = new ShaderPass(GradeShader); composer.addPass(grade);
-    addEventListener('resize', () => { const s = renderer.getDrawingBufferSize(new THREE.Vector2()); composer.setSize(s.x / renderer.getPixelRatio(), s.y / renderer.getPixelRatio()); });
+    addEventListener('resize', applySize);
   }
+  setQuality(qPref);
+}
+/* ---------- qualita': alta / media / bassa, oppure automatica (scende se il gioco va a scatti, risale se va liscio) ---------- */
+const QL = {
+  3: { name: 'alta', pr: 1.5, shadow: 2048, every: 1, bloom: true },
+  2: { name: 'media', pr: 1.0, shadow: 2048, every: 2, bloom: false },
+  1: { name: 'bassa', pr: 0.75, shadow: 1024, every: 3, bloom: false },
+};
+let qPref = 'auto'; try { qPref = localStorage.getItem('mt_q') || 'auto'; } catch (_) {}
+let qLevel = HQ ? 3 : 2, frameN = 0, ema = 16, lastT = 0, qTimer = 0, drops = {};
+export const quality = () => ({ pref: qPref, level: qLevel, name: QL[qLevel].name });
+function applySize() {
+  const pr = Math.min(devicePixelRatio || 1, QL[qLevel].pr); R.setPixelRatio(pr); R.setSize(innerWidth, innerHeight, false);
+  if (composer) { composer.setPixelRatio(pr); composer.setSize(innerWidth, innerHeight); grade.uniforms.texel.value.set(1 / (innerWidth * pr), 1 / (innerHeight * pr)); }
+}
+function applyLevel(l) {
+  qLevel = l; const Q = QL[l];
+  if (sun.shadow.mapSize.x !== Q.shadow) { sun.shadow.mapSize.set(Q.shadow, Q.shadow); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  if (bloom) bloom.enabled = Q.bloom;
+  applySize(); R.shadowMap.needsUpdate = true;
+}
+export function setQuality(pref) {
+  qPref = pref; try { localStorage.setItem('mt_q', pref); } catch (_) {}
+  applyLevel(pref === 'alta' ? 3 : pref === 'media' ? 2 : pref === 'bassa' ? 1 : (HQ ? 3 : 2)); qTimer = 0; drops = {};
+}
+export function cycleQuality() { const order = ['auto', 'alta', 'media', 'bassa']; setQuality(order[(order.indexOf(qPref) + 1) % order.length]); return quality(); }
+function autoQuality(now) {
+  const dt = lastT ? Math.min(100, now - lastT) : 16; lastT = now; ema += (dt - ema) * 0.05;
+  if (qPref !== 'auto') return; qTimer += dt;
+  if (qTimer > 2500 && ema > 24 && qLevel > 1) { drops[qLevel] = (drops[qLevel] || 0) + 1; applyLevel(qLevel - 1); qTimer = 0; ema = 16; }
+  else if (qTimer > 12000 && ema < 17.8 && qLevel < 3 && (drops[qLevel + 1] || 0) < 2) { applyLevel(qLevel + 1); qTimer = 0; }
 }
 /* ogni mondo ha il suo ritocco */
 const GRADE = {
@@ -77,6 +117,8 @@ export function lookForWorld(w) {
   sunOff.copy(sun.position).sub(sun.target.position);
 }
 export function renderFrame(scene, camera, vmScene, vmVisible) {
+  if (looks.on && R) { autoQuality(performance.now()); frameN++; if (frameN % QL[qLevel].every === 0) R.shadowMap.needsUpdate = true; }
+  else if (R) R.shadowMap.needsUpdate = true;
   if (composer) { vmPass.enabled = vmVisible; grade.uniforms.time.value = U.time.value % 10; composer.render(); return; }
   R.render(scene, camera);
   if (vmVisible) { const ac = R.autoClear; R.autoClear = false; R.clearDepth(); R.render(vmScene, camera); R.autoClear = ac; }
@@ -88,7 +130,7 @@ const sunOff = new THREE.Vector3(-35, 62, 40);
 export function followSun(p) {
   if (!looks.on) return;
   /* agganciata alla griglia della mappa d'ombra, cosi' le ombre non tremano quando ti muovi */
-  const step = 80 / sun.shadow.mapSize.x * 4; const x = Math.round(p.x / step) * step, z = Math.round(p.z / step) * step;
+  const step = 64 / sun.shadow.mapSize.x * 4; const x = Math.round(p.x / step) * step, z = Math.round(p.z / step) * step;
   sun.target.position.set(x, 0, z); sun.position.set(x + sunOff.x, sunOff.y, z + sunOff.z); sun.target.updateMatrixWorld();
 }
 export function updateLook(dt) { U.time.value += dt; }
@@ -109,7 +151,7 @@ function detail(m, opt) {
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\n  { vec4 wp = vec4(transformed, 1.0);\n  #ifdef USE_INSTANCING\n  wp = instanceMatrix * wp;\n  #endif\n  lkP = (modelMatrix * wp).xyz; lkN = normalize(mat3(modelMatrix) * objectNormal); }');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float lkWet, lkAmt;' + NOISE)
       .replace('#include <map_fragment>', `#include <map_fragment>
-  { float n = lk_n(lkP * 0.33) * 0.55 + lk_n(lkP * 1.9) * 0.3 + lk_n(lkP * 9.0) * 0.15;
+  { float n = lk_n(lkP * 0.33) * 0.62 + lk_n(lkP * 2.6) * 0.38;
     diffuseColor.rgb *= mix(1.0, mix(0.8, 1.1, n), lkAmt);
     float wall = 1.0 - abs(lkN.y);
     float base = smoothstep(-0.05, 1.3, lkP.y - floor(lkP.y / 100.0) * 100.0);
@@ -177,9 +219,9 @@ function foliage(root) {
       list.push([new THREE.Matrix4().compose(pos, q, s), c.clone()]);
     }
     /* il palloncino resta come interno della chioma, piu' piccolo e scuro, cosi' non si vede attraverso le foglie */
-    o.scale.multiplyScalar(0.6); o.material = o.material.clone(); o.material.color.multiplyScalar(0.42); o.castShadow = false;
+    o.scale.multiplyScalar(0.6); o.material = o.material.clone(); o.material.color.multiplyScalar(0.42); o.castShadow = true;
   }
-  const im = new THREE.InstancedMesh(card, mat, list.length); im.customDepthMaterial = depth; im.castShadow = true; im.receiveShadow = true;
+  const im = new THREE.InstancedMesh(card, mat, list.length); im.customDepthMaterial = depth; im.castShadow = false; im.receiveShadow = true;
   list.forEach(([m4, col], i) => { im.setMatrixAt(i, m4); im.setColorAt(i, col); }); im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
   im.frustumCulled = false; root.add(im); return list.length;
 }
