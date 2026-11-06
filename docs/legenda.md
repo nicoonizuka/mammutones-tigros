@@ -340,8 +340,8 @@ In Avventura si apre dopo aver finito il Tribunale. Si parte con 2500 monete. Il
 |---|---|---|
 | Piazza Garibaldi (la fontana) | Round 5: **Pierre**, per l'ultima volta | — |
 | Il Mac (torre grigia, a destra della fontana) | Round 10: **Corti** maledetto, enorme. Lancia panini da lontano e mena da vicino. Battuto, si sblocca e ti dà la prima metà del talismano. Poi compare Loris per un attimo | Aprire il Mac: **8000** (dopo Pierre) |
-| La zona dei bar (corso XX Settembre) | Round 15: i **cugini Progni**, due soldati biondi con la cresta, insieme. Evocano gli sgherri potenziati. Battuti tutti e due liberi **Napo** e **Ali Debbah** | Strada per i bar: **10000** (dopo Corti) |
-| Piazza San Giovanni e la basilica | Round 18: **Loris Busato** in chiesa. Battuto scappa nelle catacombe e ti lascia l'altra metà del talismano | Si sblocca battendo i Progni; aprire la chiesa: **12000** |
+| La zona dei bar (corso XX Settembre) | Round 15: i **cugini**, due soldati biondi con la cresta, insieme. Evocano gli sgherri potenziati. Battuti tutti e due liberi **Napo** e **Ali Debbah** | Strada per i bar: **10000** (dopo Corti) |
+| Piazza San Giovanni e la basilica | Round 18: **Loris Busato** in chiesa. Battuto scappa nelle catacombe e ti lascia l'altra metà del talismano | Si sblocca battendo i cugini; aprire la chiesa: **12000** |
 | Le catacombe | Elimina 12 Mammutones, poi suona i 4 campanacci nell'ordine scritto sulla tavola di pietra (se sbagli, l'ordine cambia e arrivano nemici). Poi attiva il portale | Sigillo in chiesa: col talismano intero. Portale: **20000** |
 | La Sardegna | Colline, nuraghi, ulivi, pecore e tantissimi Mammutones e capre. Dopo pochi secondi arriva **Loris, il Re dei Mammutones**: gigante, lancia campanacci enormi (danno ad area) e batte i piedi se gli sei vicino. Battuto, esce **DJ Gianfra** e Busto è salva | — |
 
@@ -363,8 +363,8 @@ Alla fontana ci sono anche pistola, mitra, fucile a pompa, AK-47 e pompa automat
 ### Personaggi nuovi
 | Personaggio | Altezza | Potere | Come si sblocca |
 |---|---|---|---|
-| Napo | 1,85 m | **Collare**: fino a 6 nemici vicini diventano suoi alleati per 10 secondi e combattono per lui | battendo i Progni |
-| Ali Debbah | 1,69 m | **L'Algerino**: per 7 secondi tutti i nemici hanno la vita dimezzata (ogni colpo vale doppio) | battendo i Progni |
+| Napo | 1,85 m | **Collare**: fino a 6 nemici vicini diventano suoi alleati per 10 secondi e combattono per lui | battendo i cugini |
+| Ali Debbah | 1,69 m | **L'Algerino**: per 7 secondi tutti i nemici hanno la vita dimezzata (ogni colpo vale doppio) | battendo i cugini |
 | DJ Gianfra | 1,88 m | **Arma gratis**: la prossima arma che compri al muro non la paghi (ricarica 45 s) | finendo la Sardegna |
 | Corti | 1,88 m | Monete doppie | battendolo al Mac |
 
@@ -391,7 +391,7 @@ La Golf GT di Corti è parcheggiata davanti al Mac: premendo E la righi. Se lo f
 | Fabio Regaglia | 3,8 m | colpi con la lancia, braccia al cielo per i rinforzi |
 | Pika impossessato | 2 m | lancia le sigarette |
 | Corti maledetto | 3,4 m | lancia i panini, si tiene la pancia quando lo colpisci |
-| Cugini Progni | 2,15 m | mano all'orecchio come con la radio per chiamare gli sgherri |
+| Cugini | 2,15 m | mano all'orecchio come con la radio per chiamare gli sgherri |
 | Loris, Re dei Mammutones | 5 m | urlo all'arrivo, lancio a due mani, pestone |
 
 Anche gli amici liberati nelle scene, gli albanesi di Tefalin (con l'AK) e Damiano nella Mercedes sono realistici.

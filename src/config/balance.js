@@ -171,10 +171,10 @@ export const BU_START_COINS = 2500;
 export const BU_SGHERRONI_WAVE = 4;                 // da qui escono gli sgherri potenziati
 export const BU_COSTS = { mac: 8000, bar: 10000, chiesa: 12000, portale: 20000 };
 export const BU_CATA_KILLS = 12;                    // Mammutones da uccidere nelle catacombe prima del rituale
-/* Pierre per l'ultima volta (fontana, round 5), Corti maledetto (Mac, round 10), i cugini Progni (bar, round 15),
+/* Pierre per l'ultima volta (fontana, round 5), Corti maledetto (Mac, round 10), i cugini (bar, round 15),
    Loris in chiesa (round 18) e Loris gigante, il Re dei Mammutones, in Sardegna */
 export const BOSS_PIERRE4 = { n: 'Pierre', hp: 9500, spd: 2.7, dmg: 30, atkCd: 1.15, reward: 4500, summonEvery: 9, wave: 5 };
 export const BOSS_CORTI = { n: 'Corti', hp: 15000, spd: 1.8, dmg: 38, atkCd: 1.6, reward: 6000, summonEvery: 13, wave: 10, throwEvery: 2.1, throwDmg: 16 };
-export const BOSS_PROGNI = { n: 'I cugini Progni', hp: 9000, spd: 2.9, dmg: 30, atkCd: 1.1, reward: 5000, summonEvery: 10, wave: 15 };
+export const BOSS_PROGNI = { n: 'I cugini', hp: 9000, spd: 2.9, dmg: 30, atkCd: 1.1, reward: 5000, summonEvery: 10, wave: 15 };
 export const BOSS_LORIS4 = { n: 'Loris Busato', hp: 18000, spd: 3.4, dmg: 32, atkCd: 1.2, reward: 8000, summonEvery: 10, wave: 18 };
 export const BOSS_RE = { n: 'Loris, il Re dei Mammutones', hp: 36000, spd: 3.3, dmg: 44, atkCd: 1.5, reward: 15000, summonEvery: 9, throwEvery: 2.6, throwDmg: 28, stompEvery: 5, stompDmg: 34 };

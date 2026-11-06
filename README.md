@@ -125,7 +125,7 @@ Salto sugli oggetti, cassa delle armi in ogni mappa (con la minigun), bottiglie 
 
 ## Novità della 2.0: il centro di Busto
 
-Il mondo 4 chiude il primo capitolo: piazza Garibaldi con Pierre, Corti maledetto al Mac, i cugini Progni ai bar, Loris in chiesa, le catacombe col rituale dei campanacci, il portale e la Sardegna con il Re dei Mammutones. Personaggi nuovi: Napo, Ali Debbah e DJ Gianfra. Armi nuove: AR, granate, cecchino dorato, minigun al muro. Dettagli in `docs/legenda.md`.
+Il mondo 4 chiude il primo capitolo: piazza Garibaldi con Pierre, Corti maledetto al Mac, i cugini ai bar, Loris in chiesa, le catacombe col rituale dei campanacci, il portale e la Sardegna con il Re dei Mammutones. Personaggi nuovi: Napo, Ali Debbah e DJ Gianfra. Armi nuove: AR, granate, cecchino dorato, minigun al muro. Dettagli in `docs/legenda.md`.
 
 ## Note
 

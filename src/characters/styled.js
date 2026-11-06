@@ -1049,7 +1049,7 @@ export function buildCapra() {
   G.userData.P = P; G.userData.height = 1.0; G.userData.hit = { body: G.getObjectByName('hitBody'), head: G.getObjectByName('hitHead') };
   return G;
 }
-/* i cugini Progni: due soldati biondi con la cresta, mimetica, giubbotto tattico. Il secondo porta gli occhiali da sole */
+/* i cugini: due soldati biondi con la cresta, mimetica, giubbotto tattico. Il secondo porta gli occhiali da sole */
 export function buildProgno(v = 0) {
   const camo = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#5a6040'; g.fillRect(0, 0, w, h); seed = 411 + v;
     for (let i = 0; i < 26; i++) { g.fillStyle = ['#3a3e28', '#7a7050', '#2a2a1c', '#6a6a44'][i % 4]; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 4 + rnd() * 8, 3 + rnd() * 5, rnd() * 3, 0, Math.PI * 2); g.fill(); } }, 3);

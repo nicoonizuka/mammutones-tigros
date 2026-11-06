@@ -133,7 +133,7 @@ const BOSSK = {
   fabio: { B: BOSS_FABIO, build: buildFabio, at: () => FABIO_SPOT, r: 0.75, name: 'Fabio Regaglia · Il gigante maledetto', minions: ['impossessato', 'orco'], call: 'Fabio Regaglia chiama rinforzi!', title: 'Fabio Regaglia!', sub: () => 'Il gigante di 2 metri e mezzo, maledetto e corazzato' },
   pierre4: { B: BOSS_PIERRE4, build: buildWell, at: () => ({ x: BX, z: -1 }), r: 0.6, name: 'Pierre · Per l\'ultima volta', minions: ['orco', 'orcone', 'sgherrone'], call: 'Pierre chiama i suoi sgherri!', title: 'Pierre!', sub: () => 'È tornato alla fontana con gli sgherri: stavolta è l\'ultima' },
   corti: { B: BOSS_CORTI, build: buildCortiBoss, at: () => ({ x: BX + 44, z: 12 }), r: 0.9, name: 'Corti · Sotto la maledizione', minions: ['base', 'furia', 'cornuto'], call: 'Corti chiama i Mammutones dalla cucina!', title: 'Corti!', sub: () => (bu.gt ? '«Hai rigato la mia GT?! Adesso sono cavoli tuoi!»' : '«Oh, mi raccomando… la mia GT non l\'hai toccata, vero? Non l\'hai graffiata?»') },
-  progni: { B: BOSS_PROGNI, build: () => buildProgno(0), at: () => ({ x: BX - 3, z: -96 }), r: 0.6, name: 'I cugini Progni', minions: ['sgherrone', 'sgherrone', 'orco'], call: 'I Progni chiamano gli sgherri potenziati!', title: 'I cugini Progni!', sub: () => 'Due soldati biondi con la cresta: escono insieme dal bar' },
+  progni: { B: BOSS_PROGNI, build: () => buildProgno(0), at: () => ({ x: BX - 3, z: -96 }), r: 0.6, name: 'I cugini', minions: ['sgherrone', 'sgherrone', 'orco'], call: 'I cugini chiamano gli sgherri potenziati!', title: 'I cugini!', sub: () => 'Due soldati biondi con la cresta: escono insieme dal bar' },
   loris4: { B: BOSS_LORIS4, build: buildLoris, at: () => ({ x: BX, z: -178 }), r: 0.65, name: 'Loris Busato · In chiesa', minions: ['capra', 'capra', 'furia'], call: 'Loris chiama le capre Mammutones!', title: 'Loris Busato!', sub: () => 'Ti aspettava davanti all\'altare' },
   re: { B: BOSS_RE, build: buildLorisRe, at: () => RE_SPOT, r: 1.4, name: 'Loris · Il Re dei Mammutones', minions: ['capra', 'capra', 'furia', 'impossessato'], call: 'Il Re chiama il suo esercito!', title: 'Il Re dei Mammutones!', sub: () => 'Loris nella forma finale. È il momento di finirla' },
   pika: { B: BOSS_PIKA, build: buildPikaBoss, at: () => (P && inCasa(P.pos) ? PIKA_SPOT_C : PIKA_SPOT_G), r: 0.5, name: 'Pika · Governatore del Tribunale (sotto maleficio)', minions: ['fachiro', 'impossessato'], call: 'Pika chiama i suoi!', title: 'Pika!', sub: () => (P && inCasa(P.pos) ? 'Il maleficio di Loris lo controlla: liberalo!' : 'Il governatore del Tribunale, impossessato. Ti lancia le sigarette da lontano') },
@@ -254,7 +254,7 @@ function damageEnemy(e, d, head) {
   if (e.hp <= 0 && !e.dead) {
     e.dead = 1; e.deadT = 0; earn(e.reward + (head ? ECONOMY.headKill : 0)); kills++; alive--;
     if (world === 4 && inCata(e.m.position)) bu.cataKills = (bu.cataKills || 0) + 1;
-    if (e.twin) banner('Un cugino Progni è a terra!', 'Manca l\'altro');
+    if (e.twin) banner('Un cugino è a terra!', 'Manca l\'altro');
     if (head && !e.boss) feed('Colpo in testa +' + (e.reward + ECONOMY.headKill));
     if (e.boss) bossDown();
     if (Math.random() < DROPS.chance) dropItem(e.m.position.clone());
@@ -354,7 +354,7 @@ const INTER = [
   /* mondo 4: porte, barricate, sigillo, campanacci, portale, la GT di Corti */
   { x: BX + 32.6, z: 11, r: 2.8, label: () => world === 4 && !bu.mac && !inMac(P.pos) ? (bu.pierre || mode === 'sandbox' ? `<b>E</b> Apri il Mac · <b>${BU_COSTS.mac}</b>` : 'Il Mac è chiuso: prima sconfiggi Pierre alla fontana (round ' + BOSS_PIERRE4.wave + ')') : null, cost: () => (bu.pierre ? BU_COSTS.mac : 0), act: openMac },
   { x: BX, z: -50.4, r: 3.6, label: () => world === 4 && !bu.bar && P.pos.z > -52 ? (bu.corti || mode === 'sandbox' ? `<b>E</b> Apri la strada per i bar · <b>${BU_COSTS.bar}</b>` : 'Strada chiusa: prima libera Corti al Mac') : null, cost: () => (bu.corti ? BU_COSTS.bar : 0), act: openBar },
-  { x: BX, z: -102.4, r: 3.6, label: () => world === 4 && !bu.piazza && P.pos.z > -104 ? 'Zona rossa: i cugini Progni la tengono chiusa (round ' + BOSS_PROGNI.wave + ')' : null, cost: () => 0 },
+  { x: BX, z: -102.4, r: 3.6, label: () => world === 4 && !bu.piazza && P.pos.z > -104 ? 'Zona rossa: i cugini la tengono chiusa (round ' + BOSS_PROGNI.wave + ')' : null, cost: () => 0 },
   { x: BX, z: -148.6, r: 3, label: () => world === 4 && !bu.chiesa && P.pos.z > -150.5 ? `<b>E</b> Apri la chiesa · <b>${BU_COSTS.chiesa}</b>` : null, cost: () => BU_COSTS.chiesa, act: openChiesa },
   { x: BX, z: -180.6, r: 2.6, label: () => world === 4 && inChiesa(P.pos) ? (bu.seal ? '<b>E</b> Scendi nelle catacombe' : bu.tal >= 2 || mode === 'sandbox' ? '<b>E</b> Unisci il talismano e apri il sigillo' : 'Il sigillo dei Mammutones: serve il talismano intero (' + (bu.tal || 0) + '/2)') : null, cost: () => 0, free: () => !!bu.seal || bu.tal >= 2 || mode === 'sandbox', act: () => { if (!bu.seal) openSeal(); else goCata(); } },
   { x: BX + 300, z: 2.2, r: 2.4, label: () => world === 4 && inCata(P.pos) ? '<b>E</b> Risali in chiesa' : null, cost: () => 0, free: () => true, act: () => { buTeleport({ x: BX, z: -179.5 }, Math.PI); } },
@@ -613,7 +613,7 @@ function resetBU() {
   BELLS.forEach(b => { b.glow.material.opacity = 0; }); setTablet(bu.seq, 0); nades.forEach(n => scene.remove(n.m)); nades = [];
 }
 function openMac() { bu.mac = 1; buMacDoor.visible = false; buMacSolid.off = 1; if (!quiet) banner('Il Mac è aperto', 'Dentro ci sono le granate e il mitragliatore · Corti arriva al round ' + BOSS_CORTI.wave); }
-function openBar() { bu.bar = 1; buBarGate.g.visible = false; buBarGate.solid.off = 1; if (!quiet) banner('La zona dei bar', 'Napo è prigioniero dei cugini Progni · escono al round ' + BOSS_PROGNI.wave); }
+function openBar() { bu.bar = 1; buBarGate.g.visible = false; buBarGate.solid.off = 1; if (!quiet) banner('La zona dei bar', 'Napo è prigioniero dei cugini · escono al round ' + BOSS_PROGNI.wave); }
 function openPiazza() { bu.piazza = 1; buPiazzaGate.g.visible = false; buPiazzaGate.solid.off = 1; }
 function openChiesa() { bu.chiesa = 1; buChurchDoor.visible = false; buChurchSolid.off = 1; if (!quiet) banner('La basilica di San Giovanni', 'Dentro c\'è la minigun · Loris ti aspetta al round ' + BOSS_LORIS4.wave); }
 function openSeal() { bu.seal = 1; buSeal.visible = false; buHole.visible = true; shake(0.4); tone(60, 1.2, 'sawtooth', 0.1, 30); banner('Il sigillo si apre!', 'Sotto la chiesa ci sono le catacombe: scendi'); }
@@ -634,7 +634,7 @@ function ringBell(i) {
     for (let k = 0; k < 4; k++) spawnEnemy(k % 2 ? 'capra' : 'furia', [b.x + (Math.random() - 0.5) * 4, b.z + 2]); }
 }
 function buBossDown(kind, at) {
-  if (kind === 'progni') { const tw = enemies.find(e => e.twin && !e.dead); if (tw) { tw.twin = 0; tw.boss = 1; boss = tw; boss.summon = BOSS_PROGNI.summonEvery; $('boss').hidden = false; $('bossn').textContent = 'Progni · l\'ultimo cugino'; banner('Un cugino Progni è a terra!', 'Manca l\'altro: è furioso'); return; } }
+  if (kind === 'progni') { const tw = enemies.find(e => e.twin && !e.dead); if (tw) { tw.twin = 0; tw.boss = 1; boss = tw; boss.summon = BOSS_PROGNI.summonEvery; $('boss').hidden = false; $('bossn').textContent = 'L\'ultimo cugino'; banner('Un cugino è a terra!', 'Manca l\'altro: è furioso'); return; } }
   if (mode === 'sandbox') { bu[kind === 'pierre4' ? 'pierre' : kind === 'loris4' ? 'loris' : kind] = 1; if (kind === 'loris4') bu.tal = 2; if (kind === 'progni') openPiazza(); banner(BOSSK[kind].title.replace('!', '') + ' è sconfitto!', 'Esci dalla zona e rientra per sfidarlo di nuovo'); return; }
   if (kind === 'pierre4') { bu.pierre = 1; banner('Pierre è sconfitto per sempre!', 'Adesso puoi aprire il Mac · ' + BU_COSTS.mac + ' monete'); return; }
   if (kind === 'corti') {
@@ -646,9 +646,9 @@ function buBossDown(kind, at) {
   }
   if (kind === 'progni') {
     bu.progni = 1; openPiazza(); const c = unlockChar('bar'); if (c) lastUnlock = { name: 'Napo e Ali Debbah' };
-    setTimeout(() => rescue(20, 'Napo', 'Grazie raga! I Progni ci tenevano legati dietro al bancone del bar.', at), 1400);
+    setTimeout(() => rescue(20, 'Napo', 'Grazie raga! I cugini ci tenevano legati dietro al bancone del bar.', at), 1400);
     setTimeout(() => rescue(21, 'Ali Debbah', 'Fratelli, siete arrivati! Andiamo a prendere Loris in chiesa.', at), 4200);
-    banner('I cugini Progni sono a terra!', (c ? 'Hai sbloccato Napo e Ali Debbah · ' : '') + 'La strada per piazza San Giovanni è libera'); return;
+    banner('I cugini sono a terra!', (c ? 'Hai sbloccato Napo e Ali Debbah · ' : '') + 'La strada per piazza San Giovanni è libera'); return;
   }
   if (kind === 'loris4') {
     bu.loris = 1; bu.tal = 2;
@@ -1236,7 +1236,7 @@ function showEnding(real, wf) {
   $('endkick').textContent = 'Mappa ' + ww + ' completata';
   $('endtitle').innerHTML = ww === 4 ? 'Busto è <span>salva</span>!' : ww === 3 ? 'Pika è <span>libero</span>!' : w2 ? 'Bravo, hai sconfitto <span>il Capo</span>!' : 'Complimenti, hai liberato <span>il Tigros</span>!';
   $('endtext').innerHTML = ww === 4
-    ? `<p><b>${who}</b> ha liberato il centro di Busto. Pierre è sconfitto per sempre, i cugini Progni sono a terra e Corti è tornato quello di sempre (anche se continua a chiedere della sua GT).</p>
+    ? `<p><b>${who}</b> ha liberato il centro di Busto. Pierre è sconfitto per sempre, i cugini sono a terra e Corti è tornato quello di sempre (anche se continua a chiedere della sua GT).</p>
        <p>Ai bar avete liberato <b>Napo</b> e <b>Ali Debbah</b>. Con le due metà del talismano avete aperto le catacombe sotto San Giovanni e il portale vi ha portati in <b>Sardegna</b>, il regno dei Mammutones.</p>
        <p>Lì, tra i nuraghi e le pecore, <b>Loris Busato</b> si è trasformato nel Re dei Mammutones. L'avete battuto. Dalla consolle è saltato fuori <b>DJ Gianfra</b>: stasera si festeggia in piazza Garibaldi. Busto Arsizio è di nuovo vostra. Fine del primo capitolo.</p>`
     : ww === 3
@@ -1273,7 +1273,7 @@ const PLACES = {
   3: { n: 'Tribunale di Busto', open: () => !!unlocks.hs || mode === 'sandbox', state: () => unlocks.tr ? 'Liberato · Pika è libero dal maleficio' : unlocks.hs ? 'Disponibile · Mondo 3' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima l\'Happy Shopping' : 'Bloccato · finisci prima l\'Happy Shopping',
        t: 'Leodessi, Castelluccio e Bulegato sono prigionieri nel garage di Pika. Ci porta Libe il matto, con Damiano. Parcheggio con Fab La Rue, piazza dei tavolini con Pierre e Fabio Regaglia, i garage e la casa di Pika.' },
   4: { n: 'Il centro di Busto', open: () => !!unlocks.tr || mode === 'sandbox', state: () => unlocks.busto ? 'Liberato · Busto è salva' : unlocks.tr ? 'Disponibile · Mondo 4' : mode === 'sandbox' ? 'Disponibile in Sandbox · in Avventura finisci prima il Tribunale' : 'Bloccato · finisci prima il Tribunale',
-       t: 'L\'ultima tappa del primo capitolo. Pierre alla fontana, Corti maledetto al Mac, i cugini Progni ai bar con Napo e Ali prigionieri, Loris in chiesa. Sotto la chiesa le catacombe, e il portale per la Sardegna, il regno dei Mammutones.' },
+       t: 'L\'ultima tappa del primo capitolo. Pierre alla fontana, Corti maledetto al Mac, i cugini ai bar con Napo e Ali prigionieri, Loris in chiesa. Sotto la chiesa le catacombe, e il portale per la Sardegna, il regno dei Mammutones.' },
 };
 function showPlace(k) {
   place = k; const Q = PLACES[k];
@@ -1352,7 +1352,7 @@ function setWorld(w) {
   if ($('w3btn')) { $('w3btn').classList.toggle('locked', !unlocks.hs); $('w3sub').textContent = unlocks.hs ? 'Pika e il maleficio' : 'in Avventura: finisci l\'Happy Shopping'; }
   if (w === 3) wi.textContent = unlocks.hs || mode === 'sandbox' ? 'Tribunale: parcheggio con Fab La Rue (round ' + TR_FAB_WAVE + '), piazza dei tavolini con Pierre (round ' + BOSS_WELL.wave + ') e Fabio Regaglia (round ' + BOSS_FABIO.wave + '), garage e casa di Pika.' : 'In Avventura il Tribunale si apre dopo aver finito l\'Happy Shopping. In Sandbox puoi provarlo subito.';
   if ($('w4btn')) { $('w4btn').classList.toggle('locked', !unlocks.tr); $('w4sub').textContent = unlocks.tr ? 'il Re dei Mammutones' : 'in Avventura: finisci il Tribunale'; }
-  if (w === 4) wi.textContent = unlocks.tr || mode === 'sandbox' ? 'Centro di Busto: Pierre alla fontana (round ' + BOSS_PIERRE4.wave + '), Corti al Mac (round ' + BOSS_CORTI.wave + '), i cugini Progni ai bar (round ' + BOSS_PROGNI.wave + '), Loris in chiesa (round ' + BOSS_LORIS4.wave + '), poi catacombe e Sardegna.' : 'In Avventura il centro di Busto si apre dopo aver finito il Tribunale. In Sandbox puoi provarlo subito.';
+  if (w === 4) wi.textContent = unlocks.tr || mode === 'sandbox' ? 'Centro di Busto: Pierre alla fontana (round ' + BOSS_PIERRE4.wave + '), Corti al Mac (round ' + BOSS_CORTI.wave + '), i cugini ai bar (round ' + BOSS_PROGNI.wave + '), Loris in chiesa (round ' + BOSS_LORIS4.wave + '), poi catacombe e Sardegna.' : 'In Avventura il centro di Busto si apre dopo aver finito il Tribunale. In Sandbox puoi provarlo subito.';
   if (w === 2) wi.textContent = hsOpen() || mode === 'sandbox' ? 'Happy Shopping: parcheggio e negozio, il Capo arriva all\'ondata ' + BOSS_CAPO.wave + '. Debe si sblocca battendolo.' : 'In Avventura l\'Happy Shopping si apre dopo aver battuto Loris Busato. In Sandbox puoi provarlo subito.';
   if (state === 'menu') { world = w; applyLook(w); }
 }
@@ -1370,7 +1370,7 @@ $('storyAgain').onclick = () => { $('sel').hidden = true; $('story').hidden = fa
 
 /* schermata di scelta: ritratti in pixel art */
 /* personaggi da sbloccare: Jacopo battendo Fab La Rue, Leo finendo la storia (solo in Avventura) */
-const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo', corti: 'È sotto una maledizione: liberalo al Mac del centro di Busto (mondo 4)', bar: 'Prigioniero dei cugini Progni: liberalo ai bar del centro di Busto (mondo 4)', busto: 'Finisci il centro di Busto: sconfiggi il Re dei Mammutones in Sardegna' };
+const UNLOCK_TXT = { fab: 'Sconfiggi Fab La Rue nel seminterrato', loris: 'Finisci la storia: sconfiggi Loris Busato', hs: 'Finisci l\'Happy Shopping: sconfiggi il Capo', corti: 'È sotto una maledizione: liberalo al Mac del centro di Busto (mondo 4)', bar: 'Prigioniero dei cugini: liberalo ai bar del centro di Busto (mondo 4)', busto: 'Finisci il centro di Busto: sconfiggi il Re dei Mammutones in Sardegna' };
 let unlocks = {}; try { unlocks = JSON.parse(localStorage.getItem('mt_unlocks') || '{}') || {}; } catch (_) {}
 /* Tefalin, Diego e Debe vengono dall'Happy Shopping: in Avventura servono Loris battuto (e Debe il Capo), in Sandbox sempre disponibili */
 const isLocked = c => { if (c.world >= 2 && mode === 'sandbox') return false; if (c.world === 4) return !unlocks[c.unlock]; if (c.world === 3) return !unlocks.tr; if (c.world === 2 && !unlocks.loris) return true; return !!c.unlock && !unlocks[c.unlock]; };
